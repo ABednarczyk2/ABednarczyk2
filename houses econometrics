@@ -1,0 +1,223 @@
+Call:
+lm(formula = log(price) ~ house_type + condition + house_type:condition + 
+    area, data = riga)
+
+Residuals:
+   Min     1Q Median     3Q    Max 
+-8.559 -2.674  1.382  2.121  3.650 
+
+Coefficients:
+                                          Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                               7.077010   0.114653  61.725  < 2e-16 ***
+house_typepanel                           0.713074   0.120546   5.915 3.59e-09 ***
+house_typebrick/panel                     0.100265   0.141055   0.711  0.47724    
+house_typewood                            0.168254   0.267997   0.628  0.53016    
+house_typemasonry                         0.311635   0.120853   2.579  0.00996 ** 
+conditionpartially                        0.863332   0.451880   1.911  0.05614 .  
+conditionnone                             2.246095   2.577957   0.871  0.38366    
+area                                      0.028368   0.001243  22.828  < 2e-16 ***
+house_typepanel:conditionpartially       -1.648097   0.973276  -1.693  0.09047 .  
+house_typebrick/panel:conditionpartially -1.012323   1.149404  -0.881  0.37851    
+house_typewood:conditionpartially        -0.133164   0.603839  -0.221  0.82547    
+house_typemasonry:conditionpartially     -1.382746   0.612867  -2.256  0.02411 *  
+house_typepanel:conditionnone            -1.007563   3.645545  -0.276  0.78227    
+house_typebrick/panel:conditionnone      -4.257465   3.648775  -1.167  0.24335    
+house_typewood:conditionnone             -1.333114   2.834847  -0.470  0.63820    
+house_typemasonry:conditionnone          -0.224575   2.882791  -0.078  0.93791    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 2.576 on 3961 degrees of freedom
+Multiple R-squared:  0.1314,	Adjusted R-squared:  0.1281 
+F-statistic: 39.96 on 15 and 3961 DF,  p-value: < 2.2e-16
+
+
+
+
+
+> ## discrete + continuous
+> reg_bc <- lm(log(price) ~ rooms + op_type + area + op_type:area,
++              data=riga)
+> summary(reg_bc)
+
+Call:
+lm(formula = log(price) ~ rooms + op_type + area + op_type:area, 
+    data = riga)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-4.9189 -0.2142  0.0803  0.3765  1.5263 
+
+Coefficients:
+                  Estimate Std. Error t value Pr(>|t|)    
+(Intercept)      4.7107669  0.0333328 141.325  < 2e-16 ***
+rooms            0.1356263  0.0166438   8.149 4.88e-16 ***
+op_typesale      5.2059910  0.0414148 125.704  < 2e-16 ***
+area             0.0130112  0.0006296  20.667  < 2e-16 ***
+op_typesale:area 0.0006654  0.0006112   1.089    0.276    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.6216 on 3972 degrees of freedom
+Multiple R-squared:  0.9493,	Adjusted R-squared:  0.9493 
+F-statistic: 1.859e+04 on 4 and 3972 DF,  p-value: < 2.2e-16
+
+
+ ## two continuous
+> reg_cc <- lm(log(price) ~ rooms + house_type + area + rooms:area,
++              data=riga)
+> summary(reg_cc)
+
+Call:
+lm(formula = log(price) ~ rooms + house_type + area + rooms:area, 
+    data = riga)
+
+Residuals:
+   Min     1Q Median     3Q    Max 
+-9.322 -2.459  1.072  1.967  3.876 
+
+Coefficients:
+                        Estimate Std. Error t value Pr(>|t|)    
+(Intercept)            5.3432057  0.1825449  29.271  < 2e-16 ***
+rooms                  1.2951496  0.0780979  16.584  < 2e-16 ***
+house_typepanel        0.4767327  0.1156260   4.123 3.82e-05 ***
+house_typebrick/panel  0.1014010  0.1352346   0.750  0.45341    
+house_typewood         0.5398897  0.2074369   2.603  0.00928 ** 
+house_typemasonry      0.2794049  0.1145551   2.439  0.01477 *  
+area                   0.0282736  0.0037526   7.534 6.04e-14 ***
+rooms:area            -0.0067402  0.0008669  -7.775 9.54e-15 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 2.493 on 3969 degrees of freedom
+Multiple R-squared:  0.1853,	Adjusted R-squared:  0.1838 
+F-statistic: 128.9 on 7 and 3969 DF,  p-value: < 2.2e-16
+
+
+> # for better interpretation, we can turn kg to g
+> # (variety of values will be more high):
+> laptops$grams <- laptops$weight*1000
+> 
+> # scatterplot weight vs price
+> plot(price_euros~grams, data=laptops)
+> 
+> # compare two fits - linear and quadratic
+> fit_lin <- lm(price_euros~grams, data=laptops)
+> 
+> # polynomial can be done in a couple of ways:
+> fit_q1 = lm(price_euros~poly(grams,2, raw=T), data=laptops)
+> fit_q2 = lm(price_euros~grams + I(grams^2), data=laptops)
+> summary(fit_q1)
+
+Call:
+lm(formula = price_euros ~ poly(grams, 2, raw = T), data = laptops)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-1576.2  -393.0  -101.4   278.6  3923.1 
+
+Coefficients:
+                           Estimate Std. Error t value Pr(>|t|)    
+(Intercept)               2.961e+03  1.297e+02   22.83   <2e-16 ***
+poly(grams, 2, raw = T)1 -1.831e+00  1.085e-01  -16.88   <2e-16 ***
+poly(grams, 2, raw = T)2  4.147e-04  2.136e-05   19.42   <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 563 on 1139 degrees of freedom
+Multiple R-squared:  0.2837,	Adjusted R-squared:  0.2825 
+F-statistic: 225.6 on 2 and 1139 DF,  p-value: < 2.2e-16
+
+  indicates a linear regression model where price_euros (the dependent variable) is being predicted using a second-degree polynomial of grams (the independent variable, representing the weight of laptops in grams).
+
+Key Components:
+lm() Function: Fits a linear model.
+price_euros: The dependent variable, representing the price of laptops in euros.
+poly(grams, 2, raw = T):
+poly() creates a polynomial term.
+grams is the predictor variable (weight of the laptop).
+2 indicates a second-degree polynomial, meaning the model includes both grams and grams^2 as predictors.
+raw = T ensures the polynomial terms are not orthogonalized, so the actual powers (grams, grams^2) are used in the regression.
+
+
+> summary(fit_q2) # will be equal
+
+Call:
+lm(formula = price_euros ~ grams + I(grams^2), data = laptops)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-1576.2  -393.0  -101.4   278.6  3923.1 
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  2.961e+03  1.297e+02   22.83   <2e-16 ***
+grams       -1.831e+00  1.085e-01  -16.88   <2e-16 ***
+I(grams^2)   4.147e-04  2.136e-05   19.42   <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 563 on 1139 degrees of freedom
+Multiple R-squared:  0.2837,	Adjusted R-squared:  0.2825 
+F-statistic: 225.6 on 2 and 1139 DF,  p-value: < 2.2e-16
+
+> 
+> coefficients(fit_q1)
+             (Intercept) poly(grams, 2, raw = T)1 poly(grams, 2, raw = T)2 
+            2.961020e+03            -1.830722e+00             4.146714e-04 
+> # interpretation of weight coefficients:
+> # derivative(price)
+> / (grams) ->
+Error: unexpected '/' in "/"
+> plot(price_euros~grams, data=laptops, main="Regressions for price")
+> lines(laptops$grams, predict(fit_lin), col="red")
+> curve(predict(fit_q1,newdata=data.frame(grams=x)),
++       add=T, col="darkgreen", lwd=2)
+> cols <- c("red", "darkgreen")
+> legend("topleft", legend=c("linear", "quadratic"), 
++        col=cols, lty=1, lwd=1.4, bg="transparent", cex = 0.75)
+> # will be the same, if:
+> # curve(predict(fit_q2,newdata=data.frame(grams=x)),
+> #       add=T, col="blue", lwd=2)
+> # cex - size of text window
+> 
+> # what if cubic?
+> fit_c <- lm(price_euros~poly(grams,3, raw=T), data=laptops)
+> summary(fit_c)
+
+Call:
+lm(formula = price_euros ~ poly(grams, 3, raw = T), data = laptops)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-2128.5  -372.5   -98.1   259.1  3876.8 
+
+Coefficients:
+                           Estimate Std. Error t value Pr(>|t|)    
+(Intercept)               4.854e+03  3.610e+02  13.445  < 2e-16 ***
+poly(grams, 3, raw = T)1 -4.476e+00  4.838e-01  -9.252  < 2e-16 ***
+poly(grams, 3, raw = T)2  1.531e-03  2.001e-04   7.648 4.34e-14 ***
+poly(grams, 3, raw = T)3 -1.412e-07  2.519e-08  -5.607 2.58e-08 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 555.7 on 1138 degrees of freedom
+Multiple R-squared:  0.303,	Adjusted R-squared:  0.3011 
+F-statistic: 164.9 on 3 and 1138 DF,  p-value: < 2.2e-16
+
+> # interpretation:
+> # first derivative, find possible extrema
+> # second derivative - extrema is min or max
+> 
+> plot(price_euros~grams, data=laptops, main="Regressions for price")
+> lines(laptops$grams, predict(fit_lin), col="red")
+> curve(predict(fit_q1,newdata=data.frame(grams=x)),
++       add=T, col="darkgreen", lwd=2)
+> curve(predict(fit_c,newdata=data.frame(grams=x)),
++       add=T, col="blue", lwd=2)
+> cols <- c("red", "darkgreen", "blue")
+> legend("topleft", legend=c("linear", "quadratic", "cubic"), 
++        col=cols, lty=1, lwd=1.4, bg="transparent", cex = 0.75)
+  
+  
+  

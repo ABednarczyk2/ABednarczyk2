@@ -1,0 +1,571 @@
+
+R version 4.3.0 (2023-04-21 ucrt) -- "Already Tomorrow"
+Copyright (C) 2023 The R Foundation for Statistical Computing
+Platform: x86_64-w64-mingw32/x64 (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+[Workspace loaded from ~/new project lesson 5/.RData]
+
+> gc()
+          used (Mb) gc trigger (Mb) max used (Mb)
+Ncells  825693 44.1    1387962 74.2  1387962 74.2
+Vcells 1303541 10.0    8388608 64.0  4866058 37.2
+> library(readxl)
+Warning message:
+package ‘readxl’ was built under R version 4.3.3 
+> data <- read_excel("C:/Users/2022/Desktop/thesis/psid/part/J341536.xlsx")
+> data$cons11 <- data$ER81914 - data$ER81848
+> View(data)
+> data_filtered <- data[!apply(data == 9999999 | data == 9999998, 1, any), ]
+> # Step 1: Fit the model without education
+> model_no_education <- lm(cons11 ~ ER78017 + ER78052 + ER81775, data = data_filtered)
+> 
+> 
+> summary(model_no_education)
+
+Call:
+lm(formula = cons11 ~ ER78017 + ER78052 + ER81775, data = data_filtered)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-466271  -14271   -4288    9083  351519 
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  3.491e+04  6.266e+02  55.717  < 2e-16 ***
+ER78017     -6.558e+01  1.151e+01  -5.698 1.25e-08 ***
+ER78052      2.784e-02  2.312e-03  12.041  < 2e-16 ***
+ER81775      1.269e-01  2.705e-03  46.936  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 23530 on 8852 degrees of freedom
+Multiple R-squared:  0.3239,	Adjusted R-squared:  0.3237 
+F-statistic:  1413 on 3 and 8852 DF,  p-value: < 2.2e-16
+
+> 
+> # Step 3: Residuals of the consumption model (without education)
+> resid_cons11_no_education <- residuals(model_no_education)
+> 
+> # Residuals of the mortgage debt model (remains the same)
+> resid_mortgage <- residuals(lm(ER78052 ~ ER78017 + ER81775, data = data_filtered_valid))
+Error in eval(mf, parent.frame()) : 
+  object 'data_filtered_valid' not found
+> # Step 1: Fit the model without education
+> model_no_education <- lm(cons11 ~ ER78017 + ER78052 + ER81775, data = data_filtered_)
+Error in eval(mf, parent.frame()) : object 'data_filtered_' not found
+> # Step 1: Fit the model without education
+> model_no_education <- lm(cons11 ~ ER78017 + ER78052 + ER81775, data = data_filtered)
+> 
+> # Step 2: Display the regression summary
+> summary(model_no_education)
+
+Call:
+lm(formula = cons11 ~ ER78017 + ER78052 + ER81775, data = data_filtered)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-466271  -14271   -4288    9083  351519 
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  3.491e+04  6.266e+02  55.717  < 2e-16 ***
+ER78017     -6.558e+01  1.151e+01  -5.698 1.25e-08 ***
+ER78052      2.784e-02  2.312e-03  12.041  < 2e-16 ***
+ER81775      1.269e-01  2.705e-03  46.936  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 23530 on 8852 degrees of freedom
+Multiple R-squared:  0.3239,	Adjusted R-squared:  0.3237 
+F-statistic:  1413 on 3 and 8852 DF,  p-value: < 2.2e-16
+
+> 
+> # Step 3: Residuals of the consumption model (without education)
+> resid_cons11_no_education <- residuals(model_no_education)
+> 
+> # Residuals of the mortgage debt model (remains the same)
+> resid_mortgage <- residuals(lm(ER78052 ~ ER78017 + ER81775, data = data_filtered))
+> 
+> # Step 4: Plot residuals (partial regression plot)
+> plot(resid_mortgage, resid_cons11_no_education, xlab = "Residuals of Mortgage Debt", 
++      ylab = "Residuals of Consumption", main = "Partial Regression: Effect of Mortgage Debt on Consumption (No Education)")
+> abline(h = 0, v = 0, col = "red")
+> 
+> # Step 1: Create bins for years of education
+> data_filtered_valid$education_bin <- cut(data_filtered_valid$ER81926,
++                                          breaks = c(-Inf, 5, 11, Inf), 
++                                          labels = c("0-5 years", "6-11 years", "12+ years"),
++                                          right = TRUE)
+Error: object 'data_filtered_valid' not found
+> # Step 1: Create bins for years of education
+> data_filtered$education_bin <- cut(data_filtered$ER81926,
++                                          breaks = c(-Inf, 5, 11, Inf), 
++                                          labels = c("0-5 years", "6-11 years", "12+ years"),
++                                          right = TRUE)
+> 
+> # Exclude rows where ER81926 is 99 (education value 99)
+> data_filtered <- data_filtered[!(data_filtered$ER81926 == 99), ]
+> 
+> # Step 2: Fit the model with the binned education variable
+> model_with_education_bins <- lm(cons11 ~ ER78017 + ER78052 + ER81775 + education_bin, data = data_filtered)
+> 
+> # Step 3: Display the regression summary
+> summary(model_with_education_bins)
+
+Call:
+lm(formula = cons11 ~ ER78017 + ER78052 + ER81775 + education_bin, 
+    data = data_filtered)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-455427  -14068   -4390    9050  352214 
+
+Coefficients:
+                          Estimate Std. Error t value Pr(>|t|)    
+(Intercept)              3.547e+04  2.629e+03  13.490  < 2e-16 ***
+ER78017                 -1.151e+02  1.536e+01  -7.492 7.45e-14 ***
+ER78052                  2.684e-02  2.317e-03  11.580  < 2e-16 ***
+ER81775                  1.253e-01  2.718e-03  46.102  < 2e-16 ***
+education_bin6-11 years -2.236e+03  2.569e+03  -0.870    0.384    
+education_bin12+ years   2.641e+03  2.497e+03   1.057    0.290    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 23450 on 8770 degrees of freedom
+Multiple R-squared:  0.3297,	Adjusted R-squared:  0.3293 
+F-statistic: 862.8 on 5 and 8770 DF,  p-value: < 2.2e-16
+
+> 
+> # Step 4: Residuals of the consumption model with education bins
+> resid_cons11_with_education <- residuals(model_with_education_bins)
+> 
+> # Residuals of the mortgage debt model (remains the same)
+> resid_mortgage <- residuals(lm(ER78052 ~ ER78017 + ER81775, data = data_filtered))
+> 
+> # Step 5: Plot residuals (partial regression plot)
+> plot(resid_mortgage, resid_cons11_with_education, 
++      xlab = "Residuals of Mortgage Debt", 
++      ylab = "Residuals of Consumption",
++      main = "Partial Regression: Effect of Mortgage Debt on Consumption with Education Binned")
+> abline(h = 0, v = 0, col = "red")
+> 
+> # Install and load the car package if not already installed
+> # install.packages("car")
+> library(car)
+Loading required package: carData
+Warning messages:
+1: package ‘car’ was built under R version 4.3.3 
+2: package ‘carData’ was built under R version 4.3.3 
+> 
+> # Fit the model with cons11 (consumption) as the dependent variable and 
+> # age, mortgage debt, income, and education as predictors.
+> model <- lm(cons11 ~ ER78017 + ER78052 + ER81775 + education_bin, data = data_filtered)
+> 
+> # Generate added-variable plots for the model using avPlots function
+> car::avPlots(model)
+> 
+> # Install and load the car package if not already installed
+> # install.packages("car")
+> library(car)
+> 
+> # Fit the model with cons11 (consumption) as the dependent variable and 
+> # age (continuous), mortgage debt, income, and education as predictors.
+> model_continuous_age <- lm(cons11 ~ ER78017 + ER78052 + ER81775 + education_bin, data = data_filtered)
+> 
+> # Generate added-variable plots for the model using avPlots function
+> car::avPlots(model_continuous_age)
+> 
+> # Create categorical age variable (e.g., 18-30, 31-40, 41-50, etc.)
+> data_filtered$age_cat <- cut(data_filtered$ER78017, 
++                              breaks = c(0, 30, 40, 50, 60, 70, 80, Inf), 
++                              labels = c("18-30", "31-40", "41-50", "51-60", "61-70", "71-80", "80+"), 
++                              right = FALSE)
+> 
+> # Fit the model with cons11 (consumption) as the dependent variable and 
+> # age (categorical), mortgage debt, income, and education as predictors
+> model_categorical_age <- lm(cons11 ~ age_cat + ER78052 + ER81775 + education_bin, data = data_filtered)
+> 
+> # Generate added-variable plots for the model using avPlots function
+> library(car)
+> car::avPlots(model_categorical_age)
+Hit <Return> to see next plot: 
+Hit <Return> to see next plot: # Create categorical education variable by binning (e.g., 0-6 years, 7-11 years, 12+ years)
+> data_filtered$education_cat <- cut(data_filtered$ER81926, 
++                                    breaks = c(0, 6, 11, Inf), 
++                                    labels = c("0-6 years", "7-11 years", "12+ years"),
++                                    right = TRUE)
+> 
+> # Exclude 99 (missing value) from education
+> data_filtered <- data_filtered[!(data_filtered$ER81926 == 99), ]
+> 
+> # Fit the model with cons11 (consumption) as the dependent variable and 
+> # age (continuous), mortgage debt, income, and education (categorical) as predictors
+> model_with_education_cat <- lm(cons11 ~ ER78017 + ER78052 + ER81775 + education_cat, data = data_filtered)
+> 
+> # Generate added-variable plots for the model using avPlots function
+> library(car)
+> car::avPlots(model_with_education_cat)
+> 
+> # Function to remove outliers based on the 1st and 99th percentiles
+> remove_outliers <- function(data) {
++     lower_bound <- quantile(data, 0.01, na.rm = TRUE)  # 1st percentile
++     upper_bound <- quantile(data, 0.99, na.rm = TRUE)  # 99th percentile
++     return(data[data >= lower_bound & data <= upper_bound])  # Filter out values outside the bounds
++ }
+> 
+> # Step 1: Remove outliers for each relevant variable
+> data_filtered$ER78017 <- remove_outliers(data_filtered$ER78017)  # Age
+Error in `$<-`:
+! Assigned data `remove_outliers(data_filtered$ER78017)` must be compatible with existing data.
+✖ Existing data has 8776 rows.
+✖ Assigned data has 8646 rows.
+ℹ Only vectors of size 1 are recycled.
+Caused by error in `vectbl_recycle_rhs_rows()`:
+! Can't recycle input of size 8646 to size 8776.
+Run `rlang::last_trace()` to see where the error occurred.
+> # Function to remove outliers based on the 1st and 99th percentiles
+> remove_outliers <- function(data) {
++     lower_bound <- quantile(data, 0.01, na.rm = TRUE)  # 1st percentile
++     upper_bound <- quantile(data, 0.99, na.rm = TRUE)  # 99th percentile
++     return(data[data >= lower_bound & data <= upper_bound])  # Filter out values outside the bounds
++ }
+> 
+> # Step 1: Apply outlier removal and store the cleaned variables
+> age_valid <- remove_outliers(data_filtered$ER78017)  # Age
+> mortgage_valid <- remove_outliers(data_filtered$ER78052)  # Mortgage Debt
+> income_valid <- remove_outliers(data_filtered$ER81775)  # Income
+> consumption_valid <- remove_outliers(data_filtered$cons11)  # Consumption
+> education_valid <- data_filtered$ER81926  # Education is continuous and does not need to be modified
+> 
+> # Step 2: Identify the rows where all variables are valid (i.e., non-NA after outlier removal)
+> valid_rows <- complete.cases(age_valid, mortgage_valid, income_valid, consumption_valid)
+Error in complete.cases(age_valid, mortgage_valid, income_valid, consumption_valid) : 
+  not all arguments have the same length
+> # Function to remove outliers based on the 1st and 99th percentiles
+> remove_outliers <- function(data) {
++     lower_bound <- quantile(data, 0.01, na.rm = TRUE)  # 1st percentile
++     upper_bound <- quantile(data, 0.99, na.rm = TRUE)  # 99th percentile
++     return(data[data >= lower_bound & data <= upper_bound])  # Filter out values outside the bounds
++ }
+> 
+> # Step 1: Remove outliers for each relevant variable (applied to the entire dataset)
+> data_filtered$ER78017 <- remove_outliers(data_filtered$ER78017)  # Age
+Error in `$<-`:
+! Assigned data `remove_outliers(data_filtered$ER78017)` must be compatible with existing data.
+✖ Existing data has 8776 rows.
+✖ Assigned data has 8646 rows.
+ℹ Only vectors of size 1 are recycled.
+Caused by error in `vectbl_recycle_rhs_rows()`:
+! Can't recycle input of size 8646 to size 8776.
+Run `rlang::last_trace()` to see where the error occurred.
+> # Function to remove outliers based on the 1st and 99th percentiles
+> remove_outliers <- function(data) {
++     lower_bound <- quantile(data, 0.01, na.rm = TRUE)  # 1st percentile
++     upper_bound <- quantile(data, 0.99, na.rm = TRUE)  # 99th percentile
++     return(data[data >= lower_bound & data <= upper_bound])  # Filter out values outside the bounds
++ }
+> 
+> # Step 1: Remove outliers for each relevant variable (applied to the entire dataset)
+> age_valid <- remove_outliers(data_filtered$ER78017)  # Age
+> mortgage_valid <- remove_outliers(data_filtered$ER78052)  # Mortgage Debt
+> income_valid <- remove_outliers(data_filtered$ER81775)  # Income
+> consumption_valid <- remove_outliers(data_filtered$cons11)  # Consumption
+> 
+> # Step 2: Create a new data frame keeping only the rows where no variables have NA (after outlier removal)
+> valid_indices <- which(!is.na(age_valid) & !is.na(mortgage_valid) & !is.na(income_valid) & !is.na(consumption_valid))
+Warning messages:
+1: In !is.na(age_valid) & !is.na(mortgage_valid) :
+  longer object length is not a multiple of shorter object length
+2: In !is.na(age_valid) & !is.na(mortgage_valid) & !is.na(income_valid) :
+  longer object length is not a multiple of shorter object length
+3: In !is.na(age_valid) & !is.na(mortgage_valid) & !is.na(income_valid) &  :
+  longer object length is not a multiple of shorter object length
+> 
+> # Step 3: Subset the original data to keep only the valid rows
+> data_filtered_valid <- data_filtered[valid_indices, ]
+> 
+> # Step 4: Exclude 99 from education and 9,999,999 and 9,999,998 from mortgage
+> data_filtered_valid <- data_filtered_valid[!(data_filtered_valid$ER81926 == 99), ]  # Exclude 99 from education
+> data_filtered_valid <- data_filtered_valid[!(data_filtered_valid$ER78052 %in% c(9999999, 9999998)), ]  # Exclude mortgage outliers
+> 
+> # Step 5: Fit the regression model on the cleaned data
+> model <- lm(cons11 ~ ER78017 + ER78052 + ER81775 + ER81926, data = data_filtered_valid)
+> 
+> # Step 6: Display the regression summary
+> summary(model)
+
+Call:
+lm(formula = cons11 ~ ER78017 + ER78052 + ER81775 + ER81926, 
+    data = data_filtered_valid)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-435880  -14117   -4297    9119  354877 
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  2.340e+04  1.549e+03  15.100  < 2e-16 ***
+ER78017     -1.101e+02  1.536e+01  -7.167 8.29e-13 ***
+ER78052      2.554e-02  2.340e-03  10.918  < 2e-16 ***
+ER81775      1.214e-01  2.748e-03  44.190  < 2e-16 ***
+ER81926      1.053e+03  1.006e+02  10.465  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 23400 on 8684 degrees of freedom
+Multiple R-squared:  0.3353,	Adjusted R-squared:  0.335 
+F-statistic:  1095 on 4 and 8684 DF,  p-value: < 2.2e-16
+
+> 
+> # Function to remove outliers based on the 1st and 99th percentiles
+> remove_outliers <- function(data) {
++     lower_bound <- quantile(data, 0.01, na.rm = TRUE)  # 1st percentile
++     upper_bound <- quantile(data, 0.99, na.rm = TRUE)  # 99th percentile
++     return(data[data >= lower_bound & data <= upper_bound])  # Filter out values outside the bounds
++ }
+> 
+> # Step 1: Remove outliers for each relevant variable (applied to the entire dataset)
+> age_valid <- remove_outliers(data_filtered$ER78017)  # Age
+> mortgage_valid <- remove_outliers(data_filtered$ER78052)  # Mortgage Debt
+> income_valid <- remove_outliers(data_filtered$ER81775)  # Income
+> consumption_valid <- remove_outliers(data_filtered$cons11)  # Consumption
+> 
+> # Step 2: Create a new data frame keeping only the rows where no variables have NA (after outlier removal)
+> valid_indices <- which(!is.na(age_valid) & !is.na(mortgage_valid) & !is.na(income_valid) & !is.na(consumption_valid))
+Warning messages:
+1: In !is.na(age_valid) & !is.na(mortgage_valid) :
+  longer object length is not a multiple of shorter object length
+2: In !is.na(age_valid) & !is.na(mortgage_valid) & !is.na(income_valid) :
+  longer object length is not a multiple of shorter object length
+3: In !is.na(age_valid) & !is.na(mortgage_valid) & !is.na(income_valid) &  :
+  longer object length is not a multiple of shorter object length
+> 
+> # Step 3: Subset the original data to keep only the valid rows
+> data_filtered_valid <- data_filtered[valid_indices, ]
+> 
+> # Step 4: Exclude 99 from education and 9,999,999 and 9,999,998 from mortgage
+> data_filtered_valid <- data_filtered_valid[!(data_filtered_valid$ER81926 == 99), ]  # Exclude 99 from education
+> data_filtered_valid <- data_filtered_valid[!(data_filtered_valid$ER78052 %in% c(9999999, 9999998)), ]  # Exclude mortgage outliers
+> 
+> # Step 5: Fit the regression model on the cleaned data
+> model <- lm(cons11 ~ ER78017 + ER78052 + ER81775 + ER81926, data = data_filtered_valid)
+> 
+> # Step 6: Display the regression summary
+> summary(model)
+
+Call:
+lm(formula = cons11 ~ ER78017 + ER78052 + ER81775 + ER81926, 
+    data = data_filtered_valid)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-435880  -14117   -4297    9119  354877 
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  2.340e+04  1.549e+03  15.100  < 2e-16 ***
+ER78017     -1.101e+02  1.536e+01  -7.167 8.29e-13 ***
+ER78052      2.554e-02  2.340e-03  10.918  < 2e-16 ***
+ER81775      1.214e-01  2.748e-03  44.190  < 2e-16 ***
+ER81926      1.053e+03  1.006e+02  10.465  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 23400 on 8684 degrees of freedom
+Multiple R-squared:  0.3353,	Adjusted R-squared:  0.335 
+F-statistic:  1095 on 4 and 8684 DF,  p-value: < 2.2e-16
+
+> 
+> # Install car package if not already installed
+> # install.packages("car")
+> 
+> # Load the car package
+> library(car)
+> 
+> # Step 1: Fit the regression model
+> model <- lm(cons11 ~ ER78017 + ER78052 + ER81775 + ER81926, data = data_filtered_valid)
+> 
+> # Step 2: Plot the AV plots using the car package
+> car::avPlots(model)
+> 
+> # Remove the values 9,999,998 and 9,999,999 from ER80012 (student loans)
+> data_filtered_valid <- data_filtered_valid[!(data_filtered_valid$ER80012 %in% c(9999998, 9999999)), ]
+> 
+> # Load the car package
+> library(car)
+> 
+> # Step 1: Fit the regression model with the new variable for student loans
+> model_with_student_loans <- lm(cons11 ~ ER78017 + ER80012 + ER81775 + ER81926, data = data_filtered_valid)
+> 
+> # Step 2: Plot the AV plots using the car package
+> car::avPlots(model_with_student_loans)
+> 
+> # Function to remove outliers based on the 1st and 99th percentiles
+> remove_outliers <- function(data) {
++     lower_bound <- quantile(data, 0.01, na.rm = TRUE)  # 1st percentile
++     upper_bound <- quantile(data, 0.99, na.rm = TRUE)  # 99th percentile
++     return(data[data >= lower_bound & data <= upper_bound])  # Filter out values outside the bounds
++ }
+> 
+> # Step 1: Remove outliers for each relevant variable
+> age_valid <- remove_outliers(data_filtered$ER78017)  # Age
+> student_loans_valid <- remove_outliers(data_filtered$ER80012)  # Student Loans
+> income_valid <- remove_outliers(data_filtered$ER81775)  # Income
+> consumption_valid <- remove_outliers(data_filtered$cons11)  # Consumption
+> 
+> # Step 2: Combine the valid values and get the indices for rows to keep
+> valid_rows <- which(!is.na(age_valid) & !is.na(student_loans_valid) & !is.na(income_valid) & !is.na(consumption_valid))
+Warning messages:
+1: In !is.na(age_valid) & !is.na(student_loans_valid) :
+  longer object length is not a multiple of shorter object length
+2: In !is.na(age_valid) & !is.na(student_loans_valid) & !is.na(income_valid) :
+  longer object length is not a multiple of shorter object length
+3: In !is.na(age_valid) & !is.na(student_loans_valid) & !is.na(income_valid) &  :
+  longer object length is not a multiple of shorter object length
+> 
+> # Step 3: Subset the original data to keep only the valid rows
+> data_filtered_valid <- data_filtered[valid_rows, ]
+> 
+> # Step 4: Exclude 99 from education and 9,999,998 and 9,999,999 from student loans
+> data_filtered_valid <- data_filtered_valid[!(data_filtered_valid$ER81926 == 99), ]  # Exclude 99 from education
+> data_filtered_valid <- data_filtered_valid[!(data_filtered_valid$ER80012 %in% c(9999998, 9999999)), ]  # Exclude student loan outliers
+> 
+> # Step 5: Fit the regression model
+> model_with_student_loans <- lm(cons11 ~ ER78017 + ER80012 + ER81775 + ER81926, data = data_filtered_valid)
+> 
+> # Step 6: Display the regression summary
+> summary(model_with_student_loans)
+
+Call:
+lm(formula = cons11 ~ ER78017 + ER80012 + ER81775 + ER81926, 
+    data = data_filtered_valid)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-371221  -14073   -4248    9077  364057 
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  2.310e+04  1.557e+03  14.835  < 2e-16 ***
+ER78017     -1.035e+02  1.554e+01  -6.657 2.97e-11 ***
+ER80012      4.853e-02  6.903e-03   7.031 2.21e-12 ***
+ER81775      1.364e-01  2.374e-03  57.436  < 2e-16 ***
+ER81926      1.024e+03  1.028e+02   9.965  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 23490 on 8683 degrees of freedom
+Multiple R-squared:  0.3299,	Adjusted R-squared:  0.3296 
+F-statistic:  1069 on 4 and 8683 DF,  p-value: < 2.2e-16
+
+> 
+> # Function to remove outliers based on the 1st and 99th percentiles
+> remove_outliers <- function(data) {
++     lower_bound <- quantile(data, 0.01, na.rm = TRUE)  # 1st percentile
++     upper_bound <- quantile(data, 0.99, na.rm = TRUE)  # 99th percentile
++     return(data[data >= lower_bound & data <= upper_bound])  # Filter out values outside the bounds
++ }
+> 
+> # Step 1: Remove outliers for each relevant variable
+> age_valid <- remove_outliers(data_filtered$ER78017)  # Age
+> credit_card_debt_valid <- remove_outliers(data_filtered$ER80002)  # Credit/Store Card Debt
+> income_valid <- remove_outliers(data_filtered$ER81775)  # Income
+> consumption_valid <- remove_outliers(data_filtered$cons11)  # Consumption
+> 
+> # Step 2: Combine the valid values and get the indices for rows to keep
+> valid_rows <- which(!is.na(age_valid) & !is.na(credit_card_debt_valid) & !is.na(income_valid) & !is.na(consumption_valid))
+Warning messages:
+1: In !is.na(age_valid) & !is.na(credit_card_debt_valid) :
+  longer object length is not a multiple of shorter object length
+2: In !is.na(age_valid) & !is.na(credit_card_debt_valid) & !is.na(income_valid) :
+  longer object length is not a multiple of shorter object length
+3: In !is.na(age_valid) & !is.na(credit_card_debt_valid) & !is.na(income_valid) &  :
+  longer object length is not a multiple of shorter object length
+> 
+> # Step 3: Subset the original data to keep only the valid rows
+> data_filtered_valid <- data_filtered[valid_rows, ]
+> 
+> # Step 4: Exclude 99 from education and 9,999,998 and 9,999,999 from credit/store card debt
+> data_filtered_valid <- data_filtered_valid[!(data_filtered_valid$ER81926 == 99), ]  # Exclude 99 from education
+> data_filtered_valid <- data_filtered_valid[!(data_filtered_valid$ER80002 %in% c(9999998, 9999999)), ]  # Exclude credit/store card debt outliers
+> 
+> # Step 5: Fit the regression model
+> model_with_credit_card_debt <- lm(cons11 ~ ER78017 + ER80002 + ER81775 + ER81926, data = data_filtered_valid)
+> 
+> # Step 6: Display the regression summary
+> summary(model_with_credit_card_debt)
+
+Call:
+lm(formula = cons11 ~ ER78017 + ER80002 + ER81775 + ER81926, 
+    data = data_filtered_valid)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-365000  -13947   -4258    8896  364826 
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  2.304e+04  1.545e+03  14.911  < 2e-16 ***
+ER78017     -1.206e+02  1.533e+01  -7.863 4.19e-15 ***
+ER80002      3.665e-01  3.035e-02  12.077  < 2e-16 ***
+ER81775      1.349e-01  2.363e-03  57.078  < 2e-16 ***
+ER81926      1.072e+03  1.002e+02  10.702  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 23380 on 8689 degrees of freedom
+Multiple R-squared:  0.3369,	Adjusted R-squared:  0.3366 
+F-statistic:  1104 on 4 and 8689 DF,  p-value: < 2.2e-16
+
+> 
+> # Ensure the car package is installed and loaded
+> # install.packages("car") # Uncomment if car package is not installed
+> library(car)
+> 
+> # Fit the regression model
+> model_with_credit_card_debt <- lm(cons11 ~ ER78017 + ER80002 + ER81775 + ER81926, data = data_filtered_valid)
+> 
+> # Generate the added variable plots (AV plots)
+> car::avPlots(model_with_credit_card_debt)
+> 
+> # Fit the regression model with medical bills as a predictor
+> model_with_medical_bills <- lm(cons11 ~ ER78017 + ER80017 + ER81775 + ER81926, data = data_filtered_valid)
+> 
+> # Generate the added variable plots (AV plots)
+> car::avPlots(model_with_medical_bills)
+> 
+> summary(model_with_medical_bills)
+
+Call:
+lm(formula = cons11 ~ ER78017 + ER80017 + ER81775 + ER81926, 
+    data = data_filtered_valid)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-373392  -14189   -4234    9079  364017 
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  2.211e+04  1.557e+03  14.196  < 2e-16 ***
+ER78017     -1.172e+02  1.546e+01  -7.582 3.76e-14 ***
+ER80017      1.767e-02  2.378e-02   0.743    0.458    
+ER81775      1.366e-01  2.379e-03  57.411  < 2e-16 ***
+ER81926      1.185e+03  1.006e+02  11.778  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 23570 on 8689 degrees of freedom
+Multiple R-squared:  0.3258,	Adjusted R-squared:  0.3255 
+F-statistic:  1050 on 4 and 8689 DF,  p-value: < 2.2e-16

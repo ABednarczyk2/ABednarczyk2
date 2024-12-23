@@ -1,0 +1,198 @@
+
+gravity_data <- readRDS("C:/Users/2022/Desktop/gravity/Gravity_V202211.rds")
+> 
+# Select relevant variables
+model_data <- gravity_data %>%
++     select(tradeflow_baci, gdp_o, gdp_d, dist, contig, comlang_off, comlang_ethno, comcol, comrelig) %>%
++     filter(!is.na(tradeflow_baci), !is.na(gdp_o), !is.na(gdp_d), !is.na(dist)) # Remove missing values
+ 
+> # Log-transform trade flow, GDP, and distance
+> model_data <- model_data %>%
++     mutate(
++         log_tradeflow = log(tradeflow_baci + 1),  # Add 1 to avoid log(0)
++         log_gdp_o = log(gdp_o),
++         log_gdp_d = log(gdp_d),
++         log_dist = log(dist)
++     )
+> 
+> # Step 2: Fit the Gravity Model
+> gravity_model <- lm(log_tradeflow ~ log_gdp_o + log_gdp_d + log_dist + contig + 
++                         comlang_off + comlang_ethno + comcol + comrelig, data = model_data)
+> 
+> # View the model summary
+> summary(gravity_model)
+
+Call:
+lm(formula = log_tradeflow ~ log_gdp_o + log_gdp_d + log_dist + 
+    contig + comlang_off + comlang_ethno + comcol + comrelig, 
+    data = model_data)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-14.9010  -1.3121   0.2199   1.5111  11.9362 
+
+Coefficients:
+                Estimate Std. Error  t value Pr(>|t|)    
+(Intercept)   -18.211044   0.052274 -348.375   <2e-16 ***
+log_gdp_o       1.182851   0.001420  832.905   <2e-16 ***
+log_gdp_d       0.899078   0.001394  644.959   <2e-16 ***
+log_dist       -1.258713   0.004162 -302.457   <2e-16 ***
+contig          1.093889   0.023341   46.866   <2e-16 ***
+comlang_off     0.474336   0.015119   31.374   <2e-16 ***
+comlang_ethno   0.409200   0.014750   27.743   <2e-16 ***
+comcol          0.630473   0.011888   53.034   <2e-16 ***
+comrelig       -0.010805   0.013231   -0.817    0.414    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 2.347 on 568977 degrees of freedom
+  (38278 observations deleted due to missingness)
+Multiple R-squared:  0.6552,	Adjusted R-squared:  0.6552 
+F-statistic: 1.352e+05 on 8 and 568977 DF,  p-value: < 2.2e-16
+
+> 
+> # Step 3: Interpret coefficients
+> # GDP variables (log_gdp_o, log_gdp_d): Economic size of trading partners
+> # log_dist: Negative effect of distance on trade
+> # contig: Positive impact of shared borders
+> # Cultural dummies (comlang_off, comlang_ethno, comcol, comrelig): Cultural ties' effects on trade
+> 
+> # Step 4: Visualization of Results
+> # Example: Trade flow vs. distance
+> ggplot(model_data, aes(x = log_dist, y = log_tradeflow)) +
++     geom_point(alpha = 0.5) +
++     geom_smooth(method = "lm", color = "blue") +
++     labs(title = "Log Trade Flow vs Log Distance", x = "Log(Distance)", y = "Log(Trade Flow)")
+`geom_smooth()` using formula = 'y ~ x'
+> 
+> # Load necessary packages
+> install.packages("dplyr")
+Error in install.packages : Updating loaded packages
+> install.packages("ggplot2")
+Error in install.packages : Updating loaded packages
+> 
+> library(dplyr)
+> library(ggplot2)
+> gravity_data <- readRDS("C:/Users/2022/Desktop/gravity/Gravity_V202211.rds")
+> model_data <- gravity_data %>%
++     select(tradeflow_baci, gdp_o, gdp_d, dist, contig, comlang_off, comlang_ethno, comcol, comrelig) %>%
++     filter(!is.na(tradeflow_baci), !is.na(gdp_o), !is.na(gdp_d), !is.na(dist)) # Remove missing values
+> 
+> # Log-transform trade flow, GDP, and distance
+> model_data <- model_data %>%
++     mutate(
++         log_tradeflow = log(tradeflow_baci + 1),  # Add 1 to avoid log(0)
++         log_gdp_o = log(gdp_o),
++         log_gdp_d = log(gdp_d),
++         log_dist = log(dist)
++     )
+> 
+> # Step 2: Fit the Gravity Model
+> gravity_model <- lm(log_tradeflow ~ log_gdp_o + log_gdp_d + log_dist + contig + 
++                         comlang_off + comlang_ethno + comcol + comrelig, data = model_data)
+> 
+> # View the model summary
+> summary(gravity_model)
+
+Call:
+lm(formula = log_tradeflow ~ log_gdp_o + log_gdp_d + log_dist + 
+    contig + comlang_off + comlang_ethno + comcol + comrelig, 
+    data = model_data)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-14.9010  -1.3121   0.2199   1.5111  11.9362 
+
+Coefficients:
+                Estimate Std. Error  t value Pr(>|t|)    
+(Intercept)   -18.211044   0.052274 -348.375   <2e-16 ***
+log_gdp_o       1.182851   0.001420  832.905   <2e-16 ***
+log_gdp_d       0.899078   0.001394  644.959   <2e-16 ***
+log_dist       -1.258713   0.004162 -302.457   <2e-16 ***
+contig          1.093889   0.023341   46.866   <2e-16 ***
+comlang_off     0.474336   0.015119   31.374   <2e-16 ***
+comlang_ethno   0.409200   0.014750   27.743   <2e-16 ***
+comcol          0.630473   0.011888   53.034   <2e-16 ***
+comrelig       -0.010805   0.013231   -0.817    0.414    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 2.347 on 568977 degrees of freedom
+  (38278 observations deleted due to missingness)
+Multiple R-squared:  0.6552,	Adjusted R-squared:  0.6552 
+F-statistic: 1.352e+05 on 8 and 568977 DF,  p-value: < 2.2e-16
+
+> ggplot(model_data, aes(x = log_dist, y = log_tradeflow)) +
++     geom_point(alpha = 0.5) +
++     geom_smooth(method = "lm", color = "blue") +
++     labs(title = "Log Trade Flow vs Log Distance", x = "Log(Distance)", y = "Log(Trade Flow)")
+`geom_smooth()` using formula = 'y ~ x'
+> 
+> 
+> 
+> 
+> R --version
+Error: object 'R' not found
+> install.packages("lmtest")
+WARNING: Rtools is required to build R packages but is not currently installed. Please download and install the appropriate version of Rtools before proceeding:
+
+https://cran.rstudio.com/bin/windows/Rtools/
+Installing package into ‘C:/Users/2022/AppData/Local/R/win-library/4.3’
+(as ‘lib’ is unspecified)
+trying URL 'https://cran.rstudio.com/bin/windows/contrib/4.3/lmtest_0.9-40.zip'
+Content type 'application/zip' length 407054 bytes (397 KB)
+downloaded 397 KB
+
+package ‘lmtest’ successfully unpacked and MD5 sums checked
+
+The downloaded binary packages are in
+	C:\Users\2022\AppData\Local\Temp\Rtmp2D4Why\downloaded_packages
+> library(lmtest)
+Loading required package: zoo
+
+Attaching package: ‘zoo’
+
+The following objects are masked from ‘package:base’:
+
+    as.Date, as.Date.numeric
+
+Warning messages:
+1: package ‘lmtest’ was built under R version 4.3.3 
+2: package ‘zoo’ was built under R version 4.3.3 
+> 
+> # Example: Log-transformed gravity model with cultural factors
+> model <- lm(log_tradeflow ~ log_gdp_o + log_gdp_d + log_dist + 
++                 contig + comlang_off + comlang_ethno + comcol + comrelig, 
++             data = model_data)
+> 
+> # Run the Ramsey RESET test
+> reset_test <- resettest(model)
+> 
+> # Display the results
+> print(reset_test)
+
+	RESET test
+
+data:  model
+RESET = 7897, df1 = 2, df2 = 568975, p-value < 2.2e-16
+
+> 
+> plot(model$residuals)
+> 
+> model2 <- lm(log_tradeflow ~ log_gdp_o + log_gdp_d + log_dist + 
++                  contig + comlang_off + comlang_ethno + comcol + comrelig + 
++                  I(log_gdp_o^2) + I(log_gdp_d^2), 
++              data = model_data)
+> 
+> 
+> model2 <- lm(log_tradeflow ~ log_gdp_o + log_gdp_d + log_dist + 
++ contig + comlang_off + comlang_ethno + comcol + comrelig + 
++ I(log_gdp_o^2) + I(log_gdp_d^2), 
++ data = model_data)
+> > 
+Error: unexpected '>' in ">"
+> model2 <- lm(log_tradeflow ~ log_gdp_o + log_gdp_d + log_dist + 
++ contig + comlang_off + comlang_ethno + comcol + comrelig + 
++ I(log_gdp_o^2) + I(log_gdp_d^2), 
++ data = model_data)
+> 

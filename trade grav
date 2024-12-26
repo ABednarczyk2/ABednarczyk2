@@ -1,0 +1,45 @@
+> file_path <- "C:\\Users\\2022\\Desktop\\gravity\\Gravity_V202211.csv"
+> 
+> # Load the data
+> gravity_data <- read_csv(file_path)
+
+
+> install.packages("readr")
+WARNING: Rtools is required to build R packages but is not currently installed. Please download and install the appropriate version of Rtools before proceeding:
+
+https://cran.rstudio.com/bin/windows/Rtools/
+Installing package into ‘C:/Users/2022/AppData/Local/R/win-library/4.3’
+(as ‘lib’ is unspecified)
+trying URL 'https://cran.rstudio.com/bin/windows/contrib/4.3/readr_2.1.5.zip'
+Content type 'application/zip' length 1191713 bytes (1.1 MB)
+downloaded 1.1 MB
+
+package ‘readr’ successfully unpacked and MD5 sums checked
+
+The downloaded binary packages are in
+	C:\Users\2022\AppData\Local\Temp\RtmpOOBMsj\downloaded_packages
+> library(readr)
+Warning message:
+package ‘readr’ was built under R version 4.3.3 
+> file_path <- "C:\\Users\\2022\\Desktop\\gravity\\Gravity_V202211.csv"
+> gravity_data <- read_csv(file_path)
+Rows: 4699296 Columns: 87                                                                                                                       
+── Column specification ─────────────────────────────────────────────────────────────────────────────────────
+Delimiter: ","
+chr (17): country_id_o, country_id_d, iso3_o, iso3_d, main_city_source_o, main_city_source_d, legal_old_o...
+dbl (58): year, iso3num_o, iso3num_d, country_exists_o, country_exists_d, gmt_offset_2020_o, gmt_offset_2...
+lgl (12): distw_harmonic_jh, distw_arithmetic_jh, entry_cost_o, entry_cost_d, entry_proc_o, entry_proc_d,...
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+Warning message:
+One or more parsing issues, call `problems()` on your data frame for details, e.g.:
+  dat <- vroom(...)
+  problems(dat) 
+> print(file_path)
+[1] "C:\\Users\\2022\\Desktop\\gravity\\Gravity_V202211.csv"
+> 
+> View(gravity_data)
+> View(gravity_data)
+> View(gravity_data)
+View(gravity_data)

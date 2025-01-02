@@ -1,0 +1,328 @@
+
+R version 4.3.0 (2023-04-21 ucrt) -- "Already Tomorrow"
+Copyright (C) 2023 The R Foundation for Statistical Computing
+Platform: x86_64-w64-mingw32/x64 (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+[Workspace loaded from ~/new project lesson 5/.RData]
+
+> # Prompt the user to choose a file
+> file_path <- file.choose()
+> 
+> 
+> 
+> # Read the chosen file (assuming it's a CSV)
+> data <- read.excel(file_path)
+Error in read.excel(file_path) : could not find function "read.excel"
+> install.packages("readxl")  # Install if not already installed
+WARNING: Rtools is required to build R packages but is not currently installed. Please download and install the appropriate version of Rtools before proceeding:
+
+https://cran.rstudio.com/bin/windows/Rtools/
+Installing package into ‘C:/Users/2022/AppData/Local/R/win-library/4.3’
+(as ‘lib’ is unspecified)
+trying URL 'https://cran.rstudio.com/bin/windows/contrib/4.3/readxl_1.4.3.zip'
+Content type 'application/zip' length 1198815 bytes (1.1 MB)
+downloaded 1.1 MB
+
+package ‘readxl’ successfully unpacked and MD5 sums checked
+Warning in install.packages :
+  cannot remove prior installation of package ‘readxl’
+Warning in install.packages :
+  problem copying C:\Users\2022\AppData\Local\R\win-library\4.3\00LOCK\readxl\libs\x64\readxl.dll to C:\Users\2022\AppData\Local\R\win-library\4.3\readxl\libs\x64\readxl.dll: Permission denied
+Warning in install.packages :
+  restored ‘readxl’
+
+The downloaded binary packages are in
+	C:\Users\2022\AppData\Local\Temp\RtmpOM01sI\downloaded_packages
+> library(readxl)  # Load the package
+Warning message:
+package ‘readxl’ was built under R version 4.3.3 
+> 
+> excel_data <- read_excel(file_path)
+> excel_data$cons21 <- excel_data$ER81914 - excle_data$ER81848
+Error: object 'excle_data' not found
+> excel_data$cons21 <- excel_data$ER81914 - excel_data$ER81848
+> filtered_data <- excel_data %>%
++     filter(!ER78052 %in% c(9999998, 9999999) & !ER78073 %in% c(9999998, 9999999))
+Error in excel_data %>% filter(!ER78052 %in% c(9999998, 9999999) & !ER78073 %in%  : 
+  could not find function "%>%"
+> install.packages("dplyr")  # Install dplyr package
+WARNING: Rtools is required to build R packages but is not currently installed. Please download and install the appropriate version of Rtools before proceeding:
+
+https://cran.rstudio.com/bin/windows/Rtools/
+Installing package into ‘C:/Users/2022/AppData/Local/R/win-library/4.3’
+(as ‘lib’ is unspecified)
+trying URL 'https://cran.rstudio.com/bin/windows/contrib/4.3/dplyr_1.1.4.zip'
+Content type 'application/zip' length 1563990 bytes (1.5 MB)
+downloaded 1.5 MB
+
+package ‘dplyr’ successfully unpacked and MD5 sums checked
+Warning in install.packages :
+  cannot remove prior installation of package ‘dplyr’
+Warning in install.packages :
+  problem copying C:\Users\2022\AppData\Local\R\win-library\4.3\00LOCK\dplyr\libs\x64\dplyr.dll to C:\Users\2022\AppData\Local\R\win-library\4.3\dplyr\libs\x64\dplyr.dll: Permission denied
+Warning in install.packages :
+  restored ‘dplyr’
+
+The downloaded binary packages are in
+	C:\Users\2022\AppData\Local\Temp\RtmpOM01sI\downloaded_packages
+> library(dplyr)  # Load the dplyr package
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+Warning message:
+package ‘dplyr’ was built under R version 4.3.3 
+> filtered_data <- excel_data %>%
++     filter(!ER78052 %in% c(9999998, 9999999) & !ER78073 %in% c(9999998, 9999999))
+> if ("ER78052" %in% names(filtered_data) & "ER78073" %in% names(filtered_data)) {
++     filtered_data$totmort <- filtered_data$ER78052 + filtered_data$ER78073
++ } else {
++     stop("One or both variables (ER78052, ER78073) are missing from the filtered_data dataframe.")
++ }
+> View(filtered_data)
+> filtered_data <- filtered_data %>%
++     mutate(
++         ER81926 = ifelse(ER81926 == 99, NA, ER81926),
++         ER78017 = ifelse(ER78017 == 999, NA, ER78017)
++     )
+> 
+> # Define the function to filter outliers
+> remove_outliers <- function(data, col) {
++     q <- quantile(data[[col]], probs = c(0.01, 0.99), na.rm = TRUE)  # 1st and 99th percentiles
++     data <- data %>%
++         filter(data[[col]] >= q[1], data[[col]] <= q[2])
++     return(data)
++ }
+> 
+> # Apply the function to multiple columns
+> filtered_data <- filtered_data %>%
++     remove_outliers("ER81775") %>%
++     remove_outliers("totmort") %>%
++     remove_outliers("cons21")
+> 
+> library(dplyr)
+> 
+> # Bin ER81926 into two groups
+> filtered_data <- filtered_data %>%
++     mutate(
++         ER81926_bin = case_when(
++             ER81926 >= 0 & ER81926 <= 12 ~ "0-12",
++             ER81926 >= 13 & ER81926 <= 17 ~ "13-17",
++             TRUE ~ NA_character_  # Assign NA for values outside the range
++         )
++     )
+> 
+> install.packages("ggplot2")
+WARNING: Rtools is required to build R packages but is not currently installed. Please download and install the appropriate version of Rtools before proceeding:
+
+https://cran.rstudio.com/bin/windows/Rtools/
+Installing package into ‘C:/Users/2022/AppData/Local/R/win-library/4.3’
+(as ‘lib’ is unspecified)
+trying URL 'https://cran.rstudio.com/bin/windows/contrib/4.3/ggplot2_3.5.1.zip'
+Content type 'application/zip' length 4963551 bytes (4.7 MB)
+downloaded 4.7 MB
+
+package ‘ggplot2’ successfully unpacked and MD5 sums checked
+
+The downloaded binary packages are in
+	C:\Users\2022\AppData\Local\Temp\RtmpOM01sI\downloaded_packages
+> library(ggplot2)
+Warning message:
+package ‘ggplot2’ was built under R version 4.3.3 
+> View(filtered_data)
+> model <- lm(
++     cons21 ~ ER81926 + ER78017 + ER81775_bin, 
++     data = data_filtered, 
++     weights = ER81958
++ )
+Error in eval(mf, parent.frame()) : object 'data_filtered' not found
+> model <- lm(
++     cons21 ~ ER81926 + ER78017 + ER81775_bin, 
++     data = filtered_data, 
++     weights = ER81958
++ )
+Error in eval(predvars, data, env) : object 'ER81775_bin' not found
+> model <- lm(
++     cons21 ~ ER81926_bin + ER78017 + ER81775, 
++     data = filtered_data, 
++     weights = ER81958
++ )
+> 
+> model2 <- lm(
++     +     cons21 ~ ER81926_bin + ER78017 + ER81775+totmort, 
++     +     data = filtered_data, 
+Error: unexpected '=' in:
+"    +     cons21 ~ ER81926_bin + ER78017 + ER81775+totmort, 
+    +     data ="
+> 
+> > model2 <- lm(
+Error: unexpected '>' in ">"
+> # Define the linear model
+> model2 <- lm(
++     cons21 ~ ER81926_bin + ER78017 + ER81775 + totmort, 
++     data = filtered_data
++ )
+> 
+> # Collect residuals from both models
+> residuals_model1 <- resid(model)  # Assuming 'model' is your first model
+> residuals_model2 <- resid(model2)  # Assuming 'model2' is your second model
+> 
+> # Plot residuals from model 1 vs model 2
+> plot(residuals_model1, residuals_model2, 
++      xlab = "Residuals from Model 1", 
++      ylab = "Residuals from Model 2", 
++      main = "Residuals from Model 1 vs Model 2")
+> 
+> # Add trendline
+> abline(lm(residuals_model2 ~ residuals_model1), col = "blue")
+> 
+> library(ggplot2)
+> 
+> # Create a data frame for plotting
+> residuals_df <- data.frame(
++     residuals_model1 = residuals_model1,
++     residuals_model2 = residuals_model2
++ )
+> 
+> # Plot with trendline
+> ggplot(residuals_df, aes(x = residuals_model1, y = residuals_model2)) +
++     geom_point() +  # Scatter plot
++     geom_smooth(method = "lm", col = "blue") +  # Trendline
++     labs(x = "Residuals from Model 1", y = "Residuals from Model 2", 
++          title = "Residuals from Model 1 vs Model 2") 
+`geom_smooth()` using formula = 'y ~ x'
+> 
+> library(ggplot2)
+> 
+> # Create a data frame for plotting
+> residuals_df <- data.frame(
++     residuals_model1 = residuals_model1,
++     residuals_model2 = residuals_model2
++ )
+> 
+> # Plot with trendline
+> ggplot(residuals_df, aes(x = residuals_model1, y = residuals_model2)) +
++     geom_point() +  # Scatter plot
++     geom_smooth(method = "lm", col = "blue") +  # Trendline
++     labs(x = "Residuals from Model 1", y = "Residuals from Model 2", 
++          title = "Residuals from Model 1 vs Model 2") 
+`geom_smooth()` using formula = 'y ~ x'
+> 
+> # Linear regression of residuals from model 2 on residuals from model 1
+> residuals_regression <- lm(residuals_model2 ~ residuals_model1)
+> 
+> # View regression summary
+> summary(residuals_regression)
+
+Call:
+lm(formula = residuals_model2 ~ residuals_model1)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-4261.7   -21.4   360.2   462.2  1046.7 
+
+Coefficients:
+                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)      -4.898e+02  9.335e+00  -52.47   <2e-16 ***
+residuals_model1  9.976e-01  5.236e-04 1905.18   <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 864.7 on 8586 degrees of freedom
+Multiple R-squared:  0.9976,	Adjusted R-squared:  0.9976 
+F-statistic: 3.63e+06 on 1 and 8586 DF,  p-value: < 2.2e-16
+
+> 
+> # Perform ANOVA on the residuals regression model
+> anova(residuals_regression)
+Analysis of Variance Table
+
+Response: residuals_model2
+                   Df     Sum Sq    Mean Sq F value    Pr(>F)    
+residuals_model1    1 2.7142e+12 2.7142e+12 3629726 < 2.2e-16 ***
+Residuals        8586 6.4203e+09 7.4777e+05                      
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+> 
+> # Perform ANOVA comparing Model 1 and Model 2
+> anova(model1, model2)
+Error: object 'model1' not found
+> # Perform ANOVA comparing Model 1 and Model 2
+> anova(model, model2)
+Analysis of Variance Table
+
+Model 1: cons21 ~ ER81926_bin + ER78017 + ER81775
+Model 2: cons21 ~ ER81926_bin + ER78017 + ER81775 + totmort
+  Res.Df        RSS Df  Sum of Sq      F    Pr(>F)    
+1   8584 6.6997e+13                                   
+2   8583 2.7206e+12  1 6.4276e+13 202779 < 2.2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Yes, the ANOVA table you provided indicates that adding totmort significantly improves the model. Here's the breakdown:
+
+Key Elements:
+Res.Df (Residual Degrees of Freedom):
+
+For Model 1, the residual degrees of freedom is 8584.
+For Model 2, the residual degrees of freedom is 8583, reflecting the addition of totmort.
+RSS (Residual Sum of Squares):
+
+Model 1 has an RSS of 6.6997e+13.
+Model 2 has an RSS of 2.7206e+12, which is much lower than Model 1, indicating that Model 2 explains much more of the variation in cons21.
+Sum of Sq (Sum of Squares):
+
+The Sum of Squares for the model is 6.4276e+13, which represents the reduction in the residual sum of squares when totmort is added to the model. This shows that totmort explains a substantial portion of the variance in cons21.
+F value:
+
+The F-statistic is 202779, which is very large, indicating that the improvement in model fit from adding totmort is highly significant.
+Pr(>F):
+
+The p-value is < 2.2e-16, which is extremely small, suggesting that adding totmort significantly improves the model's ability to explain the variance in cons21.
+Conclusion:
+The p-value < 2.2e-16 indicates that adding totmort to Model 2 significantly improves the model. This means that totmort is an important predictor that explains additional variance in cons21 beyond what was explained by the variables in Model 1.
+
+Thus, Model 2 is a better fit for the data than Model 1, with totmort making a meaningful contribution to explaining cons21.
+
+Let me know if you need more clarification or help with further analysis!
+
+
+
+
+
+
+
+but when i regressed model on model r^2 was 0.99 sth so how can it improve the model significantly
+the distinction between two different kinds of analysis:
+
+Regression of Model 2 on Model 1's residuals (i.e., comparing residuals) – This is about how well the residuals from Model 1 explain the residuals of Model 2. This type of comparison checks whether the unexplained variance from Model 1 is captured by Model 2. If the R² value is very high (e.g., 0.99), this suggests that the residuals of Model 2 can almost perfectly be explained by the residuals of Model 1, meaning the models share a lot of similar unexplained structure.
+
+ANOVA comparing Model 1 and Model 2 – This compares the overall fit of the two models, testing whether the inclusion of totmort in Model 2 improves the fit significantly in terms of explaining variance in cons21. The fact that the R² from the residual regression is very high does not directly tell you about how well the models fit overall, which is what the ANOVA is examining.
+
+Why Adding totmort Can Still Improve the Model:
+Adding totmort improves the overall fit of the model in terms of explaining more variance in the dependent variable (cons21). This improvement is reflected in the ANOVA results, where adding totmort significantly reduces the residual sum of squares (RSS). The low p-value (< 2.2e-16) indicates that totmort contributes meaningfully to explaining the variance in cons21.
+
+R² and residuals regression:
+
+When you regress Model 2 on the residuals of Model 1, you're examining if the unexplained variance from Model 1 is being captured by Model 2. The very high R² (close to 1) in this case suggests that Model 2 does a good job of explaining the residuals of Model 1. However, this does not negate the fact that adding totmort to the model improves the model's ability to explain the variation in the original dependent variable (cons21), which is what the ANOVA is testing.
+
+In other words, even if the residuals are highly related (indicating a similar pattern of unexplained variance), adding totmort still brings in new information that improves the fit of the model in terms of explaining the outcome variable cons21.

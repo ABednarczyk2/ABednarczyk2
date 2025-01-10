@@ -1,0 +1,999 @@
+ Max.   : NA   Max.   : NA      Max.   : NA                             Max.   : NA   Max.   : NA  
+   sever_year   sib_conflict     pop_o         pop_d         gdp_o         gdp_d        gdpcap_o  
+ Min.   : NA   Min.   : NA   Min.   : NA   Min.   : NA   Min.   : NA   Min.   : NA   Min.   : NA  
+ 1st Qu.: NA   1st Qu.: NA   1st Qu.: NA   1st Qu.: NA   1st Qu.: NA   1st Qu.: NA   1st Qu.: NA  
+ Median : NA   Median : NA   Median : NA   Median : NA   Median : NA   Median : NA   Median : NA  
+ Mean   :NaN   Mean   :NaN   Mean   :NaN   Mean   :NaN   Mean   :NaN   Mean   :NaN   Mean   :NaN  
+ 3rd Qu.: NA   3rd Qu.: NA   3rd Qu.: NA   3rd Qu.: NA   3rd Qu.: NA   3rd Qu.: NA   3rd Qu.: NA  
+ Max.   : NA   Max.   : NA   Max.   : NA   Max.   : NA   Max.   : NA   Max.   : NA   Max.   : NA  
+    gdpcap_d   pop_source_o       pop_source_d       gdp_source_o       gdp_source_d         gdp_ppp_o  
+ Min.   : NA   Length:0           Length:0           Length:0           Length:0           Min.   : NA  
+ 1st Qu.: NA   Class :character   Class :character   Class :character   Class :character   1st Qu.: NA  
+ Median : NA   Mode  :character   Mode  :character   Mode  :character   Mode  :character   Median : NA  
+ Mean   :NaN                                                                               Mean   :NaN  
+ 3rd Qu.: NA                                                                               3rd Qu.: NA  
+ Max.   : NA                                                                               Max.   : NA  
+   gdp_ppp_d    gdpcap_ppp_o  gdpcap_ppp_d   pop_pwt_o     pop_pwt_d   gdp_ppp_pwt_o gdp_ppp_pwt_d
+ Min.   : NA   Min.   : NA   Min.   : NA   Min.   : NA   Min.   : NA   Min.   : NA   Min.   : NA  
+ 1st Qu.: NA   1st Qu.: NA   1st Qu.: NA   1st Qu.: NA   1st Qu.: NA   1st Qu.: NA   1st Qu.: NA  
+ Median : NA   Median : NA   Median : NA   Median : NA   Median : NA   Median : NA   Median : NA  
+ Mean   :NaN   Mean   :NaN   Mean   :NaN   Mean   :NaN   Mean   :NaN   Mean   :NaN   Mean   :NaN  
+ 3rd Qu.: NA   3rd Qu.: NA   3rd Qu.: NA   3rd Qu.: NA   3rd Qu.: NA   3rd Qu.: NA   3rd Qu.: NA  
+ Max.   : NA   Max.   : NA   Max.   : NA   Max.   : NA   Max.   : NA   Max.   : NA   Max.   : NA  
+     gatt_o        gatt_d        wto_o         wto_d          eu_o          eu_d        fta_wto   
+ Min.   : NA   Min.   : NA   Min.   : NA   Min.   : NA   Min.   : NA   Min.   : NA   Min.   : NA  
+ 1st Qu.: NA   1st Qu.: NA   1st Qu.: NA   1st Qu.: NA   1st Qu.: NA   1st Qu.: NA   1st Qu.: NA  
+ Median : NA   Median : NA   Median : NA   Median : NA   Median : NA   Median : NA   Median : NA  
+ Mean   :NaN   Mean   :NaN   Mean   :NaN   Mean   :NaN   Mean   :NaN   Mean   :NaN   Mean   :NaN  
+ 3rd Qu.: NA   3rd Qu.: NA   3rd Qu.: NA   3rd Qu.: NA   3rd Qu.: NA   3rd Qu.: NA   3rd Qu.: NA  
+ Max.   : NA   Max.   : NA   Max.   : NA   Max.   : NA   Max.   : NA   Max.   : NA   Max.   : NA  
+  fta_wto_raw  rta_coverage         rta_type         entry_cost_o   entry_cost_d   entry_proc_o  
+ Min.   : NA   Length:0           Length:0           Mode:logical   Mode:logical   Mode:logical  
+ 1st Qu.: NA   Class :character   Class :character                                               
+ Median : NA   Mode  :character   Mode  :character                                               
+ Mean   :NaN                                                                                     
+ 3rd Qu.: NA                                                                                     
+ Max.   : NA                                                                                     
+ entry_proc_d   entry_time_o   entry_time_d   entry_tp_o     entry_tp_d     tradeflow_comtrade_o
+ Mode:logical   Mode:logical   Mode:logical   Mode:logical   Mode:logical   Min.   : NA         
+                                                                            1st Qu.: NA         
+                                                                            Median : NA         
+                                                                            Mean   :NaN         
+                                                                            3rd Qu.: NA         
+                                                                            Max.   : NA         
+ tradeflow_comtrade_d tradeflow_baci manuf_tradeflow_baci tradeflow_imf_o tradeflow_imf_d
+ Min.   : NA          Mode:logical   Mode:logical         Min.   : NA     Min.   : NA    
+ 1st Qu.: NA                                              1st Qu.: NA     1st Qu.: NA    
+ Median : NA                                              Median : NA     Median : NA    
+ Mean   :NaN                                              Mean   :NaN     Mean   :NaN    
+ 3rd Qu.: NA                                              3rd Qu.: NA     3rd Qu.: NA    
+ Max.   : NA                                              Max.   : NA     Max.   : NA    
+> 
+> # Apply log transformation (adding 1 to avoid log(0))
+> gravity_data_2021_clean$log_sci <- log(gravity_data_2021_clean$scaled_sci_2021 + 1)
+> gravity_data_2021_clean$log_tradeflow_imf_d <- log(gravity_data_2021_clean$tradeflow_imf_d + 1)  # Avoid log(0)
+> gravity_data_2021_clean$log_tradeflow_imf_o <- log(gravity_data_2021_clean$tradeflow_imf_o + 1)  # Avoid log(0)
+> 
+> # Scatterplot for log-transformed imports vs. SCI
+> plot(
++     gravity_data_2021_clean$log_sci, gravity_data_2021_clean$log_tradeflow_imf_d,
++     main = "Log(Imports) vs. Log(Social Connectedness Index) (2021)",
++     xlab = "Log of Social Connectedness Index (SCI)",
++     ylab = "Log of Imports (in thousands USD)",
++     pch = 19, col = "blue"
++ )
+Error in plot.window(...) : need finite 'xlim' values
+In addition: Warning messages:
+1: In min(x) : no non-missing arguments to min; returning Inf
+2: In max(x) : no non-missing arguments to max; returning -Inf
+3: In min(x) : no non-missing arguments to min; returning Inf
+4: In max(x) : no non-missing arguments to max; returning -Inf
+> # Function to remove outliers based on IQR
+> remove_outliers <- function(df, column_name) {
++     Q1 <- quantile(df[[column_name]], 0.25, na.rm = TRUE)
++     Q3 <- quantile(df[[column_name]], 0.75, na.rm = TRUE)
++     IQR_value <- IQR(df[[column_name]], na.rm = TRUE)
++     
++     lower_bound <- Q1 - 1.5 * IQR_value
++     upper_bound <- Q3 + 1.5 * IQR_value
++     
++     # Filter the data
++     df <- df %>% filter(df[[column_name]] >= lower_bound & df[[column_name]] <= upper_bound)
++     
++     return(df)
++ }
+> 
+> # Remove outliers from scaled_sci_2021, tradeflow_imf_o, and tradeflow_imf_d
+> gravity_data_2021_clean <- gravity_data_2021_clean %>%
++     remove_outliers("scaled_sci_2021") %>%
++     remove_outliers("tradeflow_imf_o") %>%
++     remove_outliers("tradeflow_imf_d")
+> 
+> # Check the cleaned data
+> summary(gravity_data_2021_clean)
+      year     country_id_o       country_id_d          iso3_o             iso3_d            iso3num_o  
+ Min.   : NA   Length:0           Length:0           Length:0           Length:0           Min.   : NA  
+ 1st Qu.: NA   Class :character   Class :character   Class :character   Class :character   1st Qu.: NA  
+ Median : NA   Mode  :character   Mode  :character   Mode  :character   Mode  :character   Median : NA  
+ Mean   :NaN                                                                               Mean   :NaN  
+ 3rd Qu.: NA                                                                               3rd Qu.: NA  
+ Max.   : NA                                                                               Max.   : NA  
+   iso3num_d   country_exists_o country_exists_d gmt_offset_2020_o gmt_offset_2020_d distw_harmonic
+ Min.   : NA   Min.   : NA      Min.   : NA      Min.   : NA       Min.   : NA       Min.   : NA   
+ 1st Qu.: NA   1st Qu.: NA      1st Qu.: NA      1st Qu.: NA       1st Qu.: NA       1st Qu.: NA   
+ Median : NA   Median : NA      Median : NA      Median : NA       Median : NA       Median : NA   
+ Mean   :NaN   Mean   :NaN      Mean   :NaN      Mean   :NaN       Mean   :NaN       Mean   :NaN   
+ 3rd Qu.: NA   3rd Qu.: NA      3rd Qu.: NA      3rd Qu.: NA       3rd Qu.: NA       3rd Qu.: NA   
+ Max.   : NA   Max.   : NA      Max.   : NA      Max.   : NA       Max.   : NA       Max.   : NA   
+ distw_arithmetic distw_harmonic_jh distw_arithmetic_jh      dist     main_city_source_o main_city_source_d
+ Min.   : NA      Mode:logical      Mode:logical        Min.   : NA   Length:0           Length:0          
+ 1st Qu.: NA                                            1st Qu.: NA   Class :character   Class :character  
+ Median : NA                                            Median : NA   Mode  :character   Mode  :character  
+ Mean   :NaN                                            Mean   :NaN                                        
+ 3rd Qu.: NA                                            3rd Qu.: NA                                        
+ Max.   : NA                                            Max.   : NA                                        
+    distcap        contig    diplo_disagreement scaled_sci_2021  comlang_off  comlang_ethno     comcol   
+ Min.   : NA   Min.   : NA   Min.   : NA        Min.   : NA     Min.   : NA   Min.   : NA   Min.   : NA  
+ 1st Qu.: NA   1st Qu.: NA   1st Qu.: NA        1st Qu.: NA     1st Qu.: NA   1st Qu.: NA   1st Qu.: NA  
+ Median : NA   Median : NA   Median : NA        Median : NA     Median : NA   Median : NA   Median : NA  
+ Mean   :NaN   Mean   :NaN   Mean   :NaN        Mean   :NaN     Mean   :NaN   Mean   :NaN   Mean   :NaN  
+ 3rd Qu.: NA   3rd Qu.: NA   3rd Qu.: NA        3rd Qu.: NA     3rd Qu.: NA   3rd Qu.: NA   3rd Qu.: NA  
+ Max.   : NA   Max.   : NA   Max.   : NA        Max.   : NA     Max.   : NA   Max.   : NA   Max.   : NA  
+     col45     legal_old_o        legal_old_d        legal_new_o        legal_new_d        comleg_pretrans
+ Min.   : NA   Length:0           Length:0           Length:0           Length:0           Min.   : NA    
+ 1st Qu.: NA   Class :character   Class :character   Class :character   Class :character   1st Qu.: NA    
+ Median : NA   Mode  :character   Mode  :character   Mode  :character   Mode  :character   Median : NA    
+ Mean   :NaN                                                                               Mean   :NaN    
+ 3rd Qu.: NA                                                                               3rd Qu.: NA    
+ Max.   : NA                                                                               Max.   : NA    
+ comleg_posttrans transition_legalchange    comrelig       heg_o         heg_d      col_dep_ever
+ Min.   : NA      Min.   : NA            Min.   : NA   Min.   : NA   Min.   : NA   Min.   : NA  
+ 1st Qu.: NA      1st Qu.: NA            1st Qu.: NA   1st Qu.: NA   1st Qu.: NA   1st Qu.: NA  
+ Median : NA      Median : NA            Median : NA   Median : NA   Median : NA   Median : NA  
+ Mean   :NaN      Mean   :NaN            Mean   :NaN   Mean   :NaN   Mean   :NaN   Mean   :NaN  
+ 3rd Qu.: NA      3rd Qu.: NA            3rd Qu.: NA   3rd Qu.: NA   3rd Qu.: NA   3rd Qu.: NA  
+ Max.   : NA      Max.   : NA            Max.   : NA   Max.   : NA   Max.   : NA   Max.   : NA  
+    col_dep    col_dep_end_year col_dep_end_conflict    empire           sibling_ever    sibling   
+ Min.   : NA   Min.   : NA      Min.   : NA          Length:0           Min.   : NA   Min.   : NA  
+ 1st Qu.: NA   1st Qu.: NA      1st Qu.: NA          Class :character   1st Qu.: NA   1st Qu.: NA  
+ Median : NA   Median : NA      Median : NA          Mode  :character   Median : NA   Median : NA  
+ Mean   :NaN   Mean   :NaN      Mean   :NaN                             Mean   :NaN   Mean   :NaN  
+ 3rd Qu.: NA   3rd Qu.: NA      3rd Qu.: NA                             3rd Qu.: NA   3rd Qu.: NA  
+ Max.   : NA   Max.   : NA      Max.   : NA                             Max.   : NA   Max.   : NA  
+   sever_year   sib_conflict     pop_o         pop_d         gdp_o         gdp_d        gdpcap_o  
+ Min.   : NA   Min.   : NA   Min.   : NA   Min.   : NA   Min.   : NA   Min.   : NA   Min.   : NA  
+ 1st Qu.: NA   1st Qu.: NA   1st Qu.: NA   1st Qu.: NA   1st Qu.: NA   1st Qu.: NA   1st Qu.: NA  
+ Median : NA   Median : NA   Median : NA   Median : NA   Median : NA   Median : NA   Median : NA  
+ Mean   :NaN   Mean   :NaN   Mean   :NaN   Mean   :NaN   Mean   :NaN   Mean   :NaN   Mean   :NaN  
+ 3rd Qu.: NA   3rd Qu.: NA   3rd Qu.: NA   3rd Qu.: NA   3rd Qu.: NA   3rd Qu.: NA   3rd Qu.: NA  
+ Max.   : NA   Max.   : NA   Max.   : NA   Max.   : NA   Max.   : NA   Max.   : NA   Max.   : NA  
+    gdpcap_d   pop_source_o       pop_source_d       gdp_source_o       gdp_source_d         gdp_ppp_o  
+ Min.   : NA   Length:0           Length:0           Length:0           Length:0           Min.   : NA  
+ 1st Qu.: NA   Class :character   Class :character   Class :character   Class :character   1st Qu.: NA  
+ Median : NA   Mode  :character   Mode  :character   Mode  :character   Mode  :character   Median : NA  
+ Mean   :NaN                                                                               Mean   :NaN  
+ 3rd Qu.: NA                                                                               3rd Qu.: NA  
+ Max.   : NA                                                                               Max.   : NA  
+   gdp_ppp_d    gdpcap_ppp_o  gdpcap_ppp_d   pop_pwt_o     pop_pwt_d   gdp_ppp_pwt_o gdp_ppp_pwt_d
+ Min.   : NA   Min.   : NA   Min.   : NA   Min.   : NA   Min.   : NA   Min.   : NA   Min.   : NA  
+ 1st Qu.: NA   1st Qu.: NA   1st Qu.: NA   1st Qu.: NA   1st Qu.: NA   1st Qu.: NA   1st Qu.: NA  
+ Median : NA   Median : NA   Median : NA   Median : NA   Median : NA   Median : NA   Median : NA  
+ Mean   :NaN   Mean   :NaN   Mean   :NaN   Mean   :NaN   Mean   :NaN   Mean   :NaN   Mean   :NaN  
+ 3rd Qu.: NA   3rd Qu.: NA   3rd Qu.: NA   3rd Qu.: NA   3rd Qu.: NA   3rd Qu.: NA   3rd Qu.: NA  
+ Max.   : NA   Max.   : NA   Max.   : NA   Max.   : NA   Max.   : NA   Max.   : NA   Max.   : NA  
+     gatt_o        gatt_d        wto_o         wto_d          eu_o          eu_d        fta_wto   
+ Min.   : NA   Min.   : NA   Min.   : NA   Min.   : NA   Min.   : NA   Min.   : NA   Min.   : NA  
+ 1st Qu.: NA   1st Qu.: NA   1st Qu.: NA   1st Qu.: NA   1st Qu.: NA   1st Qu.: NA   1st Qu.: NA  
+ Median : NA   Median : NA   Median : NA   Median : NA   Median : NA   Median : NA   Median : NA  
+ Mean   :NaN   Mean   :NaN   Mean   :NaN   Mean   :NaN   Mean   :NaN   Mean   :NaN   Mean   :NaN  
+ 3rd Qu.: NA   3rd Qu.: NA   3rd Qu.: NA   3rd Qu.: NA   3rd Qu.: NA   3rd Qu.: NA   3rd Qu.: NA  
+ Max.   : NA   Max.   : NA   Max.   : NA   Max.   : NA   Max.   : NA   Max.   : NA   Max.   : NA  
+  fta_wto_raw  rta_coverage         rta_type         entry_cost_o   entry_cost_d   entry_proc_o  
+ Min.   : NA   Length:0           Length:0           Mode:logical   Mode:logical   Mode:logical  
+ 1st Qu.: NA   Class :character   Class :character                                               
+ Median : NA   Mode  :character   Mode  :character                                               
+ Mean   :NaN                                                                                     
+ 3rd Qu.: NA                                                                                     
+ Max.   : NA                                                                                     
+ entry_proc_d   entry_time_o   entry_time_d   entry_tp_o     entry_tp_d     tradeflow_comtrade_o
+ Mode:logical   Mode:logical   Mode:logical   Mode:logical   Mode:logical   Min.   : NA         
+                                                                            1st Qu.: NA         
+                                                                            Median : NA         
+                                                                            Mean   :NaN         
+                                                                            3rd Qu.: NA         
+                                                                            Max.   : NA         
+ tradeflow_comtrade_d tradeflow_baci manuf_tradeflow_baci tradeflow_imf_o tradeflow_imf_d    log_sci   
+ Min.   : NA          Mode:logical   Mode:logical         Min.   : NA     Min.   : NA     Min.   : NA  
+ 1st Qu.: NA                                              1st Qu.: NA     1st Qu.: NA     1st Qu.: NA  
+ Median : NA                                              Median : NA     Median : NA     Median : NA  
+ Mean   :NaN                                              Mean   :NaN     Mean   :NaN     Mean   :NaN  
+ 3rd Qu.: NA                                              3rd Qu.: NA     3rd Qu.: NA     3rd Qu.: NA  
+ Max.   : NA                                              Max.   : NA     Max.   : NA     Max.   : NA  
+ log_tradeflow_imf_d log_tradeflow_imf_o
+ Min.   : NA         Min.   : NA        
+ 1st Qu.: NA         1st Qu.: NA        
+ Median : NA         Median : NA        
+ Mean   :NaN         Mean   :NaN        
+ 3rd Qu.: NA         3rd Qu.: NA        
+ Max.   : NA         Max.   : NA        
+> 
+> # Scatterplot for imports vs. SCI after removing outliers
+> plot(
++     gravity_data_2021_clean$scaled_sci_2021, gravity_data_2021_clean$tradeflow_imf_d,
++     main = "Imports vs. Social Connectedness Index (2021) - After Removing Outliers",
++     xlab = "Social Connectedness Index (SCI)",
++     ylab = "Imports (in thousands USD)",
++     pch = 19, col = "blue"
++ )
+Error in plot.window(...) : need finite 'xlim' values
+In addition: Warning messages:
+1: In min(x) : no non-missing arguments to min; returning Inf
+2: In max(x) : no non-missing arguments to max; returning -Inf
+3: In min(x) : no non-missing arguments to min; returning Inf
+4: In max(x) : no non-missing arguments to max; returning -Inf
+> # Remove rows with NA, Inf, or -Inf values in relevant columns
+> gravity_data_2021_clean <- gravity_data_2021_clean %>%
++     filter(
++         is.finite(scaled_sci_2021),       # Remove non-finite SCI values
++         is.finite(tradeflow_imf_o),       # Remove non-finite exports
++         is.finite(tradeflow_imf_d)        # Remove non-finite imports
++     )
+> 
+> # Check for remaining NA, Inf, or -Inf values
+> sum(!is.finite(gravity_data_2021_clean$scaled_sci_2021))  # Check SCI column
+[1] 0
+> sum(!is.finite(gravity_data_2021_clean$tradeflow_imf_o))  # Check exports
+[1] 0
+> sum(!is.finite(gravity_data_2021_clean$tradeflow_imf_d))  # Check imports
+[1] 0
+> 
+> # Scatterplot for imports vs. SCI
+> plot(
++     gravity_data_2021_clean$scaled_sci_2021, gravity_data_2021_clean$tradeflow_imf_d,
++     main = "Imports vs. Social Connectedness Index (2021)",
++     xlab = "Social Connectedness Index (SCI)",
++     ylab = "Imports (in thousands USD)",
++     pch = 19, col = "blue"
++ )
+Error in plot.window(...) : need finite 'xlim' values
+In addition: Warning messages:
+1: In min(x) : no non-missing arguments to min; returning Inf
+2: In max(x) : no non-missing arguments to max; returning -Inf
+3: In min(x) : no non-missing arguments to min; returning Inf
+4: In max(x) : no non-missing arguments to max; returning -Inf
+> # Check the number of rows left in the dataset
+> nrow(gravity_data_2021_clean)
+[1] 0
+> 
+> # Number of rows before filtering
+> nrow(gravity_data_2021)
+[1] 63504
+> 
+> # Number of rows after filtering
+> nrow(gravity_data_2021_clean)
+[1] 0
+> 
+> # Adjust the threshold for removing outliers
+> iqr_threshold <- 2  # Set a more lenient threshold
+> 
+> # Apply the filtering with relaxed criteria
+> gravity_data_2021_clean <- gravity_data_2021 %>%
++     filter(
++         scaled_sci_2021 > (quantile(scaled_sci_2021, 0.25) - iqr_threshold * IQR(scaled_sci_2021)) &
++             scaled_sci_2021 < (quantile(scaled_sci_2021, 0.75) + iqr_threshold * IQR(scaled_sci_2021)),
++         tradeflow_imf_o > (quantile(tradeflow_imf_o, 0.25) - iqr_threshold * IQR(tradeflow_imf_o)) &
++             tradeflow_imf_o < (quantile(tradeflow_imf_o, 0.75) + iqr_threshold * IQR(tradeflow_imf_o)),
++         tradeflow_imf_d > (quantile(tradeflow_imf_d, 0.25) - iqr_threshold * IQR(tradeflow_imf_d)) &
++             tradeflow_imf_d < (quantile(tradeflow_imf_d, 0.75) + iqr_threshold * IQR(tradeflow_imf_d))
++     )
+Error in `filter()`:
+ℹ In argument: `&...`.
+Caused by error in `quantile.default()`:
+! missing values and NaN's not allowed if 'na.rm' is FALSE
+Run `rlang::last_trace()` to see where the error occurred.
+> # Adjust the threshold for removing outliers with na.rm = TRUE
+> iqr_threshold <- 2  # Set a more lenient threshold
+> 
+> # Apply the filtering with relaxed criteria and handle NA values
+> gravity_data_2021_clean <- gravity_data_2021 %>%
++     filter(
++         scaled_sci_2021 > (quantile(scaled_sci_2021, 0.25, na.rm = TRUE) - iqr_threshold * IQR(scaled_sci_2021, na.rm = TRUE)) &
++             scaled_sci_2021 < (quantile(scaled_sci_2021, 0.75, na.rm = TRUE) + iqr_threshold * IQR(scaled_sci_2021, na.rm = TRUE)),
++         tradeflow_imf_o > (quantile(tradeflow_imf_o, 0.25, na.rm = TRUE) - iqr_threshold * IQR(tradeflow_imf_o, na.rm = TRUE)) &
++             tradeflow_imf_o < (quantile(tradeflow_imf_o, 0.75, na.rm = TRUE) + iqr_threshold * IQR(tradeflow_imf_o, na.rm = TRUE)),
++         tradeflow_imf_d > (quantile(tradeflow_imf_d, 0.25, na.rm = TRUE) - iqr_threshold * IQR(tradeflow_imf_d, na.rm = TRUE)) &
++             tradeflow_imf_d < (quantile(tradeflow_imf_d, 0.75, na.rm = TRUE) + iqr_threshold * IQR(tradeflow_imf_d, na.rm = TRUE))
++     )
+> 
+> View(gravity_data_2021_clean)
+> # Summary statistics for the relevant columns
+> summary(gravity_data_2021$scaled_sci_2021)
+     Min.   1st Qu.    Median      Mean   3rd Qu.      Max.      NA's 
+4.800e+01 5.780e+02 1.466e+03 5.469e+05 5.487e+03 1.000e+09     30743 
+> summary(gravity_data_2021$tradeflow_imf_o)
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+     NA      NA      NA     NaN      NA      NA   63504 
+> summary(gravity_data_2021$tradeflow_imf_d)
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+     NA      NA      NA     NaN      NA      NA   63504 
+> 
+> View(gravity_data)
+> # Check the number of observations in tradeflow_imf_o and tradeflow_imf_d
+> num_obs_o <- nrow(gravity_data$tradeflow_imf_o)
+> num_obs_d <- nrow(gravity_data$tradeflow_imf_d)
+> 
+> # Print the results
+> cat("Number of observations in tradeflow_imf_o:", num_obs_o, "\n")
+Number of observations in tradeflow_imf_o: 
+> cat("Number of observations in tradeflow_imf_d:", num_obs_d, "\n")
+Number of observations in tradeflow_imf_d: 
+> 
+> str(gravity_data)
+spc_tbl_ [4,699,296 × 87] (S3: spec_tbl_df/tbl_df/tbl/data.frame)
+ $ year                  : num [1:4699296] 1948 1949 1950 1951 1952 ...
+ $ country_id_o          : chr [1:4699296] "ABW" "ABW" "ABW" "ABW" ...
+ $ country_id_d          : chr [1:4699296] "ABW" "ABW" "ABW" "ABW" ...
+ $ iso3_o                : chr [1:4699296] "ABW" "ABW" "ABW" "ABW" ...
+ $ iso3_d                : chr [1:4699296] "ABW" "ABW" "ABW" "ABW" ...
+ $ iso3num_o             : num [1:4699296] 533 533 533 533 533 533 533 533 533 533 ...
+ $ iso3num_d             : num [1:4699296] 533 533 533 533 533 533 533 533 533 533 ...
+ $ country_exists_o      : num [1:4699296] 0 0 0 0 0 0 0 0 0 0 ...
+ $ country_exists_d      : num [1:4699296] 0 0 0 0 0 0 0 0 0 0 ...
+ $ gmt_offset_2020_o     : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ gmt_offset_2020_d     : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ distw_harmonic        : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ distw_arithmetic      : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ distw_harmonic_jh     : logi [1:4699296] NA NA NA NA NA NA ...
+ $ distw_arithmetic_jh   : logi [1:4699296] NA NA NA NA NA NA ...
+ $ dist                  : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ main_city_source_o    : chr [1:4699296] NA NA NA NA ...
+ $ main_city_source_d    : chr [1:4699296] NA NA NA NA ...
+ $ distcap               : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ contig                : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ diplo_disagreement    : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ scaled_sci_2021       : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ comlang_off           : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ comlang_ethno         : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ comcol                : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ col45                 : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ legal_old_o           : chr [1:4699296] NA NA NA NA ...
+ $ legal_old_d           : chr [1:4699296] NA NA NA NA ...
+ $ legal_new_o           : chr [1:4699296] NA NA NA NA ...
+ $ legal_new_d           : chr [1:4699296] NA NA NA NA ...
+ $ comleg_pretrans       : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ comleg_posttrans      : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ transition_legalchange: num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ comrelig              : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ heg_o                 : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ heg_d                 : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ col_dep_ever          : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ col_dep               : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ col_dep_end_year      : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ col_dep_end_conflict  : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ empire                : chr [1:4699296] NA NA NA NA ...
+ $ sibling_ever          : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ sibling               : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ sever_year            : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ sib_conflict          : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ pop_o                 : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ pop_d                 : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ gdp_o                 : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ gdp_d                 : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ gdpcap_o              : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ gdpcap_d              : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ pop_source_o          : chr [1:4699296] NA NA NA NA ...
+ $ pop_source_d          : chr [1:4699296] NA NA NA NA ...
+ $ gdp_source_o          : chr [1:4699296] NA NA NA NA ...
+ $ gdp_source_d          : chr [1:4699296] NA NA NA NA ...
+ $ gdp_ppp_o             : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ gdp_ppp_d             : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ gdpcap_ppp_o          : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ gdpcap_ppp_d          : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ pop_pwt_o             : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ pop_pwt_d             : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ gdp_ppp_pwt_o         : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ gdp_ppp_pwt_d         : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ gatt_o                : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ gatt_d                : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ wto_o                 : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ wto_d                 : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ eu_o                  : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ eu_d                  : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ fta_wto               : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ fta_wto_raw           : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ rta_coverage          : chr [1:4699296] NA NA NA NA ...
+ $ rta_type              : chr [1:4699296] NA NA NA NA ...
+ $ entry_cost_o          : logi [1:4699296] NA NA NA NA NA NA ...
+ $ entry_cost_d          : logi [1:4699296] NA NA NA NA NA NA ...
+ $ entry_proc_o          : logi [1:4699296] NA NA NA NA NA NA ...
+ $ entry_proc_d          : logi [1:4699296] NA NA NA NA NA NA ...
+ $ entry_time_o          : logi [1:4699296] NA NA NA NA NA NA ...
+ $ entry_time_d          : logi [1:4699296] NA NA NA NA NA NA ...
+ $ entry_tp_o            : logi [1:4699296] NA NA NA NA NA NA ...
+ $ entry_tp_d            : logi [1:4699296] NA NA NA NA NA NA ...
+ $ tradeflow_comtrade_o  : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ tradeflow_comtrade_d  : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ tradeflow_baci        : logi [1:4699296] NA NA NA NA NA NA ...
+ $ manuf_tradeflow_baci  : logi [1:4699296] NA NA NA NA NA NA ...
+ $ tradeflow_imf_o       : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ $ tradeflow_imf_d       : num [1:4699296] NA NA NA NA NA NA NA NA NA NA ...
+ - attr(*, "spec")=
+  .. cols(
+  ..   year = col_double(),
+  ..   country_id_o = col_character(),
+  ..   country_id_d = col_character(),
+  ..   iso3_o = col_character(),
+  ..   iso3_d = col_character(),
+  ..   iso3num_o = col_double(),
+  ..   iso3num_d = col_double(),
+  ..   country_exists_o = col_double(),
+  ..   country_exists_d = col_double(),
+  ..   gmt_offset_2020_o = col_double(),
+  ..   gmt_offset_2020_d = col_double(),
+  ..   distw_harmonic = col_double(),
+  ..   distw_arithmetic = col_double(),
+  ..   distw_harmonic_jh = col_logical(),
+  ..   distw_arithmetic_jh = col_logical(),
+  ..   dist = col_double(),
+  ..   main_city_source_o = col_character(),
+  ..   main_city_source_d = col_character(),
+  ..   distcap = col_double(),
+  ..   contig = col_double(),
+  ..   diplo_disagreement = col_double(),
+  ..   scaled_sci_2021 = col_double(),
+  ..   comlang_off = col_double(),
+  ..   comlang_ethno = col_double(),
+  ..   comcol = col_double(),
+  ..   col45 = col_double(),
+  ..   legal_old_o = col_character(),
+  ..   legal_old_d = col_character(),
+  ..   legal_new_o = col_character(),
+  ..   legal_new_d = col_character(),
+  ..   comleg_pretrans = col_double(),
+  ..   comleg_posttrans = col_double(),
+  ..   transition_legalchange = col_double(),
+  ..   comrelig = col_double(),
+  ..   heg_o = col_double(),
+  ..   heg_d = col_double(),
+  ..   col_dep_ever = col_double(),
+  ..   col_dep = col_double(),
+  ..   col_dep_end_year = col_double(),
+  ..   col_dep_end_conflict = col_double(),
+  ..   empire = col_character(),
+  ..   sibling_ever = col_double(),
+  ..   sibling = col_double(),
+  ..   sever_year = col_double(),
+  ..   sib_conflict = col_double(),
+  ..   pop_o = col_double(),
+  ..   pop_d = col_double(),
+  ..   gdp_o = col_double(),
+  ..   gdp_d = col_double(),
+  ..   gdpcap_o = col_double(),
+  ..   gdpcap_d = col_double(),
+  ..   pop_source_o = col_character(),
+  ..   pop_source_d = col_character(),
+  ..   gdp_source_o = col_character(),
+  ..   gdp_source_d = col_character(),
+  ..   gdp_ppp_o = col_double(),
+  ..   gdp_ppp_d = col_double(),
+  ..   gdpcap_ppp_o = col_double(),
+  ..   gdpcap_ppp_d = col_double(),
+  ..   pop_pwt_o = col_double(),
+  ..   pop_pwt_d = col_double(),
+  ..   gdp_ppp_pwt_o = col_double(),
+  ..   gdp_ppp_pwt_d = col_double(),
+  ..   gatt_o = col_double(),
+  ..   gatt_d = col_double(),
+  ..   wto_o = col_double(),
+  ..   wto_d = col_double(),
+  ..   eu_o = col_double(),
+  ..   eu_d = col_double(),
+  ..   fta_wto = col_double(),
+  ..   fta_wto_raw = col_double(),
+  ..   rta_coverage = col_character(),
+  ..   rta_type = col_character(),
+  ..   entry_cost_o = col_logical(),
+  ..   entry_cost_d = col_logical(),
+  ..   entry_proc_o = col_logical(),
+  ..   entry_proc_d = col_logical(),
+  ..   entry_time_o = col_logical(),
+  ..   entry_time_d = col_logical(),
+  ..   entry_tp_o = col_logical(),
+  ..   entry_tp_d = col_logical(),
+  ..   tradeflow_comtrade_o = col_double(),
+  ..   tradeflow_comtrade_d = col_double(),
+  ..   tradeflow_baci = col_logical(),
+  ..   manuf_tradeflow_baci = col_logical(),
+  ..   tradeflow_imf_o = col_double(),
+  ..   tradeflow_imf_d = col_double()
+  .. )
+ - attr(*, "problems")=<externalptr> 
+> 
+> nrow(gravity_data)
+[1] 4699296
+> 
+> sum(is.na(gravity_data$tradeflow_imf_o))  # Number of NAs in tradeflow_imf_o
+[1] 3785732
+> sum(is.na(gravity_data$tradeflow_imf_d))  # Number of NAs in tradeflow_imf_d
+[1] 3697562
+> 
+> prop_na_o <- sum(is.na(gravity_data$tradeflow_imf_o)) / nrow(gravity_data)
+> prop_na_d <- sum(is.na(gravity_data$tradeflow_imf_d)) / nrow(gravity_data)
+> 
+> cat("Proportion of NAs in tradeflow_imf_o:", prop_na_o, "\n")
+Proportion of NAs in tradeflow_imf_o: 0.8055956 
+> cat("Proportion of NAs in tradeflow_imf_d:", prop_na_d, "\n")
+Proportion of NAs in tradeflow_imf_d: 0.7868332 
+> 
+> # Example: Impute with the most recent value (forward-fill)
+> gravity_data$total_sci_2021 <- zoo::na.locf(gravity_data$total_sci_2021, na.rm = FALSE)
+Error in if (is.na(object[1L])) ok <- c(1L, ok) : 
+  argument is of length zero
+In addition: Warning message:
+Unknown or uninitialised column: `total_sci_2021`. 
+> # Check the column names in the gravity_data dataframe
+> colnames(gravity_data)
+ [1] "year"                   "country_id_o"           "country_id_d"           "iso3_o"                
+ [5] "iso3_d"                 "iso3num_o"              "iso3num_d"              "country_exists_o"      
+ [9] "country_exists_d"       "gmt_offset_2020_o"      "gmt_offset_2020_d"      "distw_harmonic"        
+[13] "distw_arithmetic"       "distw_harmonic_jh"      "distw_arithmetic_jh"    "dist"                  
+[17] "main_city_source_o"     "main_city_source_d"     "distcap"                "contig"                
+[21] "diplo_disagreement"     "scaled_sci_2021"        "comlang_off"            "comlang_ethno"         
+[25] "comcol"                 "col45"                  "legal_old_o"            "legal_old_d"           
+[29] "legal_new_o"            "legal_new_d"            "comleg_pretrans"        "comleg_posttrans"      
+[33] "transition_legalchange" "comrelig"               "heg_o"                  "heg_d"                 
+[37] "col_dep_ever"           "col_dep"                "col_dep_end_year"       "col_dep_end_conflict"  
+[41] "empire"                 "sibling_ever"           "sibling"                "sever_year"            
+[45] "sib_conflict"           "pop_o"                  "pop_d"                  "gdp_o"                 
+[49] "gdp_d"                  "gdpcap_o"               "gdpcap_d"               "pop_source_o"          
+[53] "pop_source_d"           "gdp_source_o"           "gdp_source_d"           "gdp_ppp_o"             
+[57] "gdp_ppp_d"              "gdpcap_ppp_o"           "gdpcap_ppp_d"           "pop_pwt_o"             
+[61] "pop_pwt_d"              "gdp_ppp_pwt_o"          "gdp_ppp_pwt_d"          "gatt_o"                
+[65] "gatt_d"                 "wto_o"                  "wto_d"                  "eu_o"                  
+[69] "eu_d"                   "fta_wto"                "fta_wto_raw"            "rta_coverage"          
+[73] "rta_type"               "entry_cost_o"           "entry_cost_d"           "entry_proc_o"          
+[77] "entry_proc_d"           "entry_time_o"           "entry_time_d"           "entry_tp_o"            
+[81] "entry_tp_d"             "tradeflow_comtrade_o"   "tradeflow_comtrade_d"   "tradeflow_baci"        
+[85] "manuf_tradeflow_baci"   "tradeflow_imf_o"        "tradeflow_imf_d"       
+> 
+> install.packages("zoo")
+Error in install.packages : Updating loaded packages
+
+Restarting R session...
+
+> # Impute with the most recent value (forward-fill)
+> gravity_data$scaled_sci_2021 <- zoo::na.locf(gravity_data$scaled_sci_2021, na.rm = FALSE)
+> 
+> # Check if there are any NAs left
+> sum(is.na(gravity_data$scaled_sci_2021))
+[1] 38
+> 
+> library(zoo)
+
+Attaching package: ‘zoo’
+
+The following objects are masked from ‘package:base’:
+
+    as.Date, as.Date.numeric
+
+Warning message:
+package ‘zoo’ was built under R version 4.3.3 
+> gravity_data$scaled_sci_2021 <- zoo::na.approx(gravity_data$scaled_sci_2021, na.rm = FALSE)
+> 
+> # Load ggplot2 for plotting
+> library(ggplot2)
+Warning message:
+package ‘ggplot2’ was built under R version 4.3.3 
+> 
+> # Create scatterplot of scaled_sci_2021 vs tradeflow_imf_o
+> ggplot(gravity_data, aes(x = tradeflow_imf_o, y = scaled_sci_2021)) +
++     geom_point(color = "blue") +  # Use blue color for points
++     labs(
++         title = "Scatterplot of Science Data vs Trade Flow (Exports)",
++         x = "Trade Flow (Exports, IMF)",
++         y = "Scaled Science Data (2021)"
++     ) +
++     theme_minimal()
+Warning message:
+Removed 3785732 rows containing missing values or values outside the scale range (`geom_point()`). 
+> 
+>  # Create scatterplot of scaled_sci_2021 vs tradeflow_imf_o
+> ggplot(gravity_data, aes(x = tradeflow_imf_o, y = scaled_sci_2021)) +
++ geom_point(color = "blue") +  # Use blue color for points
++ labs(
++ title = "Scatterplot of Science Data vs Trade Flow (Exports)",
++ x = "Trade Flow (Exports, IMF)",
++ y = "Scaled Science Data (2021)"
++ theme_minimal()
+Error: unexpected symbol in:
+"y = "Scaled Science Data (2021)"
+theme_minimal"
+> # Load ggplot2 for plotting
+> library(ggplot2)
+> 
+> # Create scatterplot of scaled_sci_2021 vs tradeflow_imf_o
+> ggplot(gravity_data, aes(x = tradeflow_imf_o, y = scaled_sci_2021)) +
++     geom_point(color = "blue") +  # Use blue color for points
++     labs(
++         title = "Scatterplot of Science Data vs Trade Flow (Exports)",
++         x = "Trade Flow (Exports, IMF)",
++         y = "Scaled Science Data (2021)"
++     ) +
++     theme_minimal()
+Warning message:
+Removed 3785732 rows containing missing values or values outside the scale range (`geom_point()`). 
+> 
+> library(ggplot2)
+> # Load ggplot2 for plotting
+> library(ggplot2)
+> 
+> # Create scatterplot of scaled_sci_2021 vs tradeflow_imf_o
+> ggplot(gravity_data, aes(x = tradeflow_imf_o, y = scaled_sci_2021)) +
++     geom_point(color = "blue") +  # Use blue color for points
++     labs(
++         title = "Scatterplot of Science Data vs Trade Flow (Exports)",
++         x = "Trade Flow (Exports, IMF)",
++         y = "Scaled Science Data (2021)"
++     ) +
++     theme_minimal()
+Warning message:
+Removed 3785732 rows containing missing values or values outside the scale range (`geom_point()`). 
+> 
+> # Scatterplot with log scaling for both axes
+> ggplot(gravity_data, aes(x = tradeflow_imf_o, y = scaled_sci_2021)) +
++     geom_point(color = "blue") +  # Blue points
++     scale_x_log10() +  # Log scale for tradeflow_imf_o
++     scale_y_log10() +  # Log scale for scaled_sci_2021
++     labs(
++         title = "Scatterplot of Science Data vs Trade Flow (Exports)",
++         x = "Log(Trade Flow (Exports, IMF))",
++         y = "Log(Scaled Science Data (2021))"
++     ) +
++     theme_minimal()
+Warning message:
+Removed 3785732 rows containing missing values or values outside the scale range (`geom_point()`). 
+> 
+> # Log-transform the variables
+> ggplot(gravity_data, aes(x = log(tradeflow_imf_o), y = log(scaled_sci_2021))) +
++     geom_point(color = "blue") +
++     labs(
++         title = "Log-Transformed Scatterplot of Science Data vs Trade Flow (Exports)",
++         x = "Log(Trade Flow (Exports, IMF))",
++         y = "Log(Scaled Science Data (2021))"
++     ) +
++     theme_minimal()
+Error in UseMethod("depth") : 
+  no applicable method for 'depth' applied to an object of class "NULL"
+In addition: Warning message:
+Removed 3785732 rows containing missing values or values outside the scale range (`geom_point()`). 
+> # Scatterplot with log scaling for both axes and a trendline
+> ggplot(gravity_data, aes(x = tradeflow_imf_o, y = scaled_sci_2021)) +
++     geom_point(color = "blue") +  # Blue points
++     scale_x_log10() +  # Log scale for tradeflow_imf_o
++     scale_y_log10() +  # Log scale for scaled_sci_2021
++     geom_smooth(method = "lm", color = "red", se = FALSE) +  # Add linear trendline in red (no confidence interval)
++     labs(
++         title = "Scatterplot of Science Data vs Trade Flow (Exports)",
++         x = "Log(Trade Flow (Exports, IMF))",
++         y = "Log(Scaled Science Data (2021))"
++     ) +
++     theme_minimal()
+`geom_smooth()` using formula = 'y ~ x'
+Warning messages:
+1: Removed 3785732 rows containing non-finite outside the scale range (`stat_smooth()`). 
+2: Removed 3785732 rows containing missing values or values outside the scale range (`geom_point()`). 
+> 
+> # Install ggpmisc if you don't have it already
+> install.packages("ggpmisc")
+Error in install.packages : Updating loaded packages
+> library(ggpmisc)
+Error in library(ggpmisc) : there is no package called ‘ggpmisc’
+> install.packages("ggpmisc")
+WARNING: Rtools is required to build R packages but is not currently installed. Please download and install the appropriate version of Rtools before proceeding:
+
+https://cran.rstudio.com/bin/windows/Rtools/
+Installing package into ‘C:/Users/2022/AppData/Local/R/win-library/4.3’
+(as ‘lib’ is unspecified)
+Warning in install.packages :
+  dependency ‘MASS’ is not available
+also installing the dependencies ‘mvtnorm’, ‘TH.data’, ‘ggpp’, ‘rlang’, ‘confintr’, ‘polynom’, ‘lmodel2’, ‘splus2R’, ‘multcomp’, ‘multcompView’
+
+trying URL 'https://cran.rstudio.com/bin/windows/contrib/4.3/mvtnorm_1.3-2.zip'
+Content type 'application/zip' length 953702 bytes (931 KB)
+downloaded 931 KB
+
+trying URL 'https://cran.rstudio.com/bin/windows/contrib/4.3/TH.data_1.1-2.zip'
+Content type 'application/zip' length 8825854 bytes (8.4 MB)
+downloaded 8.4 MB
+
+trying URL 'https://cran.rstudio.com/bin/windows/contrib/4.3/ggpp_0.5.8-1.zip'
+Content type 'application/zip' length 1878050 bytes (1.8 MB)
+downloaded 1.8 MB
+
+trying URL 'https://cran.rstudio.com/bin/windows/contrib/4.3/rlang_1.1.4.zip'
+Content type 'application/zip' length 1588682 bytes (1.5 MB)
+downloaded 1.5 MB
+
+trying URL 'https://cran.rstudio.com/bin/windows/contrib/4.3/confintr_1.0.2.zip'
+Content type 'application/zip' length 170954 bytes (166 KB)
+downloaded 166 KB
+
+trying URL 'https://cran.rstudio.com/bin/windows/contrib/4.3/polynom_1.4-1.zip'
+Content type 'application/zip' length 405315 bytes (395 KB)
+downloaded 395 KB
+
+trying URL 'https://cran.rstudio.com/bin/windows/contrib/4.3/lmodel2_1.7-4.zip'
+Content type 'application/zip' length 347647 bytes (339 KB)
+downloaded 339 KB
+
+trying URL 'https://cran.rstudio.com/bin/windows/contrib/4.3/splus2R_1.3-5.zip'
+Content type 'application/zip' length 338767 bytes (330 KB)
+downloaded 330 KB
+
+trying URL 'https://cran.rstudio.com/bin/windows/contrib/4.3/multcomp_1.4-26.zip'
+Content type 'application/zip' length 734135 bytes (716 KB)
+downloaded 716 KB
+
+trying URL 'https://cran.rstudio.com/bin/windows/contrib/4.3/multcompView_0.1-10.zip'
+Content type 'application/zip' length 115943 bytes (113 KB)
+downloaded 113 KB
+
+trying URL 'https://cran.rstudio.com/bin/windows/contrib/4.3/ggpmisc_0.6.1.zip'
+Content type 'application/zip' length 1582363 bytes (1.5 MB)
+downloaded 1.5 MB
+
+package ‘mvtnorm’ successfully unpacked and MD5 sums checked
+package ‘TH.data’ successfully unpacked and MD5 sums checked
+package ‘ggpp’ successfully unpacked and MD5 sums checked
+package ‘rlang’ successfully unpacked and MD5 sums checked
+Warning in install.packages :
+  cannot remove prior installation of package ‘rlang’
+Warning in install.packages :
+  problem copying C:\Users\2022\AppData\Local\R\win-library\4.3\00LOCK\rlang\libs\x64\rlang.dll to C:\Users\2022\AppData\Local\R\win-library\4.3\rlang\libs\x64\rlang.dll: Permission denied
+Warning in install.packages :
+  restored ‘rlang’
+package ‘confintr’ successfully unpacked and MD5 sums checked
+package ‘polynom’ successfully unpacked and MD5 sums checked
+package ‘lmodel2’ successfully unpacked and MD5 sums checked
+package ‘splus2R’ successfully unpacked and MD5 sums checked
+package ‘multcomp’ successfully unpacked and MD5 sums checked
+package ‘multcompView’ successfully unpacked and MD5 sums checked
+package ‘ggpmisc’ successfully unpacked and MD5 sums checked
+
+The downloaded binary packages are in
+	C:\Users\2022\AppData\Local\Temp\RtmpWy8nPX\downloaded_packages
+> # Scatterplot with log scaling and trendline, including regression equation and p-value
+> ggplot(gravity_data, aes(x = tradeflow_imf_o, y = scaled_sci_2021)) +
++     geom_point(color = "blue") +  # Blue points
++     scale_x_log10() +  # Log scale for tradeflow_imf_o
++     scale_y_log10() +  # Log scale for scaled_sci_2021
++     geom_smooth(method = "lm", color = "red", se = FALSE) +  # Add linear trendline in red
++     stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")),
++                  formula = y ~ x, 
++                  parse = TRUE, color = "black") +  # Add regression equation and R^2
++     labs(
++         title = "Scatterplot of Science Data vs Trade Flow (Exports)",
++         x = "Log(Trade Flow (Exports, IMF))",
++         y = "Log(Scaled Science Data (2021))"
++     ) +
++     theme_minimal()
+Error in stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")),  : 
+  could not find function "stat_poly_eq"
+> # Scatterplot with log scaling and trendline, including regression equation and p-value
+> ggplot(gravity_data, aes(x = tradeflow_imf_o, y = scaled_sci_2021)) +
++     geom_point(color = "blue") +  # Blue points
++     scale_x_log10() +  # Log scale for tradeflow_imf_o
++     scale_y_log10() +  # Log scale for scaled_sci_2021
++     geom_smooth(method = "lm", color = "red", se = FALSE) +  # Add linear trendline in red
++     stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")),
++                  formula = y ~ x, 
++                  parse = TRUE, color = "black") +  # Add regression equation and R^2
++     labs(
++         title = "Scatterplot of Science Data vs Trade Flow (Exports)",
++         x = "Log(Trade Flow (Exports, IMF))",
++         y = "Log(Scaled Science Data (2021))"
++     ) +
++     theme_minimal()
+Error in stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")),  : 
+  could not find function "stat_poly_eq"
+> # Install ggpmisc if it's not already installed
+> install.packages("ggpmisc")
+Error in install.packages : Updating loaded packages
+> library(ggpmisc)
+Loading required package: ggpp
+Registered S3 methods overwritten by 'ggpp':
+  method                  from   
+  heightDetails.titleGrob ggplot2
+  widthDetails.titleGrob  ggplot2
+
+Attaching package: ‘ggpp’
+
+The following object is masked from ‘package:ggplot2’:
+
+    annotate
+
+Error: package or namespace load failed for ‘ggpmisc’ in loadNamespace(j <- i[[1L]], c(lib.loc, .libPaths()), versionCheck = vI[[j]]):
+ namespace ‘Matrix’ 1.5-4 is already loaded, but >= 1.6.0 is required
+In addition: Warning messages:
+1: package ‘ggpmisc’ was built under R version 4.3.3 
+2: package ‘ggpp’ was built under R version 4.3.3 
+
+Restarting R session...
+
+> # Install ggpmisc if it's not already installed
+> install.packages("ggpmisc")
+Error in install.packages : Updating loaded packages
+> library(ggpmisc)
+Loading required package: ggpp
+Loading required package: ggplot2
+Registered S3 methods overwritten by 'ggpp':
+  method                  from   
+  heightDetails.titleGrob ggplot2
+  widthDetails.titleGrob  ggplot2
+
+Attaching package: ‘ggpp’
+
+The following object is masked from ‘package:ggplot2’:
+
+    annotate
+
+Error: package or namespace load failed for ‘ggpmisc’ in loadNamespace(j <- i[[1L]], c(lib.loc, .libPaths()), versionCheck = vI[[j]]):
+ namespace ‘Matrix’ 1.5-4 is already loaded, but >= 1.6.0 is required
+In addition: Warning messages:
+1: package ‘ggpmisc’ was built under R version 4.3.3 
+2: package ‘ggpp’ was built under R version 4.3.3 
+3: package ‘ggplot2’ was built under R version 4.3.3 
+> # Fit the linear model to log-transformed data
+> model <- lm(log(scaled_sci_2021) ~ log(tradeflow_imf_o), data = gravity_data)
+> 
+> # Extract the equation and p-value from the model summary
+> summary_model <- summary(model)
+> eq_label <- paste("y =", round(coef(model)[2], 2), "* x +", round(coef(model)[1], 2))
+> p_value <- summary_model$coefficients[2, 4]
+> 
+> # Scatterplot with log scaling and trendline
+> ggplot(gravity_data, aes(x = tradeflow_imf_o, y = scaled_sci_2021)) +
++     geom_point(color = "blue") +  # Blue points
++     scale_x_log10() +  # Log scale for tradeflow_imf_o
++     scale_y_log10() +  # Log scale for scaled_sci_2021
++     geom_smooth(method = "lm", color = "red", se = FALSE) +  # Add linear trendline in red
++     annotate("text", x = 1, y = 0.5, label = paste(eq_label, "\n p-value:", round(p_value, 4)), color = "black", size = 5) +  # Add equation and p-value text
++     labs(
++         title = "Scatterplot of Science Data vs Trade Flow (Exports)",
++         x = "Log(Trade Flow (Exports, IMF))",
++         y = "Log(Scaled Science Data (2021))"
++     ) +
++     theme_minimal()
+`geom_smooth()` using formula = 'y ~ x'
+Warning messages:
+1: Removed 3785732 rows containing non-finite outside the scale range (`stat_smooth()`). 
+2: Removed 3785732 rows containing missing values or values outside the scale range (`geom_point()`). 
+> 
+> # Fit the linear model to log-transformed data for imports
+> model_imports <- lm(log(scaled_sci_2021) ~ log(tradeflow_imf_d), data = gravity_data)
+> 
+> # Extract the equation and p-value from the model summary for imports
+> summary_model_imports <- summary(model_imports)
+> eq_label_imports <- paste("y =", round(coef(model_imports)[2], 2), "* x +", round(coef(model_imports)[1], 2))
+> p_value_imports <- summary_model_imports$coefficients[2, 4]
+> 
+> # Scatterplot with log scaling for imports and trendline
+> ggplot(gravity_data, aes(x = tradeflow_imf_d, y = scaled_sci_2021)) +
++     geom_point(color = "blue") +  # Blue points
++     scale_x_log10() +  # Log scale for tradeflow_imf_d (imports)
++     scale_y_log10() +  # Log scale for scaled_sci_2021
++     geom_smooth(method = "lm", color = "red", se = FALSE) +  # Add linear trendline in red
++     annotate("text", x = 1, y = 0.5, label = paste(eq_label_imports, "\n p-value:", round(p_value_imports, 4)), color = "black", size = 5) +  # Add equation and p-value text
++     labs(
++         title = "Scatterplot of Science Data vs Trade Flow (Imports)",
++         x = "Log(Trade Flow (Imports, IMF))",
++         y = "Log(Scaled Science Data (2021))"
++     ) +
++     theme_minimal()
+`geom_smooth()` using formula = 'y ~ x'
+Warning messages:
+1: Removed 3697562 rows containing non-finite outside the scale range (`stat_smooth()`). 
+2: Removed 3697562 rows containing missing values or values outside the scale range (`geom_point()`). 
+> 
+> # Fit the linear model to log-transformed data for imports
+> model_imports <- lm(log(scaled_sci_2021) ~ log(tradeflow_imf_d), data = gravity_data)
+> 
+> # Extract the equation and p-value from the model summary for imports
+> summary_model_imports <- summary(model_imports)
+> eq_label_imports <- paste("y =", round(coef(model_imports)[2], 2), "* x +", round(coef(model_imports)[1], 2))
+> p_value_imports <- summary_model_imports$coefficients[2, 4]
+> 
+> # Scatterplot with log scaling for imports and trendline
+> ggplot(gravity_data, aes(x = tradeflow_imf_d, y = scaled_sci_2021)) +
++     geom_point(color = "blue") +  # Blue points
++     scale_x_log10() +  # Log scale for tradeflow_imf_d (imports)
++     scale_y_log10() +  # Log scale for scaled_sci_2021
++     geom_smooth(method = "lm", color = "red", se = FALSE) +  # Add linear trendline in red
++     annotate("text", x = 1, y = 0.5, label = paste(eq_label_imports, "\n p-value:", round(p_value_imports, 4)), color = "black", size = 5) +  # Add equation and p-value text
++     labs(
++         title = "Scatterplot of Science Data vs Trade Flow (Imports)",
++         x = "Log(Trade Flow (Imports, IMF))",
++         y = "Log(Scaled Social Connectedness Data (2021))"
++     ) +
++     theme_minimal()
+`geom_smooth()` using formula = 'y ~ x'
+Warning messages:
+1: Removed 3697562 rows containing non-finite outside the scale range (`stat_smooth()`). 
+2: Removed 3697562 rows containing missing values or values outside the scale range (`geom_point()`). 
+> 
+> # Fit the linear model to log-transformed data for exports
+> model_exports <- lm(log(scaled_social_connectedness_2021) ~ log(tradeflow_imf_o), data = gravity_data)
+Error in eval(predvars, data, env) : 
+  object 'scaled_social_connectedness_2021' not found
+> # Fit the linear model to log-transformed data for exports
+> model_exports <- lm(log(scaled_social_connectedness_2021) ~ log(tradeflow_imf_o), data = gravity_data)
+Error in eval(predvars, data, env) : 
+  object 'scaled_social_connectedness_2021' not found
+> # Fit the linear model to log-transformed data for exports
+> model_exports <- lm(log(scaled_social_connectedness_2021) ~ log(tradeflow_imf_o), data = gravity_data)
+Error in eval(predvars, data, env) : 
+  object 'scaled_social_connectedness_2021' not found
+> # Fit the linear model to log-transformed data for exports
+> model_exports <- lm(log(scaled_social_connectedness) ~ log(tradeflow_imf_o), data = gravity_data)
+Error in eval(predvars, data, env) : 
+  object 'scaled_social_connectedness' not found
+> 
+> > # Fit the linear model to log-transformed data
+Error: unexpected '>' in ">"
+> # Fit the linear model to log-transformed data
+> model <- lm(log(scaled_sci_2021) ~ log(tradeflow_imf_o), data = gravity_data)
+> # Extract the equation and p-value from the model summary
+> summary_model <- summary(model)
+> eq_label <- paste("y =", round(coef(model)[2], 2), "* x +", round(coef(model)[1], 2))
+> p_value <- summary_model$coefficients[2, 4]
+> # Scatterplot with log scaling and trendline
+> ggplot(gravity_data, aes(x = tradeflow_imf_o, y = scaled_sci_2021)) +
++     +     geom_point(color = "blue") +  # Blue points
++     +     scale_x_log10() +  # Log scale for tradeflow_imf_o
++     +     scale_y_log10() +  # Log scale for scaled_sci_2021
++     +     geom_smooth(method = "lm", color = "red", se = FALSE) +  # Add linear trendline in red
++     +     annotate("text", x = 1, y = 0.5, label = paste(eq_label, "\n p-value:", round(p_value, 4)), color = "black", size = 5) +  # Add equation and p-value text
++     +     labs(
++         +         title = "Scatterplot of Science Data vs Trade Flow (Exports)",
+Error: unexpected '=' in:
+"    +     labs(
+        +         title ="
+> # Fit the linear model to log-transformed data for exports
+> model <- lm(log(scaled_sci_2021) ~ log(tradeflow_imf_o), data = gravity_data)
+> 
+> # Extract the equation and p-value from the model summary
+> summary_model <- summary(model)
+> eq_label <- paste("y =", round(coef(model)[2], 2), "* x +", round(coef(model)[1], 2))
+> p_value <- summary_model$coefficients[2, 4]
+> 
+> # Scatterplot with log scaling and trendline
+> ggplot(gravity_data, aes(x = tradeflow_imf_o, y = scaled_sci_2021)) +
++     geom_point(color = "blue") +  # Blue points
++     scale_x_log10() +  # Log scale for tradeflow_imf_o
++     scale_y_log10() +  # Log scale for scaled_sci_2021
++     geom_smooth(method = "lm", color = "red", se = FALSE) +  # Add linear trendline in red
++     annotate("text", x = 1, y = 0.5, label = paste(eq_label, "\n p-value:", round(p_value, 4)), color = "black", size = 5) +  # Add equation and p-value text
++     labs(
++         title = "Scatterplot of Social Connectedness Data vs Trade Flow (Exports)",
++         x = "Log(Trade Flow (Exports, IMF))",
++         y = "Log(Scaled Social Connectedness Data (2021))"
++     ) +
++     theme_minimal()
+`geom_smooth()` using formula = 'y ~ x'
+Warning messages:
+1: Removed 3785732 rows containing non-finite outside the scale range (`stat_smooth()`). 
+2: Removed 3785732 rows containing missing values or values outside the scale range (`geom_point()`). 
+> 
+> # Fit the linear model to log-transformed data for imports
+> model_imports <- lm(log(scaled_sci_2021) ~ log(tradeflow_imf_d), data = gravity_data)
+> 
+> # Extract the equation and p-value from the model summary for imports
+> summary_model_imports <- summary(model_imports)
+> eq_label_imports <- paste("y =", round(coef(model_imports)[2], 2), "* x +", round(coef(model_imports)[1], 2))
+> p_value_imports <- summary_model_imports$coefficients[2, 4]
+> 
+> # Scatterplot with log scaling for imports and trendline
+> ggplot(gravity_data, aes(x = tradeflow_imf_d, y = scaled_sci_2021)) +
++     geom_point(color = "blue") +  # Blue points
++     scale_x_log10() +  # Log scale for tradeflow_imf_d (imports)
++     scale_y_log10() +  # Log scale for scaled_sci_2021
++     geom_smooth(method = "lm", color = "red", se = FALSE) +  # Add linear trendline in red
++     annotate("text", 
++              x = quantile(gravity_data$tradeflow_imf_d, 0.05),  # Use quantiles for more flexible text positioning
++              y = quantile(gravity_data$scaled_sci_2021, 0.95), 
++              label = paste(eq_label_imports, "\n p-value:", round(p_value_imports, 4)), 
++              color = "black", size = 5) +  # Add equation and p-value text
++     labs(
++         title = "Scatterplot of Social Connectedness Data vs Trade Flow (Imports)",
++         x = "Log(Trade Flow (Imports, IMF))",
++         y = "Log(Scaled Social Connectedness Data (2021))"
++     ) +
++     theme_minimal()
+Error in quantile.default(gravity_data$tradeflow_imf_d, 0.05) : 
+  missing values and NaN's not allowed if 'na.rm' is FALSE
+> # Count the number of negative values in tradeflows_imf_o
+> negative_count <- sum(gravity_data$tradeflows_imf_o < 0)
+Warning message:
+Unknown or uninitialised column: `tradeflows_imf_o`. 
+> print(negative_count)
+[1] 0

@@ -1,0 +1,43 @@
+
+library(igraph)
+library(RColorBrewer)
+library(scales)
+library(dplyr)
+
+#countrues of interest 
+countries <- c("USA", "MEX", "CAN", "FRA", "POL", "ITA", "GBR", "IND", "JPN", "BRA", "EGY", "PRT")
+
+#filtering for relevant only
+filtered_data <- gravity_data %>%
+    filter(iso3_o %in% countries & iso3_d %in% countries) %>%
+    select(iso3_o, iso3_d, scaled_sci_2021)
+
+# removing slef pairs
+cleaned_data_unique <- filtered_data %>%
+    filter(iso3_o != iso3_d) %>%  # Remove self-loops
+    distinct(iso3_o, iso3_d, .keep_all = TRUE)  # Remove duplicates
+
+#graph
+network <- graph_from_data_frame(cleaned_data_unique, directed = FALSE)
+
+
+edge_colors <- rescale(E(network)$scaled_sci_2021, to = c(0, 1))
+
+
+colors <- colorRampPalette(c("lightblue", "blue"))(100)
+
+
+E(network)$color <- colors[round(edge_colors * 99) + 1]
+
+
+edge_widths <- log10(E(network)$scaled_sci_2021 + 1) / log10(max(E(network)$scaled_sci_2021) + 1) * 5  # Scale logarithmically
+
+#plot
+plot(
+    network,
+    edge.width = edge_widths,  # Edge thickness with logarithmic scaling
+    vertex.size = 8,  # Node size
+    vertex.label = V(network)$name,  # Add country names as labels
+    vertex.color = "lightblue",  # Node color
+    main = "Social Connectedness 2021"
+)

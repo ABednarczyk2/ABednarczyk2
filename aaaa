@@ -1,0 +1,31 @@
+> library(RColorBrewer)
+> library(scales)
+Warning message:
+package ‘scales’ was built under R version 4.3.3 
+> 
+> # Create a graph object from the cleaned data
+> network <- graph_from_data_frame(cleaned_data, directed = FALSE)
+> 
+> # Assign a color scale based on the total_sci_2021 values
+> # Normalize the `total_sci_2021` values to range from 0 to 1
+> edge_colors <- rescale(E(network)$total_sci_2021, to = c(0, 1))
+> 
+> # Use a color palette (e.g., Blues) to assign colors to edges
+> colors <- colorRampPalette(brewer.pal(9, "Blues"))(100)
+> 
+> # Assign colors to the edges
+> E(network)$color <- colors[round(edge_colors * 99) + 1]  # Round to index the color palette
+> 
+> # Scale edge width with a more gradual transformation (e.g., log scale)
+> edge_widths <- log(E(network)$total_sci_2021 + 1)  # Log transformation to reduce scale impact
+> 
+> # Plot the network with the color-coded and thinner edges
+> plot(
++     network,
++     edge.width = edge_widths / max(edge_widths) * 5,  # Normalize and reduce width
++     vertex.size = 8,  # Size of nodes
++     vertex.label = V(network)$name,  # Add country names as labels
++     vertex.color = "lightblue",  # Color for nodes
++     main = "Social Connectedness Network with Gradual Edge Thickness"
++ )
+

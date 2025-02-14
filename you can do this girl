@@ -1,0 +1,11 @@
+2. Observe that the share of income that goes to labor is wL
+AKαL
+1−α
+.
+This implies that this share is equal to 1 − α. Therefore we can set
+the value of α using information on the labor share. Find information on the labor share in the U.S. economy and use this to set
+the value of α. You will need to provide information on where you
+found this data in your writeup. You can use Penn World Tables,
+for example.
+
+2. for USA in year 2019 the share of iabor income in GDP is 0.6291631. Data was found in Penn World Tables (Labor Detail variable lab_sh1 all mixed income). So alpha s roughly 0.37 

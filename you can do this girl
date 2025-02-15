@@ -1,3 +1,58 @@
+using QuantEcon  # For Tauchen’s method
+
+# Parameters
+ρ = 0.9                # Persistence parameter
+σ = 0.4                # Standard deviation of shocks
+prod_grid_size = 5     # Number of points in the grid WHY 5 APPARENTLY IT'S THE CONVENTION follow up
+
+# Discretize AR(1) process with Tauchen’s method
+discretized_y = tauchen(prod_grid_size, ρ, σ)
+
+# Adjust productivity grid so that E[z] = 1 I guess with grid size 5 we HAVE to get 0.5
+prod_grid = exp.(discretized_y.state_values .- 0.5 * σ^2 / (1 - ρ^2))
+
+# Display the results
+println("Productivity Grid: ", prod_grid)
+println("Transition Matrix: ", discretized_y.p)
+
+
+#THIS IS TO SEE HOW DIFFERENT GRIDS AFFACT THE Accuracy (more points capture more variation in productivity) AND Computational efficiency (fewer points make calculations faster and less memory-intensive)
+using Pkg
+Pkg.add("StatFiles")
+Pkg.add("DataFrames")
+Pkg.add("CSVFiles")  # Sometimes useful for conversions
+using StatFiles, DataFrames
+using QuantEcon, Plots
+
+ρ = 0.9
+σ = 0.4
+
+function get_prod_grid(n)
+    mc = tauchen(n, ρ, σ)
+    prod_grid = exp.(mc.state_values .- 0.5 * (σ^2) / (1 - ρ^2))
+    return prod_grid, mc.p
+end
+
+grid_sizes = [3, 5, 7, 9]
+plot(title="Productivity Grids with Different Number of Points", xlabel="Grid Index", ylabel="Productivity Level")
+
+for size in grid_sizes
+    prod_grid, _ = get_prod_grid(size)
+    plot!(1:length(prod_grid), prod_grid, label="Grid Size $size", marker=:circle)
+end
+
+display(plot!())
+
+
+
+
+
+
+
+
+
+
+
 2. Observe that the share of income that goes to labor is wL
 AKαL
 1−α
@@ -9,3 +64,49 @@ found this data in your writeup. You can use Penn World Tables,
 for example.
 
 2. for USA in year 2019 the share of iabor income in GDP is 0.6291631. Data was found in Penn World Tables (Labor Detail variable lab_sh1 all mixed income). So alpha s roughly 0.37 
+
+3.
+using NLsolve  # Nonlinear solver for parameter calibration
+
+# Given constants
+α = 0.37
+r = 0.04
+inv_output_ratio = 0.2
+G_output_ratio = 0.2
+w = 1
+L = 1
+
+# System of equations to solve for A, δ, β, τ
+function equations!(F, x)
+    A, δ, β, τ = x
+
+    # 1. From marginal product of labor condition
+    Y = 1 / (1 - α)  # Output per labor is fixed at w = 1
+    K = (w / ((1 - α) * A))^(1/α)  # Capital from MPL condition
+    
+    # 2. Marginal product of capital condition
+    F[1] = r - (α * A * K^(α - 1) * L^(1 - α) - δ)
+    
+    # 3. Investment-output ratio
+    F[2] = (δ * K / Y) - inv_output_ratio
+    
+    # 4. Government spending-output ratio
+    F[3] = (τ * w * L / Y) - G_output_ratio
+    
+    # 5. Euler equation linking β and r
+    F[4] = (1 / β) - (1 + r)
+end
+
+# Initial guesses for A, δ, β, τ
+initial_guess = [1.0, 0.05, 0.96, 0.2]
+
+# Solve the system
+sol = nlsolve(equations!, initial_guess)
+
+# Display results
+A, δ, β, τ = sol.zero
+println("Calibrated Parameters:")
+println("A = ", A)
+println("δ = ", δ)
+println("β = ", β)
+println("τ = ", τ)

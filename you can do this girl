@@ -110,3 +110,82 @@ println("A = ", A)
 println("δ = ", δ)
 println("β = ", β)
 println("τ = ", τ)
+
+
+
+
+
+
+# how to check for robustness 
+If increasing the grid size only changes outcomes slightly, then the solution is robust with respect to grid resolution. ALLEGEDLY 
+
+using Plots
+
+#  tax function defined
+#   T(yi) = yi − (1 − τ) * (yi / ȳ)^(1 − λ) * ȳ
+function tax(yi, ybar, τ, λ)
+    return yi - (1 - τ) * (yi / ybar)^(1 - λ) * ybar
+end
+
+# Example 1: Calculate tax for an individual with income yi,
+# given an average income ybar, an average tax rate τ,
+# and two different progressivity parameters λ.
+yi = 1.5   # individual labor income and this is an example god how do i remember all of that at the same timeeeee 
+ybar = 1.0 # average labor income this one we know from the equilibrium condition: ȳ = 1
+τ = 0.3    # i guess we can guess freely here so let's assume an average tax rate of 30%
+
+λ1 = 0.0   # no progressivity: proportional tax (T(yi) = τ*yi)
+λ2 = 0.15  # progressive tax
+
+tax1 = tax(yi, ybar, τ, λ1)
+tax2 = tax(yi, ybar, τ, λ2)
+
+println("For yi = $yi, ȳ = $ybar, and τ = $τ:")
+println("Tax with λ = $λ1: ", tax1)
+println("Tax with λ = $λ2: ", tax2)
+
+# -----------------------------------------------------------------
+# Now a simplified framework for solving the full model shuld be set up.
+# In the model we will choose an asset grid and solve for the equilibrium (value function iteration can be used here). Here is the 
+ a placeholder function..
+#  'asset_grid_size' and 'curvature' must have chamged  parameters to ensure  robust results .
+
+function solve_equilibrium(λ; asset_grid_size=100, curvature=2.0, tol=1e-6, maxiter=1000)
+    #  non-linear asset grid.
+    # power transformation for curvatureis ok
+    a_min = 0.0
+    a_max = 20.0
+    linear_grid = range(0, 1, length=asset_grid_size)
+    asset_grid = a_min .+ (a_max - a_min) .* (linear_grid .^ curvature)
+    
+    # (Here, you would incorporate the rest of your model:
+    #   - discretize productivity,
+    #   - set up households’ Bellman equations,
+    #   - iterate to convergence,
+    #   - and solve for the equilibrium distribution and aggregate variables.)
+    #
+    # For demonstration purposes, we return a dummy equilibrium result.
+    equilibrium = Dict(
+        "asset_grid" => asset_grid,
+        "λ"          => λ,
+        "dummy_output" => rand(),  # Replace with your computed aggregate output, etc.
+        "average_assets" => mean(asset_grid)
+    )
+    return equilibrium
+end
+
+# Solve the model for both λ values.
+eq1 = solve_equilibrium(λ1, asset_grid_size=150, curvature=2.5)
+eq2 = solve_equilibrium(λ2, asset_grid_size=150, curvature=2.5)
+
+println("\nEquilibrium Results:")
+println("For λ = $λ1: ", eq1)
+println("For λ = $λ2: ", eq2)
+
+# (Optional) Plot the asset grids for visual comparison.
+plot(eq1["asset_grid"], label="λ = $λ1", lw=2)
+plot!(eq2["asset_grid"], label="λ = $λ2", lw=2)
+xlabel!("Asset grid index")
+ylabel!("Asset level")
+title!("Asset Grid Comparison for Different Tax Progressivity")
+

@@ -189,3 +189,65 @@ xlabel!("Asset grid index")
 ylabel!("Asset level")
 title!("Asset Grid Comparison for Different Tax Progressivity")
 
+
+
+
+
+
+
+
+
+# so incresing grid and curvature doesnt chnange the iterations too uch its 450 with smallish tolerance so is it robust????
+function build_asset_grid(grid_size::Int; a_min::Float64=0.0, a_max::Float64=10000.0, curvature::Float64=400.0)
+    base_grid = range(0, 1, length=grid_size)  # Uniform grid from 0 to 1
+    asset_grid = a_min .+ (a_max - a_min) .* (base_grid .^ curvature)
+    return asset_grid
+end
+
+function build_asset_grid(grid_size::Int, a_min::Float64=0.0, a_max::Float64=50.0, curvature::Float64=2.0)
+    base_grid = range(0, 1, length=grid_size)  # Uniform grid from 0 to 1
+    asset_grid = a_min .+ (a_max - a_min) .* (base_grid .^ curvature)
+    return asset_grid
+end
+
+function solve_model(asset_grid; tol=1e-6, maxiter=1000)
+    # Initialization
+    diff = Inf
+    iteration = 0
+    value_function = zeros(length(asset_grid))
+    policy_function = zeros(length(asset_grid))
+    
+    while diff > tol && iteration < maxiter
+        old_value_function = copy(value_function)
+        
+        # Simple Bellman Equation Iteration (replace with your model’s equations)
+        for i in eachindex(asset_grid)
+            value_function[i] = asset_grid[i] + 0.95 * maximum(old_value_function) 
+        end
+        
+        diff = maximum(abs.(value_function - old_value_function))
+        iteration += 1
+    end
+    
+    println("Converged in $iteration iterations with tolerance $diff")
+    return (value_function=value_function, policy_function=policy_function)
+end
+
+
+for grid_size in grid_sizes
+    asset_grid = build_asset_grid(grid_size, curvature=2.0)  # your function to build grid
+    result = solve_model(asset_grid, tol=1e-6, maxiter=1000)
+    results_grid[grid_size] = result
+end
+
+
+
+
+grid_sizes = [100, 150, 200]
+results_grid = Dict()
+
+for grid_size in grid_sizes
+    asset_grid = build_asset_grid(grid_size; curvature=2.0)
+    result = solve_model(asset_grid; tol=1e-6, maxiter=1000)
+    results_grid[grid_size] = result
+end

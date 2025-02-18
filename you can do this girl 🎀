@@ -400,3 +400,96 @@ progressive = compute_stationary_equilibrium(0.15)
 plot_value_and_policy_functions(flat, progressive)
 plot_asset_distributions(flat, progressive)
 plot_lorenz_curves(flat, progressive) #but it has errors 
+
+
+
+#now w/o errors hopefully 
+using LinearAlgebra, Distributions, Plots
+
+# Household Problem Solver (Value Function Iteration)
+function solve_household_problem(r, w, τ, asset_grid, transition_probs, β)
+    V = zeros(length(asset_grid))
+    policy = zeros(Int, length(asset_grid))
+    for _ in 1:500
+        V_new = copy(V)
+        for i in eachindex(asset_grid)
+            consumption = max.(w * (1 - τ) .+ r * asset_grid[i] .- asset_grid, 1e-10)
+            values = log.(consumption) .+ β * dot(transition_probs[i, :], V)
+            V_new[i], policy[i] = findmax(values)
+        end
+        if norm(V_new - V) < 1e-6
+            break
+        end
+        V = V_new
+    end
+    return V, policy
+end
+
+# Stationary Equilibrium Computation with Positional Arguments
+function compute_stationary_equilibrium(λ, β, r, w, τ)
+    asset_grid = range(0, stop=100, length=200)
+    transition_probs = fill(1/length(asset_grid), (length(asset_grid), length(asset_grid)))
+    V, policy = solve_household_problem(r, w, τ, asset_grid, transition_probs, β)
+    capital_supply = mean(asset_grid[policy])
+    output = capital_supply^0.36
+    return (λ = λ, r = r, w = w, τ = τ, capital_supply = capital_supply, output = output, V = V, policy = policy)
+end
+
+# Compare Flat and Progressive Tax Equilibria
+flat_eq = compute_stationary_equilibrium(0.0, 0.96, 0.04, 1.0, 0.2)
+progressive_eq = compute_stationary_equilibrium(0.15, 0.96, 0.04, 1.0, 0.15)
+
+println("Flat Tax Equilibrium: ", flat_eq)
+println("Progressive Tax Equilibrium: ", progressive_eq)
+
+
+
+
+
+
+
+
+
+
+
+# Julia Code: Tax Progressivity Comparison with Aligned Grid and Detailed Outputs
+
+using LinearAlgebra, Distributions, Plots
+
+# Household Problem Solver (Value Function Iteration)
+function solve_household_problem(r, w, τ, asset_grid, transition_probs, β)
+    V = zeros(length(asset_grid))
+    policy = zeros(Int, length(asset_grid))
+    for _ in 1:500
+        V_new = copy(V)
+        for i in eachindex(asset_grid)
+            consumption = max.(w * (1 - τ) .+ r * asset_grid[i] .- asset_grid, 1e-10)
+            values = log.(consumption) .+ β * (transition_probs[i, :] ⋅ V)
+            V_new[i], policy[i] = findmax(values)
+        end
+        if norm(V_new - V) < 1e-6
+            break
+        end
+        V = V_new
+    end
+    return V, policy
+end
+
+# Stationary Equilibrium Computation with Aligned Grid
+function compute_stationary_equilibrium(λ, β, r, w, τ, asset_grid)
+    transition_probs = fill(1/length(asset_grid), (length(asset_grid), length(asset_grid)))
+    V, policy = solve_household_problem(r, w, τ, asset_grid, transition_probs, β)
+    capital_supply = mean(asset_grid[policy])
+    output = capital_supply^0.36
+    return (; λ, r, w, τ, capital_supply, output, V, policy)
+end
+
+# Aligned Asset Grid
+aligned_asset_grid = range(0, 100, length=200)
+
+# Compare Equilibria on Aligned Grid
+flat_eq = compute_stationary_equilibrium(0.0, 0.96, 0.04, 1.0, 0.2, aligned_asset_grid)
+progressive_eq = compute_stationary_equilibrium(0.15, 0.96, 0.04, 1.0, 0.15, aligned_asset_grid)
+
+println("Flat Tax Equilibrium: ", flat_eq)
+println("Progressive Tax Equilibrium: ", progressive_eq)

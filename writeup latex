@@ -1,0 +1,117 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+ \geometry{
+ a4paper,
+ total={170mm,257mm},
+ left=20mm,
+ top=20mm,
+ }
+ \usepackage{graphicx}
+ \usepackage{titling}
+
+ \title{Tax reform in a Heterogeneous Agent Model
+}
+\author{Diyora Azimova, Aleksandra Bednarczyk}
+\date{February 2025}
+ 
+ \usepackage{fancyhdr}
+\fancypagestyle{plain}{%  the preset of fancyhdr 
+    \fancyhf{} % clear all header and footer fields
+    \fancyfoot[R]{\includegraphics[width=2cm]}
+    \fancyfoot[L]{\thedate}
+    \fancyhead[L]{Writeup}
+    \fancyhead[R]{\theauthor}
+}
+\makeatletter
+\def\@maketitle{%
+  \newpage
+  \null
+  \vskip 1em%
+  \begin{center}%
+    \let \footnote \thanks
+    {\LARGE \@title \par}%
+    \vskip 1em%
+    {\large \@author \par}
+    \vskip 1em%
+    {\large \@date \par}
+  \end{center}%
+  \par
+  \vskip 1em
+  \noindent
+  In this analysis, we solve, that is  a standard heterogeneous agent model with incomplete markets to examine the effects of tax progressivity on equilibrium allocations. Households maximize expected lifetime utility subject to budget constraints and borrowing limits. 
+
+\documentclass{article}
+\usepackage{amsmath, amssymb}
+
+\begin{document}
+
+The household's optimization problem is given by:
+
+\begin{equation}
+    \max_{\{c_{i,t}\}_{t=0}^{\infty}} \mathbb{E}_0 \sum_{t=0}^{\infty} \beta^t u(c_{i,t}),
+\end{equation}
+
+
+Households face the following budget constraint:
+
+\begin{equation}
+    c_{i,t} + a_{i,t+1} = y_{i,t} - T(y_{i,t}) + (1 + r) a_{i,t},
+\end{equation}
+
+
+\begin{document}
+
+The household's Bellman equation thenis:
+
+\begin{equation}
+    V(a, y) = \max_{c, a'} \left\{ u(c) + \beta \mathbb{E} [V(a', y') | y] \right\}
+\end{equation}
+
+\begin{document}
+
+Here:
+\begin{itemize}
+    \item \( V(a, y) \) is the value function, which represents the maximum expected lifetime utility given current assets \( a \) and income \( y \).
+    \item \( c \) is consumption.
+    \item \( a' \) is next-period asset holdings.
+    \item \( T(y) \) represents taxes on income.
+    \item \( r \) is the interest rate.
+    \item \( \beta \) is the discount factor.
+    \item The expectation is taken over future income \( y' \), given the current income \( y \).
+\end{itemize}
+
+\end{document}
+
+
+
+
+
+ 
+ 
+ where \( c = w (1 - \tau) z + r a - a' \) is consumption, \( a \) is assets, \( z \) represents idiosyncratic labor productivity shocks, \( w \) is the wage, \( r \) is the interest rate, and \( \tau \) is the tax rate. The transition of \( z \) follows an AR(1) process discretized using Tauchen's method.
+}
+\makeatother
+
+
+
+\maketitle
+
+\usepackage{lipsum}  
+\usepackage{cmbright}
+
+\begin{document}
+
+
+
+
+
+\section*{Objectives}
+\lipsum[3-3]
+
+\section*{Plan}
+\lipsum[4-4]
+
+
+
+\end{document}

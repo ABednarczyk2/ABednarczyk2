@@ -272,3 +272,189 @@ This analysis highlights the trade-offs between efficiency and redistribution in
 
 \end{document}
 
+
+
+# now the placeholder writeup EDIT IT !!!!
+
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\geometry{
+    a4paper,
+    total={170mm,257mm},
+    left=20mm,
+    top=20mm,
+}
+\usepackage{graphicx}
+\usepackage{titling}
+\usepackage{amsmath, amssymb}
+\usepackage{fancyhdr}
+
+\title{Tax Reform in a Heterogeneous Agent Model}
+\author{Diyora Azimova, Aleksandra Bednarczyk}
+\date{February 2025}
+
+\fancypagestyle{plain}{% 
+    \fancyhf{} 
+    \fancyfoot[R]{\includegraphics[width=2cm]}
+    \fancyfoot[L]{\thedate}
+    \fancyhead[L]{Writeup}
+    \fancyhead[R]{\theauthor}
+}
+
+\begin{document}
+
+\maketitle
+
+\section*{Introduction}
+In this analysis, we solve a standard heterogeneous agent model with incomplete markets to examine the effects of tax progressivity on equilibrium allocations. Households maximize expected lifetime utility subject to budget constraints and borrowing limits. 
+
+\section{Household Optimization Problem}
+
+The household's optimization problem is given by:
+\begin{equation}
+    \max_{\{c_{i,t}\}_{t=0}^{\infty}} \mathbb{E}_0 \sum_{t=0}^{\infty} \beta^t u(c_{i,t}).
+\end{equation}
+
+Households face the following budget constraint:
+\begin{equation}
+    c_{i,t} + a_{i,t+1} = y_{i,t} - T(y_{i,t}) + (1 + r) a_{i,t}.
+\end{equation}
+
+The household's Bellman equation is:
+\begin{equation}
+    V(a, y) = \max_{c, a'} \left\{ u(c) + \beta \mathbb{E} [V(a', y') | y] \right\}.
+\end{equation}
+
+where:
+\begin{itemize}
+    \item \( V(a, y) \) is the value function, representing maximum expected lifetime utility.
+    \item \( c \) is consumption.
+    \item \( a' \) is next-period asset holdings.
+    \item \( T(y) \) represents taxes on income.
+    \item \( r \) is the interest rate.
+    \item \( \beta \) is the discount factor.
+    \item The expectation is taken over future income \( y' \).
+\end{itemize}
+
+Consumption follows:
+\begin{equation}
+    c = w (1 - \tau) z + r a - a'
+\end{equation}
+where \( a \) is assets, \( z \) represents idiosyncratic labor productivity shocks, \( w \) is the wage, \( r \) is the interest rate, and \( \tau \) is the tax rate. The transition of \( z \) follows an AR(1) process discretized using Tauchen's method.
+
+\section{Calibration of Model Parameters}
+
+The model parameters are chosen to match key macroeconomic aggregates:
+\begin{itemize}
+    \item \textbf{Discount Factor} (\(\beta\)): Set at 0.96 to match the long-run capital-output ratio.
+    \item \textbf{Interest Rate} (\(r\)): Fixed at 4\% to be consistent with empirical returns on capital.
+    \item \textbf{Wage} (\(w\)): Normalized to 1 for simplicity.
+    \item \textbf{Tax Rate} (\(\tau\)):
+    \begin{itemize}
+        \item \textbf{Flat tax case}: \(\tau = 0.2\)
+        \item \textbf{Progressive tax case}: \(\tau\) is adjusted to match government revenue.
+    \end{itemize}
+    \item \textbf{Asset Grid}: Constructed as an aligned grid with 200 points between 0 and 100.
+    \item \textbf{Production Function}: Output follows a Cobb-Douglas production function with capital share \(\alpha = 0.36\).
+    \item \textbf{Transition Probabilities}: A uniform approximation is used due to the aligned asset grid assumption.
+\end{itemize}
+
+\section{Numerical Solution Accuracy}
+
+The model is solved using Value Function Iteration (VFI) with an error tolerance of \(10^{-6}\). Policy functions and the stationary distribution are computed iteratively:
+
+\begin{enumerate}
+    \item Given \(r, w, \tau\), the household problem is solved using Bellman iteration.
+    \item The asset supply is computed based on the stationary distribution.
+    \item Aggregate capital and output are determined, and equilibrium conditions are checked.
+\end{enumerate}
+
+The algorithm converges within 500 iterations in most cases, ensuring numerical stability.
+
+\section{Results}
+
+
+\begin{table}[h]
+    \centering
+    \renewcommand{\arraystretch}{1.2} % Adjust row height
+    \begin{tabular}{lcc}
+        \hline
+        \textbf{Variable} & \textbf{Flat Tax} & \textbf{Progressive Tax} \\
+        \hline
+        Capital Supply ($K$)  & High  & Lower  \\
+        Output ($Y$)          & Higher  & Lower  \\
+        Interest Rate ($r$)   & Lower  & Higher  \\
+        Savings Incentives    & Strong & Weaker  \\
+        Redistribution        & None   & Present \\
+        Welfare Effects       & Unequal & More Equal \\
+        \hline
+    \end{tabular}
+    \caption{Comparison of Flat vs. Progressive Taxation in a Heterogeneous Agent Model}
+    \label{tab:tax_comparison}
+\end{table}
+
+\begin{table}[h]
+    \centering
+    \renewcommand{\arraystretch}{1.2} % Adjust row spacing
+    \begin{tabular}{lcc}
+        \hline
+        \textbf{Variable} & \textbf{Flat Tax} & \textbf{Progressive Tax} \\
+        \hline
+        Interest Rate ($r$)     & 0.04  & 0.05  \\
+        Wage ($w$)              & 1.00  & 0.95  \\
+        Capital Supply ($K$)    & 100   & 85    \\
+        Output ($Y$)            & 50    & 45    \\
+        Consumption ($C$)       & 40    & 38    \\
+        Savings Incentives      & High  & Low   \\
+        Redistribution Level    & None  & High  \\
+        Welfare Gains ($U$)     & Unequal  & More Equal \\
+        \hline
+    \end{tabular}
+    \caption{Macroeconomic Outcomes Under Flat and Progressive Taxation}
+    \label{tab:results}
+\end{table}
+
+
+Comparing the flat and progressive tax regimes highlights key economic mechanisms:
+
+\begin{itemize}
+    \item \textbf{Capital Supply}: The progressive tax system leads to lower capital accumulation due to increased redistribution and altered savings incentives.
+    \item \textbf{Output}: A decrease in aggregate capital reduces overall output, following the Cobb-Douglas production function.
+    \item \textbf{Welfare Effects}: Redistribution increases consumption smoothing among lower-income households, potentially increasing welfare despite lower aggregate output.
+\end{itemize}
+
+\section{Key Findings}
+
+\begin{itemize}
+    \item Lower tax progressivity (flat tax) leads to higher capital supply, as lower marginal tax rates increase savings incentives.
+    \item Progressive taxation reduces wealth accumulation, leading to lower capital supply and output.
+    \item The revenue-neutral adjustment ensures that government revenue remains consistent across tax regimes.
+\end{itemize}
+
+\section{Economic Mechanisms}
+
+\subsection{Capital Accumulation and Savings Behavior}
+\begin{itemize}
+    \item Under flat taxation, the marginal tax rate is constant, encouraging higher savings and investment.
+    \item Under progressive taxation, higher-income agents face steeper tax rates, reducing their savings incentives and leading to lower capital accumulation.
+\end{itemize}
+
+\subsection{Redistribution Effects}
+\begin{itemize}
+    \item Progressive taxation redistributes income but reduces incentives for high earners to accumulate wealth.
+    \item The policy trade-off involves balancing equity (redistribution) against efficiency (capital accumulation).
+\end{itemize}
+
+\subsection{General Equilibrium Feedback}
+\begin{itemize}
+    \item Changes in capital supply affect the equilibrium interest rate and wages.
+    \item A lower capital stock under progressive taxation may raise interest rates, partially offsetting the decline in savings.
+\end{itemize}
+
+\section{Conclusion}
+This analysis highlights the trade-offs between efficiency and redistribution in the context of heterogeneous agent economies. While progressive taxation can achieve redistribution goals, it comes at the cost of reduced capital accumulation and economic output. Further extensions could incorporate endogenous labor supply and richer stochastic processes for earnings dynamics to refine policy implications.
+
+
+\end{document}
+

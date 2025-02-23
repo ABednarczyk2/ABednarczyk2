@@ -1,0 +1,139 @@
+
+
+
+
+> library(readxl)
+
+> library(dplyr)
+
+
+> # dataset
+> data <- read_excel("C:/Users/2022/Desktop/gravity/THESIS/J341967.xlsx")
+> 
+> 
+> 
+> View(data)
+> library(dplyr)
+> 
+> # 1. Splitting the full data into three datasets using the column names.
+> data1 <- data[, c("ER66001", "ER66002", "ER66048", "ER66051", "ER66069", "ER66072",
++                   "ER71426", "ER71492", "ER71494", "ER71527B", "ER71571")]
+> data2 <- data[, c("ER72001", "ER72002", "ER72048", "ER72051", "ER72072",
++                   "ER77448", "ER77521", "ER77525", "ER77587", "ER77631", "ER77632")]
+> data3 <- data[, c("ER78001", "ER78002", "ER78049", "ER78052", "ER78073",
++                   "ER81775", "ER81848", "ER81852", "ER81914", "ER81958")]
+> 
+> # 2. Create a new variable "famid" from the interview ID columns.
+> data1 <- data1 %>% mutate(famid = ER66002)
+> data2 <- data2 %>% mutate(famid = ER72002)
+> data3 <- data3 %>% mutate(famid = ER78002)
+> 
+> # 3. Merge the datasets on famid.
+> # Using inner_join ensures that only families present in all three datasets are kept.
+> merged_data <- data1 %>%
++     inner_join(data2, by = "famid", suffix = c("_2017", "_2019")) %>%
++     inner_join(data3, by = "famid")  # You can add a suffix for the third year if desired
+Error in `inner_join()`:
+! This join would result in more rows than dplyr can handle.
+ℹ 10984873552 rows would be returned. 2147483647 rows is the maximum number allowed.
+ℹ Double check your join keys. This error commonly occurs due to a missing join key, or an improperly specified join
+  condition.
+Run `rlang::last_trace()` to see where the error occurred.
+Warning message:
+In inner_join(., data2, by = "famid", suffix = c("_2017", "_2019")) :
+  Detected an unexpected many-to-many relationship between `x` and `y`.
+ℹ Row 8 of `x` matches multiple rows in `y`.
+ℹ Row 7 of `y` matches multiple rows in `x`.
+ℹ If a many-to-many relationship is expected, set `relationship = "many-to-many"` to silence this warning.
+> View(data1)
+> View(data2)
+> library(dplyr)
+> 
+> # Assuming data1, data2, and data3 each have a unique famid
+> # (e.g. famid in data1 is ER66002, in data2 is ER72002, in data3 is ER78002)
+> 
+> # Merge horizontally by joining on famid
+> merged_data <- data1 %>%
++     inner_join(data2, by = "famid", suffix = c("_2017", "_2019")) %>%
++     inner_join(data3, by = "famid", suffix = c("", "_2021"))
+Error in `inner_join()`:
+! This join would result in more rows than dplyr can handle.
+ℹ 10984873552 rows would be returned. 2147483647 rows is the maximum number allowed.
+ℹ Double check your join keys. This error commonly occurs due to a missing join key, or an improperly specified join
+  condition.
+Run `rlang::last_trace()` to see where the error occurred.
+Warning message:
+In inner_join(., data2, by = "famid", suffix = c("_2017", "_2019")) :
+  Detected an unexpected many-to-many relationship between `x` and `y`.
+ℹ Row 8 of `x` matches multiple rows in `y`.
+ℹ Row 7 of `y` matches multiple rows in `x`.
+ℹ If a many-to-many relationship is expected, set `relationship = "many-to-many"` to silence this warning.
+> library(dplyr)
+> 
+> # Check for duplicate famid values in each dataset:
+> dup_data1 <- data1 %>% count(famid) %>% filter(n > 1)
+> dup_data2 <- data2 %>% count(famid) %>% filter(n > 1)
+> dup_data3 <- data3 %>% count(famid) %>% filter(n > 1)
+> 
+> # View the duplicates (if any)
+> dup_data1
+# A tibble: 1 × 2
+  famid     n
+  <dbl> <int>
+1    NA  2084
+> dup_data2
+# A tibble: 1 × 2
+  famid     n
+  <dbl> <int>
+1    NA  2122
+> dup_data3
+# A tibble: 1 × 2
+  famid     n
+  <dbl> <int>
+1    NA  2484
+> 
+> # If duplicates are not intended, you can remove them (keeping the first occurrence):
+> data1_unique <- data1 %>% distinct(famid, .keep_all = TRUE)
+> data2_unique <- data2 %>% distinct(famid, .keep_all = TRUE)
+> data3_unique <- data3 %>% distinct(famid, .keep_all = TRUE)
+> 
+> # Then perform the merge by joining on famid:
+> merged_data <- data1_unique %>%
++     inner_join(data2_unique, by = "famid", suffix = c("_2017", "_2019")) %>%
++     inner_join(data3_unique, by = "famid", suffix = c("", "_2021"))
+> 
+> # Check dimensions to confirm one row per family
+> dim(merged_data)
+[1] 9120   33
+> head(merged_data)
+# A tibble: 6 × 33
+  ER66001 ER66002 ER66048 ER66051 ER66069 ER66072 ER71426 ER71492 ER71494 ER71527B ER71571 famid ER72001 ER72002
+    <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>    <dbl>   <dbl> <dbl>   <dbl>   <dbl>
+1       3    5620       0       0       0       0   10800       0    4020    14750  34969.  5620       1    5620
+2       3    8559       1  100000       5       0   56000   10596       0    38185  25362.  8559       1    8559
+3       3    6510       0       0       0       0    3705       0    6900    10676  17455.  6510       1    6510
+4       3    9172       0       0       0       0   89347       0    3000    13320  12349.  9172       1    9172
+5       3    7682       0       0       0       0   23500       0    7200    27441  11064.  7682       1    7682
+6       3    6393       0       0       0       0   37207       0    8700    21150   8997.  6393       1    6393
+# ℹ 19 more variables: ER72048 <dbl>, ER72051 <dbl>, ER72072 <dbl>, ER77448 <dbl>, ER77521 <dbl>, ER77525 <dbl>,
+#   ER77587 <dbl>, ER77631 <dbl>, ER77632 <dbl>, ER78001 <dbl>, ER78002 <dbl>, ER78049 <dbl>, ER78052 <dbl>,
+#   ER78073 <dbl>, ER81775 <dbl>, ER81848 <dbl>, ER81852 <dbl>, ER81914 <dbl>, ER81958 <dbl>
+> 
+> final_data <- merged_data %>%
++     select(-ER66002, -ER72002, -ER78002)
+> 
+> View(final_data)
+> View(final_data)
+> # Install and load the writexl package if you haven't already
+> if (!require("writexl")) install.packages("writexl")
+Loading required package: writexl
+Warning message:
+package ‘writexl’ was built under R version 4.3.3 
+> library(writexl)
+> 
+> # Write final_data to an Excel file called "final_data.xlsx"
+> write_xlsx(final_data, "final_data.xlsx")
+
+
+
+

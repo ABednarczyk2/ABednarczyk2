@@ -135,5 +135,81 @@ package ‘writexl’ was built under R version 4.3.3
 > write_xlsx(final_data, "final_data.xlsx")
 
 
+View(finalnew_data)
+> View(data1)
+> View(data3)
+> library(dplyr)
+> 
+> # Remove rows where any numeric variable (except famid) is below the 1st or above the 99th percentile.
+> finalnew_data_trimmed <- finalnew_data %>%
++     filter(
++         if_all(
++             .cols = -famid, 
++             .fns = ~ . >= quantile(., 0.01, na.rm = TRUE) & . <= quantile(., 0.99, na.rm = TRUE)
++         )
++     )
+> 
+> model1 <- lm(deltacons19 ~ deltaincome19 + totmort19_deflated + 
++                  totmort17_deflated + deltaincome19:totmort19_deflated + 
++                  deltaincome19:totmort17_deflated, 
++              data = finalnew_data_trimmed)
+> 
+> model2 <- lm(deltacons21 ~ deltaincome21 + totmort21_deflated + 
++                  totmort19_deflated + deltaincome21:totmort21_deflated + 
++                  deltaincome21:totmort19_deflated, 
++              data = finalnew_data_trimmed)
+> 
+> summary(model1)
+
+Call:
+lm(formula = deltacons19 ~ deltaincome19 + totmort19_deflated + 
+    totmort17_deflated + deltaincome19:totmort19_deflated + deltaincome19:totmort17_deflated, 
+    data = finalnew_data_trimmed)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-107849  -13304     167   13517  116104 
+
+Coefficients:
+                                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                      -1.834e+02  2.914e+02  -0.629 0.529178    
+deltaincome19                     2.753e-01  3.611e-03  76.241  < 2e-16 ***
+totmort19_deflated                3.791e-04  2.076e-04   1.826 0.067827 .  
+totmort17_deflated               -8.092e-04  2.003e-04  -4.041 5.38e-05 ***
+deltaincome19:totmort19_deflated -1.928e-09  2.667e-09  -0.723 0.469874    
+deltaincome19:totmort17_deflated -8.745e-09  2.351e-09  -3.720 0.000201 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 23520 on 6891 degrees of freedom
+Multiple R-squared:  0.4731,	Adjusted R-squared:  0.4727 
+F-statistic:  1237 on 5 and 6891 DF,  p-value: < 2.2e-16
+
+> summary(model2)
+
+Call:
+lm(formula = deltacons21 ~ deltaincome21 + totmort21_deflated + 
+    totmort19_deflated + deltaincome21:totmort21_deflated + deltaincome21:totmort19_deflated, 
+    data = finalnew_data_trimmed)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-106166  -13800     382   13882  100430 
+
+Coefficients:
+                                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                      -6.205e+02  3.025e+02  -2.051   0.0403 *  
+deltaincome21                     2.454e-01  3.576e-03  68.621   <2e-16 ***
+totmort21_deflated                2.550e-04  2.844e-04   0.897   0.3699    
+totmort19_deflated               -6.759e-04  2.114e-04  -3.197   0.0014 ** 
+deltaincome21:totmort21_deflated -2.641e-09  3.300e-09  -0.800   0.4236    
+deltaincome21:totmort19_deflated -6.132e-10  2.262e-09  -0.271   0.7863    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 24470 on 6891 degrees of freedom
+Multiple R-squared:  0.424,	Adjusted R-squared:  0.4236 
+F-statistic:  1015 on 5 and 6891 DF,  p-value: < 2.2e-16
+
 
 

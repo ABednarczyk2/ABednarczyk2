@@ -493,3 +493,19 @@ progressive_eq = compute_stationary_equilibrium(0.15, 0.96, 0.04, 1.0, 0.15, ali
 
 println("Flat Tax Equilibrium: ", flat_eq)
 println("Progressive Tax Equilibrium: ", progressive_eq)
+
+
+banks rely on interbank market where banks with reserve surplus lend and those with reserve shortage borrow this is the primary way of managing liquidity. however this is not the last recourse- banks can borrow off the Central Bank. It's not ideal as these rates tend to be higher but it provides a cushion, especially in the situation of crisis. this is also why banks have to "listen" to regulators. In case of interbank market drying up they dont want to be left without only possible line of credit. ECB however, charges banks according to their perceived riskiness and this process is mirrored further. Interestingly the small and medium clients take the majority of this premium. It makes sense that the corporations have better means to defy paying more. They are potentially less risky (transparency- their financial reports are usualy more robust), there is still a bigger chance of government support for corporation than for a small company (even though we have reaized that thare is no such thing as too big to fail). 
+
+banks can be penalized for violating standards in terms of loan granting and pricing. an example from textbook was that austrian banks spreading into eastern europe didnt properly inform clients of the exchange rate risk (Hungarian loans priced in CHF which undergone revaluation during the crisis). the financial crisis put many optimistic practices to the test. transparency, fairness and avoidance of excessive risk taking are not only encouraged but also checked with banks violating them liable to fines etc. In fact banks have to make more detailed analyses of risk like for example avoid taking on cliants or too many clients that are in the same line of business (industry risk) 
+
+Basel 2 and Basel 3
+
+Interest works in such a way the non-defaulting clients pay for the defaulting ones. 
+In this way this process functions just like insurance. 
+If the Expected Loss (EL) is as forecasted then return on equity is as desired but if the number of defaulting clients is significantly higher than expected the bank can run into trouble. 
+This happened on an enormous scale during the Global Financial Crisis. 
+
+Lately there is a push for Risk Adjusted Pricing. Entire pool of clients is divided into smaller groups with similar EL forecasts. 
+This could lead to Adverse Selection
+

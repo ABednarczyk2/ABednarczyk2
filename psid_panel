@@ -1,37 +1,20 @@
 > head(f))  # family file example
-   year   age_head  principal1  principal2  income  rent_exp  mort_exp  tot_exp  
-1: 2017             ER66051     ER66072     ER71426
-2: 2019             
-3: 2021              
+   year   age_head  principal1  principal2  income   rent_exp  mort_exp  tot_exp  
+1: 2017             ER66051     ER66072     ER71426  ER71494   ER71492   ER71527B
+2: 2019             ER72051     ER72072     ER77448  ER77525   ER77521   ER77587
+3: 2021             ER78052     ER78073     ER81775  ER81852   ER81848   ER81914
 
 
-                     
-    A24 REM PRINCIPAL MOR 1                 
-ER66069    A28 2ND MORTGAGE                        
-    A24 REM PRINCIPAL MOR 2                 
-    TOTAL FAMILY INCOME-2016                
-ER71492    MORTGAGE EXPENDITURE 2017               
-ER71494    RENT EXPENDITURE 2017                   
-ER71527B   TOTAL EXPENDITURE                       
-ER71571    2017 CROSS-SECTIONAL FAMILY WEIGHT      
-ER72001    RELEASE NUMBER                          
-ER72002    2019 FAMILY INTERVIEW (ID) NUMBER       
-ER72048    A23 HAVE MORTGAGE?                      
-ER72051    A24 REM PRINCIPAL MOR 1                 
-ER72072    A24 REM PRINCIPAL MOR 2                 
-ER77448    TOTAL FAMILY INCOME-2018                
-ER77521    MORTGAGE EXPENDITURE 2019               
-ER77525    RENT EXPENDITURE 2019                   
-ER77587    TOTAL EXPENDITURE                       
+                                           
 ER77631    2019 CORE/IMMIGRANT FAM WEIGHT NUMBER 1 
 ER77632    2019 CROSS-SECTIONAL FAMILY WEIGHT      
 ER78001    RELEASE NUMBER                          
 ER78002    2021 FAMILY INTERVIEW (ID) NUMBER       
 ER78049    A23 HAVE MORTGAGE?                      
-ER78052    A24 REM PRINCIPAL MOR 1                 
-ER78073    A24 REM PRINCIPAL MOR 2                 
-ER81775    TOTAL FAMILY INCOME-2020                
-ER81848    MORTGAGE EXPENDITURE 2021               
-ER81852    RENT EXPENDITURE 2021                   
-ER81914    TOTAL EXPENDITURE                       
+   A24 REM PRINCIPAL MOR 1                 
+   A24 REM PRINCIPAL MOR 2                 
+    TOTAL FAMILY INCOME-2020                
+    MORTGAGE EXPENDITURE 2021               
+   RENT EXPENDITURE 2021                   
+    TOTAL EXPENDITURE                       
 ER81958    2021 CORE/IMMIGRANT FAM WEIGHT NUMBER 1 

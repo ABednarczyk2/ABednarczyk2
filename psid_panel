@@ -5,4 +5,211 @@
 3: 2021   ER78017  ER78052     ER78073     ER81775  ER81852   ER81848   ER81914
 
 
-                                           
+
+
+Call:
+lm(formula = deltacons19 ~ deltaincome19 + totmort19_deflated + 
+    totmort17_deflated + deltaincome19:totmort19_deflated + deltaincome19:totmort17_deflated, 
+    data = cleaned_data)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-124515   -8628   -1127    7088  263529 
+
+Coefficients:
+                                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                       1.038e+03  4.618e+02   2.248   0.0247 *  
+deltaincome19                     1.269e-01  1.109e-02  11.439   <2e-16 ***
+totmort19_deflated                1.428e-04  3.457e-04   0.413   0.6795    
+totmort17_deflated               -3.004e-04  3.030e-04  -0.991   0.3216    
+deltaincome19:totmort19_deflated  1.464e-08  8.921e-09   1.640   0.1010    
+deltaincome19:totmort17_deflated -1.822e-09  9.017e-09  -0.202   0.8399    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 21040 on 2170 degrees of freedom
+  (108 observations deleted due to missingness)
+Multiple R-squared:  0.06413,	Adjusted R-squared:  0.06197 
+F-statistic: 29.74 on 5 and 2170 DF,  p-value: < 2.2e-16
+#############################################################################
+now 2 models
+#############################################################################
+Call:
+lm(formula = deltacons21 ~ deltaincome21 + totmort21_deflated + 
+    totmort19_deflated + deltaincome21:totmort21_deflated + deltaincome21:totmort19_deflated, 
+    data = cleaned_data)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-247718   -8392    1340    8802  121956 
+
+Coefficients:
+                                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                      -1.967e+03  4.740e+02  -4.150 3.46e-05 ***
+deltaincome21                     1.160e-01  1.058e-02  10.972  < 2e-16 ***
+totmort21_deflated                2.933e-04  5.583e-04   0.525   0.5994    
+totmort19_deflated               -4.725e-05  3.844e-04  -0.123   0.9022    
+deltaincome21:totmort21_deflated  2.443e-08  1.110e-08   2.201   0.0278 *  
+deltaincome21:totmort19_deflated  7.672e-09  8.700e-09   0.882   0.3780    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 21770 on 2176 degrees of freedom
+  (102 observations deleted due to missingness)
+Multiple R-squared:  0.06384,	Adjusted R-squared:  0.06169 
+F-statistic: 29.68 on 5 and 2176 DF,  p-value: < 2.2e-16
+###################################################################################
+now these 2 but divided on income 
+###################################################################################
+print(model1_low)
+Call:
+lm(formula = formula, data = filter(data, income_group == group))
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-118763   -5171    -514    4294   82710 
+
+Coefficients:
+                                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                       4.710e+02  6.025e+02   0.782   0.4346    
+deltaincome19                     1.824e-01  2.350e-02   7.763 2.87e-14 ***
+totmort19_deflated               -8.617e-04  4.744e-04  -1.817   0.0697 .  
+totmort17_deflated                7.816e-05  3.788e-04   0.206   0.8366    
+deltaincome19:totmort19_deflated -2.933e-08  1.851e-08  -1.585   0.1135    
+deltaincome19:totmort17_deflated  2.599e-08  1.709e-08   1.521   0.1287    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 14720 on 718 degrees of freedom
+  (29 observations deleted due to missingness)
+Multiple R-squared:  0.0886,	Adjusted R-squared:  0.08225 
+F-statistic: 13.96 on 5 and 718 DF,  p-value: 4.862e-13
+
+> print(model1_middle)
+
+Call:
+lm(formula = formula, data = filter(data, income_group == group))
+
+Residuals:
+   Min     1Q Median     3Q    Max 
+-71907  -7588   -572   7018  90681 
+
+Coefficients:
+                                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                       1.625e+02  6.584e+02   0.247    0.805    
+deltaincome19                     1.129e-01  1.847e-02   6.113 1.59e-09 ***
+totmort19_deflated                2.112e-04  5.463e-04   0.387    0.699    
+totmort17_deflated                1.779e-04  4.150e-04   0.429    0.668    
+deltaincome19:totmort19_deflated -1.830e-08  2.057e-08  -0.889    0.374    
+deltaincome19:totmort17_deflated  1.072e-08  1.368e-08   0.784    0.433    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 17420 on 733 degrees of freedom
+  (14 observations deleted due to missingness)
+Multiple R-squared:  0.05283,	Adjusted R-squared:  0.04637 
+F-statistic: 8.178 on 5 and 733 DF,  p-value: 1.587e-07
+
+> print(model1_high)
+
+Call:
+lm(formula = formula, data = filter(data, income_group == group))
+
+Residuals:
+   Min     1Q Median     3Q    Max 
+-97379 -13811  -2140  11034 262265 
+
+Coefficients:
+                                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                       3.524e+03  1.165e+03   3.025  0.00258 ** 
+deltaincome19                     1.036e-01  2.016e-02   5.139 3.57e-07 ***
+totmort19_deflated               -3.175e-05  8.495e-04  -0.037  0.97020    
+totmort17_deflated               -1.063e-03  8.481e-04  -1.253  0.21061    
+deltaincome19:totmort19_deflated  2.761e-08  1.555e-08   1.775  0.07625 .  
+deltaincome19:totmort17_deflated -9.018e-09  1.732e-08  -0.521  0.60268    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 28450 on 707 degrees of freedom
+  (40 observations deleted due to missingness)
+Multiple R-squared:  0.05038,	Adjusted R-squared:  0.04366 
+F-statistic: 7.501 on 5 and 707 DF,  p-value: 7.126e-07
+
+> 
+> # Print summaries for Model 2 (2019-2021)
+> print(model2_low)
+
+Call:
+lm(formula = formula, data = filter(data, income_group == group))
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-101530   -4940     375    5947   91464 
+
+Coefficients:
+                                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                      -3.335e+02  6.317e+02  -0.528   0.5977    
+deltaincome21                     2.117e-01  1.711e-02  12.370   <2e-16 ***
+totmort21_deflated               -1.001e-03  7.831e-04  -1.278   0.2017    
+totmort19_deflated                4.553e-05  5.972e-04   0.076   0.9393    
+deltaincome21:totmort21_deflated  2.370e-08  9.488e-09   2.498   0.0127 *  
+deltaincome21:totmort19_deflated -4.796e-09  1.157e-08  -0.414   0.6787    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 16090 on 732 degrees of freedom
+  (15 observations deleted due to missingness)
+Multiple R-squared:  0.2053,	Adjusted R-squared:  0.1999 
+F-statistic: 37.83 on 5 and 732 DF,  p-value: < 2.2e-16
+
+> print(model2_middle)
+
+Call:
+lm(formula = formula, data = filter(data, income_group == group))
+
+Residuals:
+   Min     1Q Median     3Q    Max 
+-81928  -7794    290   8092 101965 
+
+Coefficients:
+                                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                      -1.526e+03  6.297e+02  -2.424   0.0156 *  
+deltaincome21                     7.392e-02  1.833e-02   4.031 6.12e-05 ***
+totmort21_deflated                1.336e-03  8.388e-04   1.593   0.1116    
+totmort19_deflated                4.159e-04  5.082e-04   0.818   0.4135    
+deltaincome21:totmort21_deflated  5.505e-08  5.318e-08   1.035   0.3010    
+deltaincome21:totmort19_deflated -6.260e-09  2.529e-08  -0.248   0.8046    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 16760 on 730 degrees of freedom
+  (17 observations deleted due to missingness)
+Multiple R-squared:  0.02948,	Adjusted R-squared:  0.02283 
+F-statistic: 4.435 on 5 and 730 DF,  p-value: 0.0005493
+
+> print(model2_high)
+
+Call:
+lm(formula = formula, data = filter(data, income_group == group))
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-243636  -12776    1628   14613  122425 
+
+Coefficients:
+                                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                      -6.029e+03  1.176e+03  -5.126 3.83e-07 ***
+deltaincome21                     7.363e-02  2.016e-02   3.652  0.00028 ***
+totmort21_deflated                1.377e-03  1.525e-03   0.903  0.36691    
+totmort19_deflated                7.240e-06  1.038e-03   0.007  0.99444    
+deltaincome21:totmort21_deflated -4.629e-08  7.075e-08  -0.654  0.51315    
+deltaincome21:totmort19_deflated  1.665e-08  1.840e-08   0.905  0.36602    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 29360 on 702 degrees of freedom
+  (45 observations deleted due to missingness)
+Multiple R-squared:  0.0239,	Adjusted R-squared:  0.01695 
+F-statistic: 3.438 on 5 and 702 DF,  p-value: 0.004466
+########
+

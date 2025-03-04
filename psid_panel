@@ -1,12 +1,20 @@
+####################################################################################
+panel table
+####################################################################################
 > head(f))  # family file example
    year   age_ref  principal1  principal2  income   rent_exp  mort_exp  tot_exp  
 1: 2017   ER66017  ER66051     ER66072     ER71426  ER71494   ER71492   ER71527B
 2: 2019   ER72017  ER72051     ER72072     ER77448  ER77525   ER77521   ER77587
 3: 2021   ER78017  ER78052     ER78073     ER81775  ER81852   ER81848   ER81914
 
+Error in get.psid(family[i, "file"], name = paste0(datadir, "FAM", family[i,  : 
+  no longer logged in
 
+makes no sense since i can log on their page ok
 
-
+####################################################################################
+model1
+####################################################################################
 Call:
 lm(formula = deltacons19 ~ deltaincome19 + totmort19_deflated + 
     totmort17_deflated + deltaincome19:totmort19_deflated + deltaincome19:totmort17_deflated, 
@@ -32,7 +40,7 @@ Residual standard error: 21040 on 2170 degrees of freedom
 Multiple R-squared:  0.06413,	Adjusted R-squared:  0.06197 
 F-statistic: 29.74 on 5 and 2170 DF,  p-value: < 2.2e-16
 #############################################################################
-now 2 models
+model2
 #############################################################################
 Call:
 lm(formula = deltacons21 ~ deltaincome21 + totmort21_deflated + 
@@ -59,7 +67,7 @@ Residual standard error: 21770 on 2176 degrees of freedom
 Multiple R-squared:  0.06384,	Adjusted R-squared:  0.06169 
 F-statistic: 29.68 on 5 and 2176 DF,  p-value: < 2.2e-16
 ###################################################################################
-now these 2 but divided on income 
+now these 2 but divided on income (tertiles)
 ###################################################################################
 print(model1_low)
 Call:

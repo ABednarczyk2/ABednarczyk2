@@ -1,0 +1,34 @@
+library(psidR)
+ library(data.table)
+ library(SAScii)
+ library(readr)
+
+rawdir <- "C:/Users/2022/Desktop/R data/raw_data"  # Raw files
+outputdir <- "C:/Users/2022/Desktop/R data/processed_data"  # Output
+# Load the package
+library(SAScii)
+
+# Define paths (same as before)
+rawdir <- "C:/Users/2022/Desktop/R data/raw_data"
+outputdir <- "C:/Users/2022/Desktop/R data/processed_data"
+
+# Specify the missing year
+year <- 2015  # <--- Only process 2015
+
+# Construct file paths
+family_txt <- paste0(rawdir, "/FAM", year, "ER.txt")
+family_sas <- paste0(rawdir, "/FAM", year, "ER.sas")
+
+# Check if files exist
+if (file.exists(family_txt) && file.exists(family_sas)) {
+  cat("Processing FAM", year, "...\n")
+  family_data <- read.SAScii(family_txt, family_sas)
+  save(family_data, file = paste0(outputdir, "/FAM", year, "ER.rda"))
+  rm(family_data)
+  cat("Successfully saved FAM", year, "!\n")
+} else {
+  warning("Files for 2015 not found. Check if these exist:\n",
+          family_txt, "\n", family_sas)
+}
+getNamesPSID("ER17013", cwf, years = NULL) 
+meow

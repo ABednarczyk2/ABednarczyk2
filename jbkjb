@@ -1,0 +1,47 @@
+library(psidR)
+library(data.table)
+library(SAScii)
+library(readr)
+
+# =============================================
+# ADJUSTED PATHS FOR YOUR LOCAL SYSTEM
+# =============================================
+rawdir <- "C:/Users/2022/Desktop/R data"  # Base directory
+dictdir <- "C:/Users/2022/Desktop/R data/psid_dict"  # Dictionary files
+r <- "C:/Users/2022/Desktop/R data/data/PSID"  # Output directory
+
+# =============================================
+# FILE PATHS WITH YOUR FOLDER STRUCTURE
+# =============================================
+fn <- file.path(rawdir, ".txt/IND2021ER.txt")       # .txt in .txt subfolder
+sas_ri <- file.path(rawdir, ".nottxt/IND2021ER.sas") # .sas in .nottxt subfolder
+
+# =============================================
+# CORE PROCESSING (PRESERVED AS-IS)
+# =============================================
+x <- read.SAScii(fn, sas_ri)
+save(x, file = file.path(r, "IND2021ER.rda"))
+
+# =============================================
+# DICTIONARY FILES (PRESERVED AS-IS)
+# =============================================
+f <- fread(file.path(dictdir, "famvars_test.txt"))
+i <- fread(file.path(dictdir, "indvars_test.txt"))
+
+# =============================================
+# DATA RESHAPING (PRESERVED AS-IS)
+# =============================================
+i <- dcast(i[, list(year, name, variable)], year ~ name, value.var = "variable")
+f <- dcast(f[, list(year, name, variable)], year ~ name, value.var = "variable")
+
+# =============================================
+# PANEL BUILDING (PRESERVED AS-IS)
+# =============================================
+d <- build.panel(
+  datadir = r,
+  fam.vars = f,
+  ind.vars = i,
+  heads.only = TRUE,
+  sample = "SRC",
+  design = "all"
+)

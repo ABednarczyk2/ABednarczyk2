@@ -45,3 +45,277 @@ d <- build.panel(
   sample = "SRC",
   design = "all"
 )
+
+
+
+########
+the code
+########
+library(psidR)
+ library(data.table)
+ library(SAScii)
+ library(readr)
+
+rawdir <- "C:/Users/2022/Desktop/R data/raw_data"  # Raw files
+outputdir <- "C:/Users/2022/Desktop/R data/processed_data"  # Output
+# Load the package
+library(SAScii)
+
+# Define paths (same as before)
+rawdir <- "C:/Users/2022/Desktop/R data/raw_data"
+outputdir <- "C:/Users/2022/Desktop/R data/processed_data"
+
+# Specify the missing year
+year <- 2015  # <--- Only process 2015
+
+# Construct file paths
+family_txt <- paste0(rawdir, "/FAM", year, "ER.txt")
+family_sas <- paste0(rawdir, "/FAM", year, "ER.sas")
+
+# Check if files exist
+if (file.exists(family_txt) && file.exists(family_sas)) {
+  cat("Processing FAM", year, "...\n")
+  family_data <- read.SAScii(family_txt, family_sas)
+  save(family_data, file = paste0(outputdir, "/FAM", year, "ER.rda"))
+  rm(family_data)
+  cat("Successfully saved FAM", year, "!\n")
+} else {
+  warning("Files for 2015 not found. Check if these exist:\n",
+          family_txt, "\n", family_sas)
+}
+
+
+library(SAScii)
+
+# Your existing directory setup (DO NOT CHANGE)
+rawdir = 'D:/ind2021er'
+dictdir = "./psid_dict"
+r = "./data/PSID"
+
+# Years to process (edit this list as needed)
+years <- c(1999,2001,2003,2005,2007,2009,2011,2013,2015,2017,2019,2021)  # Add more years like c(2019, 2020, 2021)
+
+# Loop through years WITHOUT changing variable names
+for(year in years){
+  
+  # Construct paths using your original naming convention
+  fn      = paste0(rawdir, '/IND', year, 'ER.txt')  # Your existing 'fn' format
+  sas_ri  = paste0(rawdir, '/IND', year, 'ER.sas')   # Your existing 'sas_ri' format
+  
+  # Check if files exist first
+  if(file.exists(fn) & file.exists(sas_ri)){
+    
+    # Your original processing code
+    x <- read.SAScii(fn, sas_ri)  # Keep 'x' as the data object
+    save(x, file = paste0(r, "/IND", year, "ER.rda"))  # Keep 'r' as output dir
+    
+    # Cleanup (optional)
+    rm(x)
+    
+    message("Successfully processed IND", year, "ER!")
+    
+  } else {
+    warning("Skipping ", year, " - files not found!")
+  }
+}
+warnings()  # Shows details of all 12 warnings
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Define paths (USE THESE INSTEAD OF D:/ind2021er)
+base_dir <- "C:/Users/2022/Desktop/R data"  # Root folder
+sas_dir <- file.path(base_dir, ".nottxt")   # SAS files
+txt_dir <- file.path(base_dir, ".txt")      # .txt files
+output_dir <- file.path(base_dir, "processed_data")  # Output folder (create this!)
+
+
+
+
+
+
+library(SAScii)
+
+# Years to process (update with your actual years)
+years <- c(1999,2001,2003,2005,2007,2009,2011,2013,2015, 2017, 2019, 2021)  # Example
+
+for (year in years) {
+  # Construct paths using YOUR folders
+  txt_file <- file.path(txt_dir, paste0("IND", year, "ER.txt"))   # .txt file
+  sas_file <- file.path(sas_dir, paste0("IND", year, "ER.sas"))    # .sas file
+  output_file <- file.path(output_dir, paste0("IND", year, "ER.rda"))  # Output
+
+  # Check if files exist
+  if (file.exists(txt_file) && file.exists(sas_file)) {
+    x <- read.SAScii(txt_file, sas_file)
+    save(x, file = output_file)
+    message("Processed IND", year, "ER!")
+  } else {
+    warning("Files missing for ", year, ":\n", txt_file, "\n", sas_file)
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+library(SAScii)
+
+# =============================================
+# ORIGINAL VARIABLE NAMES PRESERVED
+# =============================================
+rawdir <- "C:/Users/2022/Desktop/R data"  # Base directory
+dictdir <- "./psid_dict"                  # Keep as-is (optional)
+r <- "./data/PSID"                        # Output directory
+
+# =============================================
+# FILE PATHS MATCHING YOUR STRUCTURE
+# =============================================
+fn <- paste0(rawdir, "/.txt/IND2021ER.txt")    # .txt file in .txt subfolder
+sas_ri <- paste0(rawdir, "/.nottxt/IND2021ER.sas")  # .sas file in .nottxt subfolder
+
+# =============================================
+#  <- file.path(rawdir, ".txt/IND2021ER.txt")       # .txt in .txt subfolder
+sas_ri <- file.path(rawdir, ".nottxt/IND2021ER.sas") # .sas in .nottxt subfolder
+
+# =============================================
+# CORE PROCESSING (PRESERVED AS-IS)
+# =============================================
+x <- read.SAScii(fn, sas_ri)
+save(x, file = file.path(r, "IND2021ER.rda"))
+
+# =============================================
+# DICTIONARY FILES (PRESERVED AS-IS)
+# =============================================
+f <- fread(file.path(dictdir, "famvars_test.txt"))
+i <- fread(file.path(dictdir, "indvars_test.txt"))
+
+# =============================================
+# DATA RESHAPING (PRESERVED AS-IS)
+# =============================================
+i <- dcast(i[, list(year, name, variable)], year ~ name, value.var = "variable")
+f <- dcast(f[, list(year, name, variable)], year ~ name, value.var = "variable")
+
+# =============================================
+# PANEL BUILDING (PRESERVED AS-IS)
+# =============================================
+d <- build.panel(
+  datadir = r,
+  fam.vars = f,
+  ind.vars = i,
+  heads.only = TRUE,
+  sample = "SRC",
+  design = "all"
+)REQUIRED FOLDER CREATION (RUN ONCE)
+# =============================================
+# Create output directory if missing
+if(!dir.exists(r)) dir.create(r, recursive = TRUE)
+
+# =============================================
+# PROCESS AND SAVE (NO CHANGES HERE)
+# =============================================
+x <- read.SAScii(fn, sas_ri)
+save(x, file = paste0(r, "/IND2021ER.rda"))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+library(psidR)
+library(data.table)
+library(SAScii)
+library(readr)
+
+# =============================================
+# ADJUSTED PATHS FOR YOUR LOCAL SYSTEM
+# =============================================
+rawdir <- "C:/Users/2022/Desktop/R data"  # Base directory
+dictdir <- "C:/Users/2022/Desktop/R data/psid_dict"  # Dictionary files
+r <- "C:/Users/2022/Desktop/R data/data/PSID"  # Output directory
+
+# =============================================
+# FILE PATHS WITH YOUR FOLDER STRUCTURE
+# =============================================
+fn
+Sys.sleep(20*60)
+Sys.sleep(150*60)
+
+# Convert years to numeric in both data frames BEFORE build.panel()
+f$year <- as.numeric(f$year)
+i$year <- as.numeric(i$year)
+
+# Now run build.panel()
+d <- build.panel(
+  datadir = r,
+  fam.vars = f,
+  ind.vars = i,
+  heads.only = TRUE,
+  sample = "SRC",
+  design = "all"
+)
+str(f$year)  # Check the current data type
+head(f$year) # View sample values
+# Check if basic R commands work
+print("Hello R")  # Should appear in console
+2+2              # Should return 4
+

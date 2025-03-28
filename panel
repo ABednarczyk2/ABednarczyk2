@@ -1,0 +1,300 @@
+library(psidR)
+library(data.table)
+library(SAScii)
+library(readr)
+
+# =============================================
+# ADJUSTED PATHS FOR YOUR LOCAL SYSTEM
+# =============================================
+rawdir <- "C:/Users/2022/Desktop/R data"  # Base directory
+dictdir <- "C:/Users/2022/Desktop/R data/psid_dict"  # Dictionary files
+r <- "C:/Users/2022/Desktop/R data/data/PSID"  # Output directory
+
+# =============================================
+# FILE PATHS WITH YOUR FOLDER STRUCTURE
+# =============================================
+fn <- file.path(rawdir, ".txt/IND2021ER.txt")       # .txt in .txt subfolder
+sas_ri <- file.path(rawdir, ".nottxt/IND2021ER.sas") # .sas in .nottxt subfolder
+
+# =============================================
+# CORE PROCESSING (PRESERVED AS-IS)
+# =============================================
+x <- read.SAScii(fn, sas_ri)
+save(x, file = file.path(r, "IND2021ER.rda"))
+
+# =============================================
+# DICTIONARY FILES (PRESERVED AS-IS)
+# =============================================
+f <- fread(file.path(dictdir, "famvars_test.txt"))
+i <- fread(file.path(dictdir, "indvars_test.txt"))
+
+# =============================================
+# DATA RESHAPING (PRESERVED AS-IS)
+# =============================================
+i <- dcast(i[, list(year, name, variable)], year ~ name, value.var = "variable")
+f <- dcast(f[, list(year, name, variable)], year ~ name, value.var = "variable")
+
+# =============================================
+# PANEL BUILDING (PRESERVED AS-IS)
+# =============================================
+d <- build.panel(
+  datadir = r,
+  fam.vars = f,
+  ind.vars = i,
+  heads.only = TRUE,
+  sample = "SRC",
+  design = "all"
+)
+
+
+
+#######
+the code
+########
+library(psidR)
+library(data.table)
+library(SAScii)
+library(readr)
+
+rawdir <- "C:/Users/2022/Desktop/R data/raw_data"  # Raw files
+outputdir <- "C:/Users/2022/Desktop/R data/processed_data"  # Output
+# Load the package
+library(SAScii)
+
+# Define paths (same as before)
+rawdir <- "C:/Users/2022/Desktop/R data/raw_data"
+outputdir <- "C:/Users/2022/Desktop/R data/processed_data"
+
+# Specify the missing year
+year <- 2015  # <--- Only process 2015
+
+# Construct file paths
+family_txt <- paste0(rawdir, "/FAM", year, "ER.txt")
+family_sas <- paste0(rawdir, "/FAM", year, "ER.sas")
+
+# Check if files exist
+if (file.exists(family_txt) && file.exists(family_sas)) {
+  cat("Processing FAM", year, "...\n")
+  family_data <- read.SAScii(family_txt, family_sas)
+  save(family_data, file = paste0(outputdir, "/FAM", year, "ER.rda"))
+  rm(family_data)
+  cat("Successfully saved FAM", year, "!\n")
+} else {
+  warning("Files for 2015 not found. Check if these exist:\n",
+          family_txt, "\n", family_sas)
+}
+
+  ###########2017############
+
+library(data.table)
+library(SAScii)
+library(readr)
+
+###########################################################################
+# EXACT PATHS (NO CHANGES)
+###########################################################################
+rawdir <- "C:/Users/2022/Desktop/R data"  
+dictdir <- "C:/Users/2022/Desktop/R data/psid_dict"  
+r <- "C:/Users/2022/Desktop/R data/data/PSID"  
+
+##################################################
+# 2017-SPECIFIC FILE PATHS (ONLY YEAR CHANGED)
+##################################################
+fn <- paste0(rawdir, "/.txt/FAM2017ER.txt")      # Changed to 2017
+sas_ri <- paste0(rawdir, "/.nottxt/FAM2017ER.sas") # Changed to 2017
+
+###################################################
+# PROCESSING (IDENTICAL STRUCTURE)
+##################################################
+start_time <- Sys.time()
+cat("Starting FAM2017ER processing at:", format(start_time, "%H:%M:%S"), "\n")
+
+x <- read.SAScii(fn, sas_ri, verbose = TRUE)  # Same function call
+
+cat("Completed in", round(difftime(Sys.time(), start_time, units = "mins"), 1), "minutes\n")
+save(x, file = paste0(r, "/FAM2017ER.rda"))   # Changed to 2017
+
+cat("\nSuccessfully saved FAM2017ER.rda to:\n", paste0(r, "/FAM2017ER.rda"))
+##########idiot#####################
+
+library(data.table)
+library(SAScii)
+
+# Set paths (same as your original)
+rawdir <- "C:/Users/2022/Desktop/R data"
+r <- "C:/Users/2022/Desktop/R data/data/PSID"
+
+# 2017 file paths (directly swapped from your 2021 example)
+fn <- paste0(rawdir, "/.txt/FAM2017ER.txt")       # .txt file
+sas_ri <- paste0(rawdir, "/.nottxt/FAM2017ER.sas") # .sas file
+
+# Process and save (identical to your working code)
+x <- read.SAScii(fn, sas_ri) 
+save(x, file = paste0(r, "/FAM2017ER.rda")) 
+
+# Optional: Print confirmation
+cat("FAM2017ER.rda saved to:", paste0(r, "/FAM2017ER.rda"))
+ 
+
+
+library(data.table)
+library(SAScii)
+
+# Set paths (same as your original)
+rawdir <- "C:/Users/2022/Desktop/R data"
+r <- "C:/Users/2022/Desktop/R data/data/PSID"
+
+# 2015 file paths (directly swapped from your 2021 example)
+fn <- paste0(rawdir, "/.txt/FAM2015ER.txt")       # .txt file
+sas_ri <- paste0(rawdir, "/.nottxt/FAM2015ER.sas") # .sas file
+
+# Process and save (identical to your working code)
+x <- read.SAScii(fn, sas_ri) 
+save(x, file = paste0(r, "/FAM2015ER.rda")) 
+
+# Optional: Print confirmation
+cat("FAM2015ER.rda saved to:", paste0(r, "/FAM2015ER.rda"))
+
+library(data.table)
+library(SAScii)
+
+# Set paths (same as your original)
+rawdir <- "C:/Users/2022/Desktop/R data"
+r <- "C:/Users/2022/Desktop/R data/data/PSID"
+
+# 2013 file paths (directly swapped from your 2021 example)
+fn <- paste0(rawdir, "/.txt/FAM2013ER.txt")       # .txt file
+sas_ri <- paste0(rawdir, "/.nottxt/FAM2013ER.sas") # .sas file
+
+# Process and save (identical to your working code)
+x <- read.SAScii(fn, sas_ri) 
+save(x, file = paste0(r, "/FAM2013ER.rda")) 
+
+# Optional: Print confirmation
+cat("FAM2013ER.rda saved to:", paste0(r, "/FAM2017ER.rda"))
+
+
+library(data.table)
+library(SAScii)
+
+# Set paths (same as your original)
+rawdir <- "C:/Users/2022/Desktop/R data"
+r <- "C:/Users/2022/Desktop/R data/data/PSID"
+
+# 2011 file paths (directly swapped from your 2021 example)
+fn <- paste0(rawdir, "/.txt/FAM2011ER.txt")       # .txt file
+sas_ri <- paste0(rawdir, "/.nottxt/FAM2011ER.sas") # .sas file
+
+# Process and save (identical to your working code)
+x <- read.SAScii(fn, sas_ri) 
+save(x, file = paste0(r, "/FAM2011ER.rda")) 
+
+# Optional: Print confirmation
+cat("FAM2011ER.rda saved to:", paste0(r, "/FAM2011ER.rda"))
+
+
+library(data.table)
+library(SAScii)
+
+# Set paths (same as your original)
+rawdir <- "C:/Users/2022/Desktop/R data"
+r <- "C:/Users/2022/Desktop/R data/data/PSID"
+
+# 2009 file paths (directly swapped from your 2021 example)
+fn <- paste0(rawdir, "/.txt/FAM2009ER.txt")       # .txt file
+sas_ri <- paste0(rawdir, "/.nottxt/FAM2009ER.sas") # .sas file
+
+# Process and save (identical to your working code)
+x <- read.SAScii(fn, sas_ri) 
+save(x, file = paste0(r, "/FAM2009ER.rda")) 
+
+# Optional: Print confirmation
+cat("FAM2009ER.rda saved to:", paste0(r, "/FAM2009ER.rda"))
+
+
+library(data.table)
+library(SAScii)
+
+# Set paths (same as your original)
+rawdir <- "C:/Users/2022/Desktop/R data"
+r <- "C:/Users/2022/Desktop/R data/data/PSID"
+
+# 2007 file paths (directly swapped from your 2007 example)
+fn <- paste0(rawdir, "/.txt/FAM2007ER.txt")       # .txt file
+sas_ri <- paste0(rawdir, "/.nottxt/FAM2007ER.sas") # .sas file
+
+# Process and save (identical to your working code)
+x <- read.SAScii(fn, sas_ri) 
+save(x, file = paste0(r, "/FAM2007ER.rda")) 
+
+# Optional: Print confirmation
+cat("FAM2007ER.rda saved to:", paste0(r, "/FAM2007ER.rda"))
+
+
+library(data.table)
+library(SAScii)
+
+# Set paths (same as your original)
+rawdir <- "C:/Users/2022/Desktop/R data"
+r <- "C:/Users/2022/Desktop/R data/data/PSID"
+
+# 2005 file paths (directly swapped from your 2021 example)
+fn <- paste0(rawdir, "/.txt/FAM2005ER.txt")       # .txt file
+sas_ri <- paste0(rawdir, "/.nottxt/FAM2005ER.sas") # .sas file
+
+# Process and save (identical to your working code)
+x <- read.SAScii(fn, sas_ri) 
+save(x, file = paste0(r, "/FAM2005ER.rda")) 
+
+# Optional: Print confirmation
+cat("FAM2005ER.rda saved to:", paste0(r, "/FAM2005ER.rda"))
+
+
+library(data.table)
+library(SAScii)
+
+# Set paths (same as your original)
+rawdir <- "C:/Users/2022/Desktop/R data"
+r <- "C:/Users/2022/Desktop/R data/data/PSID"
+
+# 2001 file paths (directly swapped from your 2001 example)
+fn <- paste0(rawdir, "/.txt/FAM2001ER.txt")       # .txt file
+sas_ri <- paste0(rawdir, "/.nottxt/FAM2001ER.sas") # .sas file
+
+# Process and save (identical to your working code)
+x <- read.SAScii(fn, sas_ri) 
+save(x, file = paste0(r, "/FAM2001ER.rda")) 
+
+# Optional: Print confirmation
+cat("FAM2001ER.rda saved to:", paste0(r, "/FAM2001ER.rda"))
+
+
+# Set paths (same as your original)
+rawdir <- "C:/Users/2022/Desktop/R data"
+r <- "C:/Users/2022/Desktop/R data/data/PSID"
+
+# 1999 file paths (directly swapped from your 2021 example)
+fn <- paste0(rawdir, "/.txt/FAM1999ER.txt")       # .txt file
+sas_ri <- paste0(rawdir, "/.nottxt/FAM1999ER.sas") # .sas file
+
+# Process and save (identical to your working code)
+x <- read.SAScii(fn, sas_ri) 
+save(x, file = paste0(r, "/FAM1999ER.rda")) 
+
+# Optional: Print confirmation
+cat("FAM1999ER.rda saved to:", paste0(r, "/FAM1999ER.rda"))
+
+
+dictdir <- "C:/Users/2022/Desktop/R data"  # Set dictionary directory
+
+
+i <- fread(file.path(dictdir, "indvars_test.txt"))
+
+f = fread(file.path(dictdir,"famvars_test.txt"))
+i = fread(file.path(dictdir,"indvars_test.txt"))
+
+
+i = dcast(i[,list(year,name,variable)],year~name, value.var = "variable")
+f = dcast(f[,list(year,name,variable)],year~name, value.var = "variable")
+
+d = build.panel(datadir = r,fam.vars=f,ind.vars=i, heads.only = TRUE,sample="SRC",design="all")

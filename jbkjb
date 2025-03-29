@@ -3,6 +3,57 @@ library(data.table)
 library(SAScii)
 library(readr)
 
+# Set directories
+rawdir <- "C:/Users/2022/Desktop/R data/raw_data"
+outputdir <- "C:/Users/2022/Desktop/R data/processed_data"
+
+# Define years to process (modify this list as needed)
+years <- c(2015, 2016, 2017, 2018, 2019, 2020, 2021) 
+
+# Loop through years
+for(year in years) {
+  # Construct file paths
+  family_txt <- file.path(rawdir, sprintf("FAM%04dER.txt", year))
+  family_sas <- file.path(rawdir, sprintf("FAM%04dER.sas", year))
+  output_file <- file.path(outputdir, sprintf("FAM%04dER.rda", year))
+  
+  # Check if files exist
+  if(file.exists(family_txt) && file.exists(family_sas)) {
+    cat("\nProcessing FAM", year, "...\n")
+    
+    # Read and process data
+    family_data <- read.SAScii(family_txt, family_sas)
+    
+    # Save with consistent naming structure
+    save(family_data, file = output_file)
+    rm(family_data)
+    
+    cat("Successfully processed FAM", year, "!\n")
+  } else {
+    warning("Files not found for year ", year, ":\n",
+            family_txt, "\n", family_sas, "\n")
+  }
+}
+
+# Optional: Combine all years into single dataset
+all_years <- lapply(years, function(y) {
+  load(file.path(outputdir, sprintf("FAM%04dER.rda", y)))
+  family_data
+})
+combined_data <- rbindlist(all_years, fill = TRUE)
+
+
+
+
+
+
+
+
+library(psidR)
+library(data.table)
+library(SAScii)
+library(readr)
+
 # =============================================
 # ADJUSTED PATHS FOR YOUR LOCAL SYSTEM
 # =============================================
@@ -319,3 +370,47 @@ head(f$year) # View sample values
 print("Hello R")  # Should appear in console
 2+2              # Should return 4
 
+###################################################################################################
+library(psidR)
+library(data.table)
+library(SAScii)
+library(readr)
+
+# Set directories
+rawdir <- "C:/Users/2022/Desktop/R data/raw_data"
+outputdir <- "C:/Users/2022/Desktop/R data/processed_data"
+
+# Define years to process (modify this list as needed)
+years <- c(2015, 2016, 2017, 2018, 2019, 2020, 2021) 
+
+# Loop through years
+for(year in years) {
+  # Construct file paths
+  family_txt <- file.path(rawdir, sprintf("FAM%04dER.txt", year))
+  family_sas <- file.path(rawdir, sprintf("FAM%04dER.sas", year))
+  output_file <- file.path(outputdir, sprintf("FAM%04dER.rda", year))
+  
+  # Check if files exist
+  if(file.exists(family_txt) && file.exists(family_sas)) {
+    cat("\nProcessing FAM", year, "...\n")
+    
+    # Read and process data
+    family_data <- read.SAScii(family_txt, family_sas)
+    
+    # Save with consistent naming structure
+    save(family_data, file = output_file)
+    rm(family_data)
+    
+    cat("Successfully processed FAM", year, "!\n")
+  } else {
+    warning("Files not found for year ", year, ":\n",
+            family_txt, "\n", family_sas, "\n")
+  }
+}
+
+# Optional: Combine all years into single dataset
+all_years <- lapply(years, function(y) {
+  load(file.path(outputdir, sprintf("FAM%04dER.rda", y)))
+  family_data
+})
+combined_data <- rbindlist(all_years, fill = TRUE)

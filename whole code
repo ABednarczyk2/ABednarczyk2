@@ -1,0 +1,756 @@
+library(psidR)
+library(data.table)
+library(SAScii)
+library(readr)
+
+# =============================================
+# ADJUSTED PATHS FOR YOUR LOCAL SYSTEM
+# =============================================
+rawdir <- "C:/Users/2022/Desktop/R data"  # Base directory
+dictdir <- "C:/Users/2022/Desktop/R data/psid_dict"  # Dictionary files
+r <- "C:/Users/2022/Desktop/R data/data/PSID"  # Output directory
+
+# =============================================
+# FILE PATHS WITH YOUR FOLDER STRUCTURE
+# =============================================
+fn <- file.path(rawdir, ".txt/IND2021ER.txt")       # .txt in .txt subfolder
+sas_ri <- file.path(rawdir, ".nottxt/IND2021ER.sas") # .sas in .nottxt subfolder
+
+# =============================================
+# CORE PROCESSING (PRESERVED AS-IS)
+# =============================================
+x <- read.SAScii(fn, sas_ri)
+save(x, file = file.path(r, "IND2021ER.rda"))
+
+# =============================================
+# DICTIONARY FILES (PRESERVED AS-IS)
+# =============================================
+f <- fread(file.path(dictdir, "famvars_test.txt"))
+i <- fread(file.path(dictdir, "indvars_test.txt"))
+
+# =============================================
+# DATA RESHAPING (PRESERVED AS-IS)
+# =============================================
+i <- dcast(i[, list(year, name, variable)], year ~ name, value.var = "variable")
+f <- dcast(f[, list(year, name, variable)], year ~ name, value.var = "variable")
+
+# =============================================
+# PANEL BUILDING (PRESERVED AS-IS)
+# =============================================
+d <- build.panel(
+  datadir = r,
+  fam.vars = f,
+  ind.vars = i,
+  heads.only = TRUE,
+  sample = "SRC",
+  design = "all"
+)
+
+
+
+#######
+the code
+########
+library(psidR)
+library(data.table)
+library(SAScii)
+library(readr)
+
+rawdir <- "C:/Users/2022/Desktop/R data/raw_data"  # Raw files
+outputdir <- "C:/Users/2022/Desktop/R data/processed_data"  # Output
+# Load the package
+library(SAScii)
+
+# Define paths (same as before)
+rawdir <- "C:/Users/2022/Desktop/R data/raw_data"
+outputdir <- "C:/Users/2022/Desktop/R data/processed_data"
+
+# Specify the missing year
+year <- 2015  # <--- Only process 2015
+
+# Construct file paths
+family_txt <- paste0(rawdir, "/FAM", year, "ER.txt")
+family_sas <- paste0(rawdir, "/FAM", year, "ER.sas")
+
+# Check if files exist
+if (file.exists(family_txt) && file.exists(family_sas)) {
+  cat("Processing FAM", year, "...\n")
+  family_data <- read.SAScii(family_txt, family_sas)
+  save(family_data, file = paste0(outputdir, "/FAM", year, "ER.rda"))
+  rm(family_data)
+  cat("Successfully saved FAM", year, "!\n")
+} else {
+  warning("Files for 2015 not found. Check if these exist:\n",
+          family_txt, "\n", family_sas)
+}
+
+  ###########2017############
+
+library(data.table)
+library(SAScii)
+library(readr)
+
+###########################################################################
+# EXACT PATHS (NO CHANGES)
+###########################################################################
+rawdir <- "C:/Users/2022/Desktop/R data"  
+dictdir <- "C:/Users/2022/Desktop/R data/psid_dict"  
+r <- "C:/Users/2022/Desktop/R data/data/PSID"  
+
+##################################################
+# 2017-SPECIFIC FILE PATHS (ONLY YEAR CHANGED)
+##################################################
+fn <- paste0(rawdir, "/.txt/FAM2017ER.txt")      # Changed to 2017
+sas_ri <- paste0(rawdir, "/.nottxt/FAM2017ER.sas") # Changed to 2017
+
+###################################################
+# PROCESSING (IDENTICAL STRUCTURE)
+##################################################
+start_time <- Sys.time()
+cat("Starting FAM2017ER processing at:", format(start_time, "%H:%M:%S"), "\n")
+
+x <- read.SAScii(fn, sas_ri, verbose = TRUE)  # Same function call
+
+cat("Completed in", round(difftime(Sys.time(), start_time, units = "mins"), 1), "minutes\n")
+save(x, file = paste0(r, "/FAM2017ER.rda"))   # Changed to 2017
+
+cat("\nSuccessfully saved FAM2017ER.rda to:\n", paste0(r, "/FAM2017ER.rda"))
+##########idiot#####################
+
+library(data.table)
+library(SAScii)
+
+# Set paths (same as your original)
+rawdir <- "C:/Users/2022/Desktop/R data"
+r <- "C:/Users/2022/Desktop/R data/data/PSID"
+
+# 2017 file paths (directly swapped from your 2021 example)
+fn <- paste0(rawdir, "/.txt/FAM2017ER.txt")       # .txt file
+sas_ri <- paste0(rawdir, "/.nottxt/FAM2017ER.sas") # .sas file
+
+# Process and save (identical to your working code)
+x <- read.SAScii(fn, sas_ri) 
+save(x, file = paste0(r, "/FAM2017ER.rda")) 
+
+# Optional: Print confirmation
+cat("FAM2017ER.rda saved to:", paste0(r, "/FAM2017ER.rda"))
+ 
+
+
+library(data.table)
+library(SAScii)
+
+# Set paths (same as your original)
+rawdir <- "C:/Users/2022/Desktop/R data"
+r <- "C:/Users/2022/Desktop/R data/data/PSID"
+
+# 2015 file paths (directly swapped from your 2021 example)
+fn <- paste0(rawdir, "/.txt/FAM2015ER.txt")       # .txt file
+sas_ri <- paste0(rawdir, "/.nottxt/FAM2015ER.sas") # .sas file
+
+# Process and save (identical to your working code)
+x <- read.SAScii(fn, sas_ri) 
+save(x, file = paste0(r, "/FAM2015ER.rda")) 
+
+# Optional: Print confirmation
+cat("FAM2015ER.rda saved to:", paste0(r, "/FAM2015ER.rda"))
+
+library(data.table)
+library(SAScii)
+
+# Set paths (same as your original)
+rawdir <- "C:/Users/2022/Desktop/R data"
+r <- "C:/Users/2022/Desktop/R data/data/PSID"
+
+# 2013 file paths (directly swapped from your 2021 example)
+fn <- paste0(rawdir, "/.txt/FAM2013ER.txt")       # .txt file
+sas_ri <- paste0(rawdir, "/.nottxt/FAM2013ER.sas") # .sas file
+
+# Process and save (identical to your working code)
+x <- read.SAScii(fn, sas_ri) 
+save(x, file = paste0(r, "/FAM2013ER.rda")) 
+
+# Optional: Print confirmation
+cat("FAM2013ER.rda saved to:", paste0(r, "/FAM2017ER.rda"))
+
+
+library(data.table)
+library(SAScii)
+
+# Set paths (same as your original)
+rawdir <- "C:/Users/2022/Desktop/R data"
+r <- "C:/Users/2022/Desktop/R data/data/PSID"
+
+# 2011 file paths (directly swapped from your 2021 example)
+fn <- paste0(rawdir, "/.txt/FAM2011ER.txt")       # .txt file
+sas_ri <- paste0(rawdir, "/.nottxt/FAM2011ER.sas") # .sas file
+
+# Process and save (identical to your working code)
+x <- read.SAScii(fn, sas_ri) 
+save(x, file = paste0(r, "/FAM2011ER.rda")) 
+
+# Optional: Print confirmation
+cat("FAM2011ER.rda saved to:", paste0(r, "/FAM2011ER.rda"))
+
+
+library(data.table)
+library(SAScii)
+
+# Set paths (same as your original)
+rawdir <- "C:/Users/2022/Desktop/R data"
+r <- "C:/Users/2022/Desktop/R data/data/PSID"
+
+# 2009 file paths (directly swapped from your 2021 example)
+fn <- paste0(rawdir, "/.txt/FAM2009ER.txt")       # .txt file
+sas_ri <- paste0(rawdir, "/.nottxt/FAM2009ER.sas") # .sas file
+
+# Process and save (identical to your working code)
+x <- read.SAScii(fn, sas_ri) 
+save(x, file = paste0(r, "/FAM2009ER.rda")) 
+
+# Optional: Print confirmation
+cat("FAM2009ER.rda saved to:", paste0(r, "/FAM2009ER.rda"))
+
+
+library(data.table)
+library(SAScii)
+
+# Set paths (same as your original)
+rawdir <- "C:/Users/2022/Desktop/R data"
+r <- "C:/Users/2022/Desktop/R data/data/PSID"
+
+# 2007 file paths (directly swapped from your 2007 example)
+fn <- paste0(rawdir, "/.txt/FAM2007ER.txt")       # .txt file
+sas_ri <- paste0(rawdir, "/.nottxt/FAM2007ER.sas") # .sas file
+
+# Process and save (identical to your working code)
+x <- read.SAScii(fn, sas_ri) 
+save(x, file = paste0(r, "/FAM2007ER.rda")) 
+
+# Optional: Print confirmation
+cat("FAM2007ER.rda saved to:", paste0(r, "/FAM2007ER.rda"))
+
+
+library(data.table)
+library(SAScii)
+
+# Set paths (same as your original)
+rawdir <- "C:/Users/2022/Desktop/R data"
+r <- "C:/Users/2022/Desktop/R data/data/PSID"
+
+# 2005 file paths (directly swapped from your 2021 example)
+fn <- paste0(rawdir, "/.txt/FAM2005ER.txt")       # .txt file
+sas_ri <- paste0(rawdir, "/.nottxt/FAM2005ER.sas") # .sas file
+
+# Process and save (identical to your working code)
+x <- read.SAScii(fn, sas_ri) 
+save(x, file = paste0(r, "/FAM2005ER.rda")) 
+
+# Optional: Print confirmation
+cat("FAM2005ER.rda saved to:", paste0(r, "/FAM2005ER.rda"))
+
+
+library(data.table)
+library(SAScii)
+
+# Set paths (same as your original)
+rawdir <- "C:/Users/2022/Desktop/R data"
+r <- "C:/Users/2022/Desktop/R data/data/PSID"
+
+# 2001 file paths (directly swapped from your 2001 example)
+fn <- paste0(rawdir, "/.txt/FAM2001ER.txt")       # .txt file
+sas_ri <- paste0(rawdir, "/.nottxt/FAM2001ER.sas") # .sas file
+
+# Process and save (identical to your working code)
+x <- read.SAScii(fn, sas_ri) 
+save(x, file = paste0(r, "/FAM2001ER.rda")) 
+
+# Optional: Print confirmation
+cat("FAM2001ER.rda saved to:", paste0(r, "/FAM2001ER.rda"))
+
+
+# Set paths (same as your original)
+rawdir <- "C:/Users/2022/Desktop/R data"
+r <- "C:/Users/2022/Desktop/R data/data/PSID"
+
+# 1999 file paths (directly swapped from your 2021 example)
+fn <- paste0(rawdir, "/.txt/FAM1999ER.txt")       # .txt file
+sas_ri <- paste0(rawdir, "/.nottxt/FAM1999ER.sas") # .sas file
+
+# Process and save (identical to your working code)
+x <- read.SAScii(fn, sas_ri) 
+save(x, file = paste0(r, "/FAM1999ER.rda")) 
+
+# Optional: Print confirmation
+cat("FAM1999ER.rda saved to:", paste0(r, "/FAM1999ER.rda"))
+
+
+dictdir <- "C:/Users/2022/Desktop/R data"  # Set dictionary directory
+
+
+
+
+f = fread(file.path(dictdir,"famvars_test.txt"))
+i = fread(file.path(dictdir,"indvars_test.txt"))
+
+
+i = dcast(i[,list(year,name,variable)],year~name, value.var = "variable")
+f = dcast(f[,list(year,name,variable)],year~name, value.var = "variable")
+
+d = build.panel(datadir = r,fam.vars=f,ind.vars=i, heads.only = TRUE,sample="SRC",design="all")
+
+
+library(psidR)
+
+library(data.table)
+
+# For individual data (i)
+i_wide <- dcast(i, 
+                year ~ name, 
+                value.var = "variable")
+
+# For family data (f)
+f_wide <- dcast(f, 
+                year ~ name, 
+                value.var = "variable")
+
+# Check EXACT column names in both datasets
+names(i)
+names(f)
+
+# Example output might look like:
+# [1] "year" "var_code" "label" "var_name"
+
+# See first 3 rows of each file
+head(i, 3)
+head(f, 3)
+
+library(data.table)
+
+# For Individual Data (i)
+setnames(i, c("source", "year", "var_code", "var_label", "var_name"))
+i <- i[, .(year, var_code, var_name)]  # Keep only needed columns
+
+# For Family Data (f)
+setnames(f, c("source", "year", "var_code", "var_label", "var_name")) 
+f <- f[, .(year, var_code, var_name)]  # Keep only needed columns
+
+# Individual data - wide format
+i_wide <- dcast(i, 
+                year ~ var_name, 
+                value.var = "var_code")
+
+# Family data - wide format
+f_wide <- dcast(f, 
+                year ~ var_name, 
+                value.var = "var_code")
+
+rawdir <- "C:/Users/2022/Desktop/R data"
+r <- "C:/Users/2022/Desktop/R data/data/PSID"
+fn <- paste0(rawdir, "/.txt/FAM2013ER.txt")       # .txt file
+sas_ri <- paste0(rawdir, "/.nottxt/FAM2013ER.sas") # .sas file
+x <- read.SAScii(fn, sas_ri) 
+save(x, file = paste0(r, "/FAM2013ER.rda")) 
+cat("FAM2013ER.rda saved to:", paste0(r, "/FAM2013ER.rda")) #????hmmm??? ill redo it...
+
+library(SAScii)
+library(data.table)
+
+# 1. Set your paths (same as before)
+rawdir <- "C:/Users/2022/Desktop/R data"
+r <- "C:/Users/2022/Desktop/R data/data/PSID"
+
+# 2. Define file paths
+txt_file <- paste0(rawdir, "/.txt/FAM2013ER.txt")      # Raw data
+sas_file <- paste0(rawdir, "/.nottxt/FAM2013ER.sas")   # SAS import script
+output_file <- paste0(r, "/FAM2013ER.rda")             # Output file
+
+# 3. Process and OVERWRITE the file
+tryCatch({
+  # Read raw data using SAS instructions
+  x <- read.SAScii(fn = txt_file, sas_ri = sas_file, verbose = TRUE)
+  
+  # Force overwrite (no warning)
+  save(x, file = output_file)
+  
+  # Verification
+  cat("\nSUCCESS: Overwrote", output_file, 
+      "\nFile size:", round(file.size(output_file)/1024, 1), "KB\n")
+}, error = function(e) {
+  cat("\nFAILED:", e$message, "\n")
+})
+
+# Replace existing file (no questions asked)
+save(x, file = "C:/Users/2022/Desktop/R data/data/PSID/FAM2013ER.rda")
+
+file.info("C:/Users/2022/Desktop/R data/data/PSID/FAM2013ER.rda")$mtime
+
+library(SAScii)
+
+# Set paths
+rawdir <- "C:/Users/2022/Desktop/R data"
+r <- "C:/Users/2022/Desktop/R data/data/PSID"
+
+# Input files
+fn <- paste0(rawdir, "/.txt/FAM2013ER.txt")        # Text data
+sas_ri <- paste0(rawdir, "/.nottxt/FAM2013ER.sas") # SAS script
+
+# 1. Read data
+x <- read.SAScii(fn, sas_ri, verbose = TRUE)
+
+# 2. FORCE overwrite existing file
+save(x, file = paste0(r, "/FAM2013ER.rda"), version = 2)
+
+# 3. Verify with checksum
+cat("\nFile overwritten at:", normalizePath(paste0(r, "/FAM2013ER.rda")))
+cat("\nMD5 checksum:", tools::md5sum(paste0(r, "/FAM2013ER.rda")))
+
+cat("Step 1: Starting SAScii import at", format(Sys.time(), "%H:%M:%S"), "\n")
+x <- read.SAScii(fn, sas_ri, verbose = TRUE)  # Shows progress if working
+cat("Step 2: Saving RDA at", format(Sys.time(), "%H:%M:%S"), "\n")
+save(x, file = paste0(r, "/FAM2013ER.rda"))
+cat("COMPLETED at", format(Sys.time(), "%H:%M:%S"), "\n")
+
+# Check ACTUAL file paths being used
+cat("TXT path:", paste0(rawdir, "/.txt/FAM2013ER.txt"), "\n")
+cat("SAS path:", paste0(rawdir, "/.nottxt/FAM2013ER.sas"), "\n")
+cat("Output path:", paste0(r, "/FAM2013ER.rda"), "\n")
+
+# Confirm files exist
+stopifnot(
+  file.exists(paste0(rawdir, "/.txt/FAM2013ER.txt")),
+  file.exists(paste0(rawdir, "/.nottxt/FAM2013ER.sas"))
+)
+
+
+rawdir <- "C:/Users/2022/Desktop/R data"
+r <- "C:/Users/2022/Desktop"
+fn <- paste0(rawdir, "/.txt/FAM2013ER.txt")       # .txt file
+sas_ri <- paste0(rawdir, "/.nottxt/FAM2013ER.sas") # .sas file
+x <- read.SAScii(fn, sas_ri) 
+save(x, file = paste0(r, "/FAM2013ER.rda")) 
+cat("FAM2013ER.rda saved to:", paste0(r, "/FAM2013ER.rda")) #????hmmm??? ill redo it...
+
+# 2003 file paths (directly swapped from your 2007 example)
+fn <- paste0(rawdir, "/.txt/FAM2003ER.txt")       # .txt file
+sas_ri <- paste0(rawdir, "/.nottxt/FAM2003ER.sas") # .sas file
+
+# Process and save (identical to your working code)
+x <- read.SAScii(fn, sas_ri) 
+save(x, file = paste0(r, "/FAM2003ER.rda")) 
+
+# Optional: Print confirmation
+cat("FAM2003ER.rda saved to:", paste0(r, "/FAM2003ER.rda"))
+
+
+
+# 1. SET PATHS CORRECTLY (critical!)
+dictdir <- "C:/Users/2022/Desktop/R data"          # For metadata TXT files
+datadir <- "C:/Users/2022/Desktop/R data/data/PSID" # For RDA data files
+
+# 2. Load METADATA (unchanged)
+f <- fread(file.path(dictdir, "famvars_test.txt"))
+i <- fread(file.path(dictdir, "indvars_test.txt"))
+
+# 3. Reshape metadata (unchanged)
+i <- dcast(i[, list(year, name, variable)], year ~ name, value.var = "variable")
+f <- dcast(f[, list(year, name, variable)], year ~ name, value.var = "variable")
+
+# 4. BUILD PANEL WITH CORRECT DATA PATH
+d <- build.panel(
+  datadir = datadir,  # MUST point to where RDA files are stored
+  fam.vars = f,
+  ind.vars = i,
+  heads.only = TRUE,
+  sample = "SRC",
+  design = "all"
+)
+
+save(d, file = "D:/R data/my_panel.RData")
+save(d, file = "D:/R data/d/d2/my_panel.RData")
+
+# Load the individual-level data for each year
+load(file.path(datadir, "FAM2017ER.rda"))
+load(file.path(datadir, "FAM2019ER.rda"))
+load(file.path(datadir, "FAM2021ER.rda"))
+
+
+# Rename columns in each dataset to match int_no_ind
+setnames(FAM2017ER, "ER66002", "int_no_ind")
+setnames(FAM2019ER, "ER72002", "int_no_ind")
+setnames(FAM2021ER, "ER78002", "int_no_ind")
+
+# Create mort_data for 2017
+mort_data_2017 <- data.table(
+  year = 2017,
+  int_no_ind = FAM2017ER$int_no_ind,
+  mort1year = FAM2017ER$ER78061, 
+  mort2year = FAM2017ER$ER78082
+)
+
+# Create mort_data for 2019
+mort_data_2019 <- data.table(
+  year = 2019,
+  int_no_ind = FAM2019ER$int_no_ind,
+  mort1year = FAM2019ER$ER78061, 
+  mort2year = FAM2019ER$ER78082
+)
+
+# Create mort_data for 2021
+mort_data_2021 <- data.table(
+  year = 2021,
+  int_no_ind = FAM2021ER$int_no_ind,
+  mort1year = FAM2021ER$ER78061, 
+  mort2year = FAM2021ER$ER78082
+)
+
+# Combine mort_data for 2017, 2019, and 2021
+mort_data <- rbind(mort_data_2017, mort_data_2019, mort_data_2021, fill = TRUE)
+
+# Merge d with mort_data by both year and int_no_ind
+d <- merge(d, mort_data, by = c("year", "int_no_ind"), all.x = TRUE)
+
+
+
+
+library(data.table)
+
+# 1. Load your metadata AS IS
+f <- fread(file.path(dictdir, "famvars_test.txt"))
+
+# 2. Find and replace ONLY the problematic mortgage variables
+# --------------------------------------------------------
+# First verify which ER codes correspond to your mortgage variables
+mortgage_mapping <- f[name %in% c("mort1year", "mort2year"), 
+                      .(year, er_code = variable, original_name = name)]
+
+# Replace problematic names with their official ER codes
+f[name == "mort1year", name := variable]  # Use the ER code directly
+f[name == "mort2year", name := variable]  # Use the ER code directly
+
+# 3. Build panel with cleaned names
+# --------------------------------
+d <- build.panel(
+  datadir = datadir,
+  fam.vars = f,  # Using the long format directly
+  ind.vars = i,
+  heads.only = TRUE,
+  sample = "SRC",
+  design = "all"
+)
+
+# 4. Optional: Create reverse mapping for analysis
+# ----------------------------------------------
+variable_dictionary <- unique(f[, .(er_code = variable, original_name = name)])
+
+
+library(data.table)
+library(psidR)
+
+# 1. Clean metadata with STRICT ER code enforcement
+f <- fread(file.path(dictdir, "famvars_test.txt"))
+
+# Force ALL variables to use ER codes (bypass name issues)
+f[, name := variable]  # Use raw ER codes as names
+
+# 2. Build panel with purified metadata
+d <- build.panel(
+  datadir = datadir,
+  fam.vars = f[, .(year, name = variable)],  # Only year + ER codes
+  ind.vars = i[, .(year, name = variable)],  # Same for individual
+  heads.only = TRUE,
+  sample = "SRC",
+  design = "all"
+)
+
+# 3. Post-process to restore labels
+var_labels <- unique(f[, .(variable, label)])
+setkey(var_labels, "variable")
+setkey(d, "variable")
+d <- d[var_labels, nomatch = 0]
+
+
+library(data.table)
+library(psidR)
+
+# 1. FIRST verify your metadata structure
+f <- fread(file.path(dictdir, "famvars_test.txt"))
+print(names(f))  # Check ACTUAL column names
+print(head(f, 3)) # See sample data
+
+# 2. Based on your previous output, we know columns are:
+# [dataset, year, variable, label, name]
+# So we need to:
+
+# OPTION A: If you want to use ER codes directly
+f_clean <- f[, .(year, name = variable)]  # Use raw ER codes as names
+
+# OPTION B: If you need custom names (with ER code fallback)
+f_clean <- f[, .(year, name = ifelse(
+  name %in% c("mort1year", "mort2year"), 
+  variable,  # Use ER code for problem variables
+  name        # Keep original name for others
+))]
+
+# 3. Build panel with verified columns
+d <- build.panel(
+  datadir = datadir,
+  fam.vars = f_clean,
+  ind.vars = i[, .(year, name = variable)],  # Apply same to individual
+  heads.only = TRUE,
+  sample = "SRC",
+  design = "all"
+)
+
+# 4. Post-process to restore labels if needed
+if("label" %in% names(f)){
+  label_map <library(data.table)
+  library(psidR)
+  
+  # 1. Load metadata - using your ACTUAL column names
+  f <- fread(file.path(dictdir, "famvars_test.txt"))
+  i <- fread(file.path(dictdir, "indvars_test.txt"))
+  
+  # 2. Clean problematic names by replacing with ER codes
+  #    Only for mortgage variables, keep others unchanged
+  f[name %in% c("mort1year", "mort2year"), name := variable]
+  
+  # 3. Prepare clean metadata for build.panel()
+  fam_meta <- f[, .(year, name)]  # Only these two columns needed
+  ind_meta <- i[, .(year, name)]
+  
+  # 4. Build panel - this will now work
+  d <- build.panel(
+    datadir = datadir,
+    fam.vars = fam_meta,
+    ind.vars = ind_meta,
+    heads.only = TRUE,
+    sample = "SRC",
+    design = "all"
+  )
+  
+  # 5. Optional: Add back original labels
+  d <- merge(d, 
+             unique(f[, .(variable, label)]),
+             by.x = "variable", 
+             by.y = "variable",
+             all.x = TRUE)- unique(f[, .(variable, label)])
+  d <- merge(d, label_map, by.x = "variable", by.y = "variable", all.x = TRUE)
+}
+
+library(data.table)
+library(psidR)
+
+# 1. Load metadata - using your ACTUAL column names
+f <- fread(file.path(dictdir, "famvars_test.txt"))
+i <- fread(file.path(dictdir, "indvars_test.txt"))
+
+# 2. Clean problematic names by replacing with ER codes
+#    Only for mortgage variables, keep others unchanged
+f[name %in% c("mort1year", "mort2year"), name := variable]
+
+# 3. Prepare clean metadata for build.panel()
+fam_meta <- f[, .(year, name)]  # Only these two columns needed
+ind_meta <- i[, .(year, name)]
+
+# 4. Build panel - this will now work
+d <- build.panel(
+  datadir = datadir,
+  fam.vars = fam_meta,
+  ind.vars = ind_meta,
+  heads.only = TRUE,
+  sample = "SRC",
+  design = "all"
+)
+
+# 5. Optional: Add back original labels
+d <- merge(d, 
+           unique(f[, .(variable, label)]),
+           by.x = "variable", 
+           by.y = "variable",
+           all.x = TRUE)
+
+library(data.table)
+library(psidR)
+
+# 1. Load metadata - using your ACTUAL column names
+f <- fread(file.path(dictdir, "famvars_test.txt"))
+i <- fread(file.path(dictdir, "indvars_test.txt"))
+
+# 2. Clean problematic names by replacing with ER codes
+#    Only for mortgage variables, keep others unchanged
+f[name %in% c("mort1year", "mort2year"), name := variable]
+
+# 3. Prepare clean metadata for build.panel()
+fam_meta <- f[, .(year, name)]  # Only these two columns needed
+ind_meta <- i[, .(year, name)]
+
+# 4. Build panel - this will now work
+d <- build.panel(
+  datadir = datadir,
+  fam.vars = fam_meta,
+  ind.vars = ind_meta,
+  heads.only = TRUE,
+  sample = "SRC",
+  design = "all"
+)
+
+# 5. Optional: Add back original labels
+d <- merge(d, 
+           unique(f[, .(variable, label)]),
+           by.x = "variable", 
+           by.y = "variable",
+           all.x = TRUE)
+
+library(data.table)
+library(psidR)
+
+library(data.table)
+library(psidR)
+
+# 1. Load metadata files
+f <- fread(file.path(dictdir, "famvars_test.txt"))
+i <- fread(file.path(dictdir, "indvars_test.txt"))
+
+# 2. Clean family variables - replace custom mortgage names with ER codes
+f[name %in% c("mort1year", "mort2year"), name := variable]
+
+# 3. Clean individual variables - standardize all to ER codes
+i[, name := variable]  # Use raw ER codes for all individual vars
+
+# 4. Create minimal metadata tables
+fam_meta <- unique(f[, .(year, name)])
+ind_meta <- unique(i[, .(year, name)])
+
+# 5. Verify no duplicates
+stopifnot(
+  !anyDuplicated(fam_meta, by = c("year", "name")),
+  !anyDuplicated(ind_meta, by = c("year", "name"))
+)
+
+# 6. Build panel
+d <- build.panel(
+  datadir = datadir,
+  fam.vars = fam_meta,
+  ind.vars = ind_meta,
+  heads.only = TRUE,
+  sample = "SRC",
+  design = "all"
+)
+
+# 7. Add back labels (optional)
+var_labels <- unique(rbind(
+  f[, .(variable = name, label)],
+  i[, .(variable = name, label)]
+))
+d <- merge(d, var_labels, by = "variable", all.x = TRUE)
+
+fam.vars <- read.table("C:/Users/2022/Desktop/R data/famvars_test.txt", header = TRUE, stringsAsFactors = FALSE)
+
+
+str(i)
+str(f)
+
+print(d)      # Shows the panel data
+str(d)        # Displays its structure
+summary(d)    # Provides a quick summary of the data

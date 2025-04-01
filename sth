@@ -3,8 +3,8 @@ dictdir <- "C:/Users/2022/Desktop/R data"          #  metadata TXT files
 datadir <- "C:/Users/2022/Desktop/R data/data/PSID" #  RDA data files
 
 # 2. LOADING METADATA 
-f <- fread(file.path(dictdir, "famvars_test.txt"))
-i <- fread(file.path(dictdir, "indvars_test.txt"))
+f <- fread(file.path(dictdir, "famvars_test2.txt"))
+i <- fread(file.path(dictdir, "indvars_test2.txt"))
 
 # 3. RESHAPING METADATA (unchanged)
 i <- dcast(i[, list(year, name, variable)], year ~ name, value.var = "variable")
@@ -167,8 +167,8 @@ mort_data_2021 <- data.table(
   mort2year = FAM2021ER$ER78082
 )
 
-# Combine mort_data for 2017, 2019, and 2021
-mort_data <- rbind(mort_data_2017, mort_data_2019, mort_data_2021, fill = TRUE)
+# Combine mort_data 1999 -  2021
+mort_data <- rbind(mort_data_1999,mort_data_2001,mort_data_2003,mort_data_2005,mort_data_2007,mort_data_2009,mort_data_2011,mort_data_2013,mort_data_2015,mort_data_2017, mort_data_2019, mort_data_2021, fill = TRUE)
 
 # Merge d with mort_data by both year and int_no_ind
 d <- merge(d, mort_data, by = c("year", "int_no_ind"), all.x = TRUE)

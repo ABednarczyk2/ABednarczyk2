@@ -1,0 +1,175 @@
+# 1. SETTING PATHS 
+dictdir <- "C:/Users/2022/Desktop/R data"          #  metadata TXT files
+datadir <- "C:/Users/2022/Desktop/R data/data/PSID" #  RDA data files
+
+# 2. LOADING METADATA 
+f <- fread(file.path(dictdir, "famvars_test.txt"))
+i <- fread(file.path(dictdir, "indvars_test.txt"))
+
+# 3. RESHAPING METADATA (unchanged)
+i <- dcast(i[, list(year, name, variable)], year ~ name, value.var = "variable")
+f <- dcast(f[, list(year, name, variable)], year ~ name, value.var = "variable")
+
+# 4. BUILDING PANEL 
+d <- build.panel(
+  datadir = datadir,  #  where RDA files are stored
+  fam.vars = f,
+  ind.vars = i,
+  heads.only = TRUE,
+  sample = "SRC",
+  design = "all"
+)
+
+
+
+# Load the individual-level data for each year
+
+
+
+
+
+load(file.path(datadir, "FAM1999ER.rda"))
+load(file.path(datadir, "FAM2001ER.rda"))
+load(file.path(datadir, "FAM2003ER.rda"))
+load(file.path(datadir, "FAM2005ER.rda"))
+load(file.path(datadir, "FAM2007ER.rda"))
+load(file.path(datadir, "FAM2009ER.rda"))
+load(file.path(datadir, "FAM2011ER.rda"))
+load(file.path(datadir, "FAM2013ER.rda"))
+load(file.path(datadir, "FAM2015ER.rda"))
+load(file.path(datadir, "FAM2017ER.rda"))
+load(file.path(datadir, "FAM2019ER.rda"))
+load(file.path(datadir, "FAM2021ER.rda"))
+
+
+
+# Rename columns in each dataset to match int_no_ind
+
+
+
+setnames(FAM1999ER, "ER13002", "int_no_ind")
+setnames(FAM2001ER, "ER17002", "int_no_ind")
+setnames(FAM2003ER, "ER21002", "int_no_ind")
+setnames(FAM2005ER, "ER25002", "int_no_ind")
+setnames(FAM2007ER, "ER36002", "int_no_ind")
+setnames(FAM2009ER, "ER42002", "int_no_ind")
+setnames(FAM2011ER, "ER47302", "int_no_ind")
+setnames(FAM2013ER, "ER53002", "int_no_ind")
+setnames(FAM2015ER, "ER60002", "int_no_ind")
+setnames(FAM2017ER, "ER66002", "int_no_ind")
+setnames(FAM2019ER, "ER72002", "int_no_ind")
+setnames(FAM2021ER, "ER78002", "int_no_ind")
+
+
+
+# Create mort_data for 1999
+mort_data_1999 <- data.table(
+  year = 1999,
+  int_no_ind = FAM1999ER$int_no_ind,
+  mort1year = FAM1999ER$ER13051, 
+  mort2year = FAM1999ER$ER13060
+)
+
+
+# Create mort_data for 2001
+mort_data_2001 <- data.table(
+  year = 2001,
+  int_no_ind = FAM2001ER$int_no_ind,
+  mort1year = FAM2001ER$ER17058, 
+  mort2year = FAM2001ER$ER17069
+)
+
+
+# Create mort_data for 2003
+mort_data_2003 <- data.table(
+  year = 2003,
+  int_no_ind = FAM2003ER$int_no_ind,
+  mort1year = FAM2003ER$ER21057, 
+  mort2year = FAM2003ER$ER21068
+)
+
+
+# Create mort_data for 2005
+mort_data_2005 <- data.table(
+  year = 2005,
+  int_no_ind = FAM2005ER$int_no_ind,
+  mort1year = FAM2005ER$ER25048, 
+  mort2year = FAM2005ER$ER25059 
+)
+
+
+# Create mort_data for 2007
+mort_data_2007 <- data.table(
+  year = 2007,
+  int_no_ind = FAM2007ER$int_no_ind,
+  mort1year = FAM2007ER$ER36049, 
+  mort2year = FAM2007ER$ER36061 
+)
+
+
+# Create mort_data for 2009
+mort_data_2009 <- data.table(
+  year = 2009,
+  int_no_ind = FAM2009ER$int_no_ind,
+  mort1year = FAM2009ER$ER42050, 
+  mort2year = FAM2009ER$ER42069
+)
+
+
+# Create mort_data for 2011
+mort_data_2011 <- data.table(
+  year = 2011,
+  int_no_ind = FAM2011ER$int_no_ind,
+  mort1year = FAM2011ER$ER47357, 
+  mort2year = FAM2011ER$ER47378
+)
+
+
+# Create mort_data for 2013
+mort_data_2013 <- data.table(
+  year = 2013,
+  int_no_ind = FAM2013ER$int_no_ind,
+  mort1year = FAM2013ER$ER53057, 
+  mort2year = FAM2013ER$ER53078 
+)
+
+
+
+# Create mort_data for 2015
+mort_data_2015 <- data.table(
+  year = 2015,
+  int_no_ind = FAM2015ER$int_no_ind,
+  mort1year = FAM2015ER$ER60058, 
+  mort2year = FAM2015ER$ER60079
+)
+
+# Create mort_data for 2017
+mort_data_2017 <- data.table(
+  year = 2017,
+  int_no_ind = FAM2017ER$int_no_ind,
+  mort1year = FAM2017ER$ER66060, 
+  mort2year = FAM2017ER$ER66081
+)
+
+# Create mort_data for 2019
+mort_data_2019 <- data.table(
+  year = 2019,
+  int_no_ind = FAM2019ER$int_no_ind,
+  mort1year = FAM2019ER$ER72060, 
+  mort2year = FAM2019ER$ER78082
+)
+
+# Create mort_data for 2021
+mort_data_2021 <- data.table(
+  year = 2021,
+  int_no_ind = FAM2021ER$int_no_ind,
+  mort1year = FAM2021ER$ER78061, 
+  mort2year = FAM2021ER$ER78082
+)
+
+# Combine mort_data for 2017, 2019, and 2021
+mort_data <- rbind(mort_data_2017, mort_data_2019, mort_data_2021, fill = TRUE)
+
+# Merge d with mort_data by both year and int_no_ind
+d <- merge(d, mort_data, by = c("year", "int_no_ind"), all.x = TRUE)
+

@@ -1,0 +1,1392 @@
+# Ensure both are data.tables
+setDT(d4a)
+setDT(cpi_data)
+d4a[cpi_data, cpi := i.cpi, on = "year"]
+colnames(d)
+nominal_vars <- c("mort1","mort2","mort_expen","proptax_expen","rent_expen","tot_expen","valuehouse_ifrent","wlth_no_equity","wlth_w_equity") 
+d4a[, paste0("real_", nominal_vars) := lapply(.SD, function(x) (x * base_cpi)/cpi),
+    .SDcols = nominal_vars]
+fwrite(d4a, "psid_real_adjusted.csv")  
+getwd()  # Prints the full folder path where files are saved
+library(haven)
+write_dta(d4a, "psid_real_adjusted.dta")
+colnames(d2) <- trimws(colnames(d))  # Removes leading/trailing whitespace from all names
+d2 <- d2[!duplicated(colnames(d2))]
+# For data.table (best approach)
+d2 <- d2[, .SD, .SDcols = !duplicated(colnames(d2))]
+cwf <- openxlsx::read.xlsx("C:/Users/2022/Desktop/psid.xlsx")
+getNamesPSID("ER72081", cwf, years = NULL)
+colnames(d2) <- trimws(colnames(d2))  # Removes leading/trailing spaces/tabs
+d2 <- d2[, .SD, .SDcols = !duplicated(colnames(d2))]
+colnames(d2) <- trimws(colnames(d2))  # Removes leading/trailing spaces/tabs
+d2 <- d2[, .SD, .SDcols = !duplicated(colnames(d2))]
+colnames(d2)
+base_cpi <- 271
+setDT(cpi_data) #really sure its data.table
+d2[cpi_data, cpi := i.cpi, on = "year"]
+nominal_vars <- c("car_mainten_expen","child_expen_prevy","educ_expen_prevy","fam_income_prevy","food_expen","gas_expen","health_expen","house_expen","house_value","mort1","mort2","mort_expen","park_expen_month","proptax_expen","pub_trans_expen_month","rent_expen","taxi_expen_month","tot_expen","trans_incom_prevy","util_expen","cloth_expen_prevy","otr_recre_expen_prevy","phone_expen","trips_expen_prevy","valuehouse_ifrent","wlth_no_equity","wlth_w_equity")
+
+d2[, paste0("real_", nominal_vars) := lapply(.SD, function(x) (x * base_cpi)/cpi),
+   .SDcols = nominal_vars]
+
+library(data.table)
+
+# Create a copy of d2 d2 has real variables and thats it
+
+d20 <- copy(d2)
+library(data.table)
+setDT(d20)  # Ensure data is a data.table
+
+
+# Define placeholder values (using proper variable names)
+placeholder_rules <- list(
+  real_mort1 = c(9999999, 9999998),
+  real_mort2 = c(9999999, 9999998),
+  int1prc = c(98, 99),
+  int2prc = c(98, 99),
+  mort_rate1fv = c(8, 9),
+  mort1year = c(9998, 9999),
+  mort2year = c(9998, 9999),
+  is2refin = c(8, 9),
+  `refin1_y/n` = c(8, 9),  # Backticks for special characters
+  mort_rate2fv = c(8, 9),
+  `mort_y/n` = c(8, 9),    # Backticks here too
+  real_house_value = c(99999999, 99999998),
+  educ_ref = 99
+)
+
+# Corrected placeholder checker
+is_placeholder <- function(var_name, values) {
+  if (var_name %in% names(d20)) {
+    d20[[var_name]] %in% values
+  } else {
+    rep(FALSE, nrow(d20))  # Fixed to reference d20
+  }
+}
+
+# Apply filtering THIS DIDNT WORK
+d20_clean <- d20[!Reduce(`|`, lapply(names(placeholder_rules), function(var) {
+  is_placeholder(var, placeholder_rules[[var]])
+}))]
+
+
+library(data.table)
+
+# Ensure d20_clean is a data.table
+setDT(d20_clean)
+
+# List of variables to winsorize (same as your list)
+real_vars <- c(
+  "real_car_mainten_expen", "real_child_expen_prevy", "real_educ_expen_prevy",
+  "real_fam_income_prevy", "real_food_expen", "real_gas_expen",
+  "real_health_expen", "real_house_expen", "real_house_value",
+  "real_mort1", "real_mort2", "real_mort_expen", "real_proptax_expen",
+  "real_rent_expen", "real_tot_expen", "real_trans_incom_prevy",
+  "real_util_expen", "real_cloth_expen_prevy", "real_otr_recre_expen_prevy",
+  "real_phone_expen", "real_trips_expen_prevy", "real_valuehouse_ifrent",
+  "real_wlth_no_equity", "real_wlth_w_equity"
+)
+
+# Winsorization function (1st and 99th percentiles)
+winsorize <- function(x) {
+  q1 <- quantile(x, 0.01, na.rm = TRUE)
+  q99 <- quantile(x, 0.99, na.rm = TRUE)
+  x[x < q1] <- q1
+  x[x > q99] <- q99
+  return(x)
+}
+
+# Apply winsorization to each variable in d20_clean
+for (var in real_vars) {
+  if (var %in% names(d20_clean)) {
+    d20_clean[, (var) := winsorize(get(var))]
+  } else {
+    warning(paste("Variable", var, "not found in d20_clean. Skipping."))
+  }
+}
+summary(d2[, .SD, .SDcols = real_vars])
+# Verify results
+summary(d20_clean[, .SD, .SDcols = real_vars])
+
+# Method 1: Base R subsetting
+library(data.table)
+setDT(d10_clean)
+
+# Create real_nonshelcons with year-specific formulas
+d10_clean[, real_nonshelcons := fcase(
+  # 1999-2015 formula
+  year %in% 1999:2015,
+  real_tot_expen - real_mort_expen - real_rent_expen - real_proptax_expen,
+  
+  # 2017-2021 formula (with valuehouse_ifrent added)
+  year %in% 2017:2021,
+  real_tot_expen + real_valuehouse_ifrent - real_mort_expen - real_rent_expen - real_proptax_expen,
+  
+  # Default for other years (2016, etc.)
+  default = NA_real_
+)]
+
+# Add methodology warning for 2017+ (fixed parentheses)
+if (any(d10_clean$year %in% 2017:2021)) {
+  message("NOTE: 2017-2021 non-shelter consumption includes valuehouse_ifrent")
+}
+# Method 2: dplyr approach
+library(dplyr)
+d20_clean %>% 
+  select(year, age_ref, pid) %>% 
+  View()
+d10 <- copy(d20_clean)# for sorting and dropping abmitious 
+library(data.table)
+setDT(d10) # Ensure it's a data.table
+
+d10 <- copy(d20)
+d10_clean <- d10[order(pid, year), 
+][, .SD[!any(diff(year) > 2) & .N >= 2], by = pid]  # Changed to >2
+
+library(data.table)
+setDT(d10_clean)
+
+# Step 1: Recode education levels
+d10_clean[, educ := fcase(
+  educ_ref %in% 0:11, 1L,       # 0-11 grades (including no schooling)
+  educ_ref == 12, 2L,           # High school (12 grades)
+  educ_ref %in% 13:17, 3L,      # College (13-17 grades)
+  default = NA_integer_         # Set missing for values >17 or NA
+)]
+
+# Step 2: Forward/backward fill missing education values within person timelines
+d10_clean <- d10_clean[order(pid, year), 
+][, educ := nafill(educ, "locf"), by = pid]  # Forward fill
+
+d10_clean <- d10_clean[order(pid, -year), 
+][, educ := nafill(educ, "locf"), by = pid]  # Backward fill
+
+# Restore original sort order
+setorder(d10_clean, pid, year)
+
+# Step 3: Take maximum education achieved per person
+d10_clean[, maxed := if(any(!is.na(educ))) max(educ, na.rm = TRUE), by = pid
+][, educ := fifelse(is.na(educ), maxed, educ)
+][, maxed := NULL]
+
+# Optional: Create educ2 to preserve original values
+d10_clean[, educ2 := educ_ref]
+
+
+library(data.table)
+setDT(d10_clean)
+
+# List of variables to sum
+nondur_vars <- c(
+  "real_car_mainten_expen",     
+  "real_child_expen_prevy",     
+  "real_educ_expen_prevy",     
+  "real_food_expen",            
+  "real_gas_expen",            
+  "real_health_expen",                       
+  "real_util_expen",            
+  "real_cloth_expen_prevy",    
+  "real_otr_recre_expen_prevy", 
+  "real_phone_expen",           
+  "real_trips_expen_prevy",    
+  "real_valuehouse_ifrent"
+)
+
+# Check if all variables exist in dataset
+existing_vars <- nondur_vars[nondur_vars %in% names(d10_clean)]
+
+# Create new variable by summing components
+d10_clean[, real_nondurcons := rowSums(.SD, na.rm = TRUE), 
+          .SDcols = existing_vars]
+
+library(data.table)
+setDT(d10_clean)
+
+# First, verify variable names match your dataset
+expected_vars <- c("real_tot_expen", "real_mort_expen", "real_rent_expen",
+                   "real_proptax_expen", "valuehouse_ifrent")
+
+# Check which variables exist
+existing_vars <- expected_vars[expected_vars %in% names(d10_clean)]
+if(length(missing <- setdiff(expected_vars, existing_vars)) > 0) {
+  warning("Missing variables: ", paste(missing, collapse = ", "))
+}
+
+library(data.table)
+setDT(d10_clean)
+
+# Create real_nonshelcons with year-specific formulas
+d10_clean[, real_nonshelcons := fcase(
+  # 1999-2015 formula
+  year %in% 1999:2015,
+  real_tot_expen - real_mort_expen - real_rent_expen - real_proptax_expen,
+  
+  # 2017-2021 formula (with valuehouse_ifrent added)
+  year %in% 2017:2021,
+  real_tot_expen + real_valuehouse_ifrent - real_mort_expen - real_rent_expen - real_proptax_expen,
+  
+  # Default for other years (2016, etc.)
+  default = NA_real_
+)]
+
+# Add methodology warning for 2017+ (fixed parentheses)
+if (any(d10_clean$year %in% 2017:2021)) {
+  message("NOTE: 2017-2021 non-shelter consumption includes valuehouse_ifrent")
+}
+colnames(d10_clean)
+library(data.table)
+setDT(d10_clean)
+
+# Create real_nonshelcons with year-specific formulas
+d10_clean[, real_nonshelcons := fcase(
+  # 1999-2015 formula
+  year %in% 1999:2015,
+  real_tot_expen - real_mort_expen - real_rent_expen - real_proptax_expen,
+  
+  # 2017-2021 formula (with valuehouse_ifrent added)
+  year %in% 2017:2021,
+  real_tot_expen + valuehouse_ifrent - real_mort_expen - real_rent_expen - real_proptax_expen,
+  
+  # Default for other years (2016, etc.)
+  default = NA_real_
+)]
+
+# Add methodology warning for 2017+ (fixed parentheses)
+if (any(d10_clean$year %in% 2017:2021)) {
+  message("NOTE: 2017-2021 non-shelter consumption includes valuehouse_ifrent")
+}
+
+# With identifiers
+d10_clean[1:1000, .(pid, year, real_nondurcons, real_nonshelcons)]
+
+
+library(data.table)
+setDT(d10_clean)
+
+# Check if variables exist
+mort_vars <- c("real_mort1", "real_mort2")
+existing_vars <- mort_vars[mort_vars %in% names(d10_clean)]
+
+# Create real_mort (sum existing components)
+if(length(existing_vars) > 0) {
+  d10_clean[, real_mort := rowSums(.SD, na.rm = TRUE), .SDcols = existing_vars]
+} else {
+  warning("No mortgage variables found - 'real_mort1' and 'real_mort2' missing")
+}
+
+# Verify results
+d10_clean[, .(real_mort1, real_mort2, real_mort)][1:10]
+
+library(data.table)
+setDT(d10_clean)
+
+### STEP 1: Clean mortgage variables ### STILL SUS AF IT DIDNT CLEAN
+# Define placeholder codes to replace with NA
+mort_placeholders <- c(9999999, 9999998)
+
+d10_clean[, `:=`(
+  real_mort1 = fifelse(real_mort1 %in% mort_placeholders, NA_real_, real_mort1),
+  real_mort2 = fifelse(real_mort2 %in% mort_placeholders, NA_real_, real_mort2)
+)]
+
+### OPTIONAL: Winsorize after cleaning ###
+# (If you want to cap extreme values instead of NA)
+winsorize <- function(x, p = 0.01) {
+  q <- quantile(x, c(p, 1-p), na.rm = TRUE)
+  x[x < q[1]] <- q[1]
+  x[x > q[2]] <- q[2]
+  x
+}
+
+d10_clean[, `:=`(
+  real_mort1 = winsorize(real_mort1),
+  real_mort2 = winsorize(real_mort2)
+)]
+
+### STEP 2: Create real_mort ###
+d10_clean[, real_mort := rowSums(.SD, na.rm = TRUE), 
+          .SDcols = c("real_mort1", "real_mort2")]
+
+### STEP 3: Verify ###
+d10_clean[, .(
+  real_mort1 = summary(real_mort1),
+  real_mort2 = summary(real_mort2), 
+  real_mort = summary(real_mort)
+)]
+library(ggplot2)
+ggplot(d10_clean) +
+  geom_histogram(aes(real_mort1), binwidth = 1000) +
+  geom_vline(xintercept = quantile(d10_clean$real_mort1, c(0.01, 0.99), na.rm = TRUE), 
+             color = "red", linetype = "dashed")
+library(data.table)
+setDT(d10_clean)
+
+# 1. Remove placeholder codes first (critical)
+d10_clean[, `:=`(
+  real_mort1 = fifelse(real_mort1 %in% c(9999999, 9999998), NA_real_, real_mort1),
+  real_mort2 = fifelse(real_mort2 %in% c(9999999, 9999998), NA_real_, real_mort2)
+)]
+
+# 2. Calculate 99th percentile (excluding NAs)
+mort1_99 <- quantile(d10_clean$real_mort1, 0.95, na.rm = TRUE)
+mort2_99 <- quantile(d10_clean$real_mort2, 0.95, na.rm = TRUE)
+
+# 3. Trim values above percentile
+d10_clean[, `:=`(
+  real_mort1 = fifelse(real_mort1 > mort1_95, NA_real_, real_mort1), #maybe too sharp
+  real_mort2 = fifelse(real_mort2 > mort2_95, NA_real_, real_mort2)
+)]
+
+# 4. Create real_mort sum
+d10_clean[, real_mort := rowSums(.SD, na.rm = TRUE), 
+          .SDcols = c("real_mort1", "real_mort2")]
+
+# Verify
+summary(d10_clean[, .(real_mort1, real_mort2, real_mort)])
+summary(d10[, .(real_mort1, real_mort2)])
+# Count observations where real_mort1 > 1,000,000
+d10_clean[real_mort1 > 1e6, .N]  # .N gives the count
+library(ggplot2)
+ggplot(d10_clean, aes(real_mort1)) + 
+  geom_histogram(binwidth = 1e5) + 
+  geom_vline(xintercept = 1e6, color = "red") +
+  scale_x_continuous(labels = scales::comma) +
+  labs(title = "Distribution of real_mort1 (1m threshold in red)")
+ggplot(d10_clean, aes(real_mort2)) + 
+  geom_histogram(binwidth = 1e5) + 
+  geom_vline(xintercept = 1e6, color = "red") +
+  scale_x_continuous(labels = scales::comma) +
+  labs(title = "Distribution of real_mort2 (1m threshold in red)")
+# Cap mortgages at 10,000,000 (for non-NA values)
+d10_clean[, `:=`(
+  real_mort1 = fifelse(real_mort1 > 1e7, 1e7, real_mort1),
+  real_mort2 = fifelse(real_mort2 > 1e7, 1e7, real_mort2)
+)]
+# Recalculate the sum (if previously created)
+d10_clean[, real_mort := rowSums(.SD, na.rm = TRUE), 
+          .SDcols = c("real_mort1", "real_mort2")]
+d200 <- copy(d10_clean)
+######################
+# placeholder values 
+placeholder_rules <- list(
+  real_mort1 = c(9999999, 9999998),
+  real_mort2 = c(9999999, 9999998),
+  int1prc = c(98, 99),
+  int2prc = c(98, 99),
+  mort_rate1fv = c(8, 9),
+  mort1year = c(9998, 9999),
+  mort2year = c(9998, 9999),
+  is2refin = c(8, 9),
+  `refin1_y/n` = c(8, 9),  #  special characters
+  mort_rate2fv = c(8, 9),
+  `mort_y/n` = c(8, 9),    # special
+  real_house_value = c(99999999, 99999998),
+  educ_ref = 99
+)
+
+#  placeholder checker corrected
+is_placeholder <- function(var_name, values) {
+  if (var_name %in% names(d20)) {
+    d20[[var_name]] %in% values
+  } else {
+    rep(FALSE, nrow(d20))  # Fixed to reference d20
+  }
+}
+
+#  filtering applied
+d20_clean <- d20[!Reduce(`|`, lapply(names(placeholder_rules), function(var) {
+  is_placeholder(var, placeholder_rules[[var]])
+}))]
+
+GETTING RID OF OUTLIERS 1-99th percentile 
+
+library(data.table)
+
+# make sure d20_clean is a data.table
+setDT(d20_clean)
+
+# List of variables to winsorize (same as your list)
+real_vars <- c(
+  "real_car_mainten_expen", "real_child_expen_prevy", "real_educ_expen_prevy",
+  "real_fam_income_prevy", "real_food_expen", "real_gas_expen",
+  "real_health_expen", "real_house_expen", "real_house_value",
+  "real_mort1", "real_mort2", "real_mort_expen", "real_proptax_expen",
+  "real_rent_expen", "real_tot_expen", "real_trans_incom_prevy",
+  "real_util_expen", "real_cloth_expen_prevy", "real_otr_recre_expen_prevy",
+  "real_phone_expen", "real_trips_expen_prevy", "real_valuehouse_ifrent",
+  "real_wlth_no_equity", "real_wlth_w_equity"
+)
+
+# Winsorization function (1st and 99th percentiles)
+winsorize <- function(x) {
+  q1 <- quantile(x, 0.01, na.rm = TRUE)
+  q99 <- quantile(x, 0.99, na.rm = TRUE)
+  x[x < q1] <- q1
+  x[x > q99] <- q99
+  return(x)
+}
+
+
+for (var in real_vars) {
+  if (var %in% names(d20_clean)) {
+    d20_clean[, (var) := winsorize(get(var))]
+  } else {
+    warning(paste("Variable", var, "not found in d20_clean. Skipping."))
+  }
+}
+
+NOW AS IN BLUNDELL
+1 sorting by person amd year and dropping intermittent 
+d10 <- copy(d20_clean)# for sorting and dropping abmitious 
+
+d10 <- d10[order(pid, year),  # Sort by person-year (STEP 1)
+][, .SD[!any(diff(year) > 1) & .N >= 2], by = pid]  # Drop intermittents (STEP 2) ahahah its 2 year survey everyone disappeared 
+
+d10_clean <- d10[order(pid, year), 
+][, .SD[!any(diff(year) > 2) & .N >= 2], by = pid]  # Changed to >2 # better it's d10_clean 52k obs
+
+
+#  education levels
+d10_clean[, educ := fcase(
+  educ_ref %in% 0:11, 1L,       # 0-11 grades (including no schooling)
+  educ_ref == 12, 2L,           # High school (12 grades)
+  educ_ref %in% 13:17, 3L,      # College (13-17 grades)
+  default = NA_integer_         # Set missing for values >17 or NA
+)]
+
+# SForward/backward missing education values filled
+d10_clean <- d10_clean[order(pid, year), 
+][, educ := nafill(educ, "locf"), by = pid]  # Forward fill
+
+d10_clean <- d10_clean[order(pid, -year), 
+][, educ := nafill(educ, "locf"), by = pid]  # Backward fill
+
+#  original sort order
+setorder(d10_clean, pid, year)
+
+#  maximum education achieved per person
+d10_clean[, maxed := if(any(!is.na(educ))) max(educ, na.rm = TRUE), by = pid
+][, educ := fifelse(is.na(educ), maxed, educ)
+][, maxed := NULL]
+
+
+
+
+CREATING 2 CONSUMPTION VARIABLES AS DEFINED IN LITERATURE: NON-SHELTER, NON-DURABLE
+I define NON-DURABLE CONSUMPTION as a sum of:
+  "real_car_mainten_expen"     
+"real_child_expen_prevy"     
+"real_educ_expen_prevy"     
+"real_food_expen"            
+"real_gas_expen"            
+"real_health_expen"                       
+"real_park_expen_month"  # sus            
+"real_pub_trans_expen_month" #kinda sus some values repeat couple times...suggestion?
+"real_taxi_expen_month"  # cant be used. values are suspicious there are negative values, absolute majority is 0 and those that appear repeat so i discard it. I also would need to multiply it by 12. mess.            
+"real_util_expen"            
+"real_cloth_expen_prevy"    
+"real_otr_recre_expen_prevy" 
+"real_phone_expen"           
+"real_trips_expen_prevy"    
+"real_valuehouse_ifrent"      
+following G.Kaplan(2016) to best of my ability and availability of data
+for now lets exclude 3 month variables (idk it could be rounding method or what)
+
+
+nondur_vars <- c(
+  "real_car_mainten_expen",     
+  "real_child_expen_prevy",     
+  "real_educ_expen_prevy",     
+  "real_food_expen",            
+  "real_gas_expen",            
+  "real_health_expen",                       
+  "real_util_expen",            
+  "real_cloth_expen_prevy",    
+  "real_otr_recre_expen_prevy", 
+  "real_phone_expen",           
+  "real_trips_expen_prevy",    
+  "real_valuehouse_ifrent"
+)
+
+existing_vars <- nondur_vars[nondur_vars %in% names(d10_clean)]
+
+d10_clean[, real_nondurcons := rowSums(.SD, na.rm = TRUE), 
+          .SDcols = existing_vars]
+
+NON-SHELTER CONSUMPTION:
+  1999-2015 it's real_tot_expen - real_mort_expen - real_rent_expend - real_prop_tax_expen
+2017-2021 it's total expenditure +  valuehouse_ifrent - mortgage expenditure - rent expenditure - property tax. no insurance substracted
+Total Expenditure: Generated variable combining all expenditures, excluding rent value ER81850.
+
+
+#  real_nonshelcons with year-specific formulas
+d10_clean[, real_nonshelcons := fcase(
+  
+  # 1999-2015 formula
+  year %in% 1999:2015,
+  real_tot_expen - real_mort_expen - real_rent_expen - real_proptax_expen,
+  
+  # 2017-2021 formula (with valuehouse_ifrent added)
+  year %in% 2017:2021,
+  real_tot_expen + valuehouse_ifrent - real_mort_expen - real_rent_expen - real_proptax_expen,
+  
+  }
+
+ADDITIONAL VARIABLE REAL_TOT_MORT    
+REAL_MORT1+REAL_MORT2
+
+mort_vars <- c("real_mort1", "real_mort2")
+existing_vars <- mort_vars[mort_vars %in% names(d10_clean)]
+
+#  real_mort (sum existing components)
+if(length(existing_vars) > 0) {
+  d10_clean[, real_mort := rowSums(.SD, na.rm = TRUE), .SDcols = existing_vars]
+} else {
+  warning("No mortgage variables found - 'real_mort1' and 'real_mort2' missing")
+}
+rm(d10)
+
+
+
+
+
+
+
+
+
+
+
+
+
+REAL VARIABLES
+
+library(tidyverse) 
+base_cpi <- 271 # source: www.minneapolisfed.org https://www.minneapolisfed.org/about-us/monetary-policy/inflation-calculator/consumer-price-index-1913-
+class(d4a)  
+library(data.table)
+
+setDT(d4a)
+setDT(cpi_data) #really sure its data.table
+d2[cpi_data, cpi := i.cpi, on = "year"]
+colnames(d2)
+####################################################################
+nominal_vars <- c("mort1","mort2","mort_expen","proptax_expen","rent_expen","tot_expen","valuehouse_ifrent","wlth_no_equity","wlth_w_equity") 
+d4a[, paste0("real_", nominal_vars) := lapply(.SD, function(x) (x * base_cpi)/cpi),
+    .SDcols = nominal_vars]
+###########################edit:####################################
+nominal_vars <- c("car_mainten_expen","child_expen_prevy","educ_expen_prevy","fam_income_prevy","food_expen","gas_expen","health_expen","house_expen","house_value","mort1","mort2","mort_expen","park_expen_month","proptax_expen","pub_trans_expen_month","rent_expen","taxi_expen_month","tot_expen","trans_incom_prevy","util_expen","cloth_expen_prevy","otr_recre_expen_prevy","phone_expen","trips_expen_prevy","valuehouse_ifrent","wlth_no_equity","wlth_w_equity")
+
+d2[, paste0("real_", nominal_vars) := lapply(.SD, function(x) (x * base_cpi)/cpi),
+   .SDcols = nominal_vars]
+
+creating yearly variables out of monthly:
+  
+  "real_park_expen_month","real_pub_trans_expen_month","real_taxi_expen_month"                
+
+
+GETTING RID OF 9,999,999 and 9,999,998 values from:
+  
+  real_mort1 (9,999,999 and 9,999,998) "real_mort1"
+real_mort2 (9,999,999 and 9,999,998) "real_mort2"
+current interest rate whole % (98 and 99)"int1prc" 
+current interest rate whole % (98 and 99) "int2prc"
+current interest rate fixed variable (8 and 9) "mort_rate1fv"
+current interest rate fixed variable (8 and 9) "mort_rate2fv"
+year obtained loan (9,998 and 9,999) "mort1year" 
+year obtained loan (9,998 and 9,999) "mort2year" 
+2 refinanced? (8 and 9) "is2refin"
+1 refinanced? (8 and 9) "refin1_y/n" 
+age (999) "age_ref"
+have mortgage? (8 and 9) "mort_y/n" 
+house value (99,999,999 and 99,999,998) "real_house_value"
+education (99) "educ_ref"   
+
+my main data.table is d2 so 
+d20 <- copy(d2)
+library(data.table)
+
+
+# placeholder values 
+placeholder_rules <- list(
+  real_mort1 = c(9999999, 9999998),
+  real_mort2 = c(9999999, 9999998),
+  int1prc = c(98, 99),
+  int2prc = c(98, 99),
+  mort_rate1fv = c(8, 9),
+  mort1year = c(9998, 9999),
+  mort2year = c(9998, 9999),
+  is2refin = c(8, 9),
+  `refin1_y/n` = c(8, 9),  #  special characters
+  mort_rate2fv = c(8, 9),
+  `mort_y/n` = c(8, 9),    # special
+  real_house_value = c(99999999, 99999998),
+  educ_ref = 99
+)
+
+#  placeholder checker corrected
+is_placeholder <- function(var_name, values) {
+  if (var_name %in% names(d20)) {
+    d20[[var_name]] %in% values
+  } else {
+    rep(FALSE, nrow(d20))  # Fixed to reference d20
+  }
+}
+
+#  filtering applied
+d20_clean <- d20[!Reduce(`|`, lapply(names(placeholder_rules), function(var) {
+  is_placeholder(var, placeholder_rules[[var]])
+}))]
+
+GETTING RID OF OUTLIERS 1-99th percentile 
+
+library(data.table)
+
+# make sure d20_clean is a data.table
+setDT(d20_clean)
+
+# List of variables to winsorize (same as your list)
+real_vars <- c(
+  "real_car_mainten_expen", "real_child_expen_prevy", "real_educ_expen_prevy",
+  "real_fam_income_prevy", "real_food_expen", "real_gas_expen",
+  "real_health_expen", "real_house_expen", "real_house_value",
+  "real_mort1", "real_mort2", "real_mort_expen", "real_proptax_expen",
+  "real_rent_expen", "real_tot_expen", "real_trans_incom_prevy",
+  "real_util_expen", "real_cloth_expen_prevy", "real_otr_recre_expen_prevy",
+  "real_phone_expen", "real_trips_expen_prevy", "real_valuehouse_ifrent",
+  "real_wlth_no_equity", "real_wlth_w_equity"
+)
+
+# Winsorization function (1st and 99th percentiles)
+winsorize <- function(x) {
+  q1 <- quantile(x, 0.01, na.rm = TRUE)
+  q99 <- quantile(x, 0.99, na.rm = TRUE)
+  x[x < q1] <- q1
+  x[x > q99] <- q99
+  return(x)
+}
+
+
+for (var in real_vars) {
+  if (var %in% names(d20_clean)) {
+    d20_clean[, (var) := winsorize(get(var))]
+  } else {
+    warning(paste("Variable", var, "not found in d20_clean. Skipping."))
+  }
+}
+
+NOW AS IN BLUNDELL
+1 sorting by person amd year and dropping intermittent 
+d10 <- copy(d20_clean)# for sorting and dropping abmitious 
+
+# d10 <- d10[order(pid, year),  # Sort by person-year (STEP 1)
+# ][, .SD[!any(diff(year) > 1) & .N >= 2], by = pid]  # Drop intermittents (STEP 2) ahahah its 2 year survey everyone disappeared 
+
+d10_clean <- d10[order(pid, year), 
+][, .SD[!any(diff(year) > 2) & .N >= 2], by = pid]  # Changed to >2 # better it's d10_clean 52k obs
+
+
+#  education levels
+d10_clean[, educ := fcase(
+  educ_ref %in% 0:11, 1L,       # 0-11 grades (including no schooling)
+  educ_ref == 12, 2L,           # High school (12 grades)
+  educ_ref %in% 13:17, 3L,      # College (13-17 grades)
+  default = NA_integer_         # Set missing for values >17 or NA
+)]
+
+# SForward/backward missing education values filled
+d10_clean <- d10_clean[order(pid, year), 
+][, educ := nafill(educ, "locf"), by = pid]  # Forward fill
+
+d10_clean <- d10_clean[order(pid, -year), 
+][, educ := nafill(educ, "locf"), by = pid]  # Backward fill
+
+#  original sort order
+setorder(d10_clean, pid, year)
+
+#  maximum education achieved per person
+d10_clean[, maxed := if(any(!is.na(educ))) max(educ, na.rm = TRUE), by = pid
+][, educ := fifelse(is.na(educ), maxed, educ)
+][, maxed := NULL]
+
+
+
+
+CREATING 2 CONSUMPTION VARIABLES AS DEFINED IN LITERATURE: NON-SHELTER, NON-DURABLE
+I define NON-DURABLE CONSUMPTION as a sum of:
+  "real_car_mainten_expen"     
+"real_child_expen_prevy"     
+"real_educ_expen_prevy"     
+"real_food_expen"            
+"real_gas_expen"            
+"real_health_expen"                       
+"real_park_expen_month"  # sus            
+"real_pub_trans_expen_month" #kinda sus some values repeat couple times...suggestion?
+"real_taxi_expen_month"  # cant be used. values are suspicious there are negative values, absolute majority is 0 and those that appear repeat so i discard it. I also would need to multiply it by 12. mess.            
+"real_util_expen"            
+"real_cloth_expen_prevy"    
+"real_otr_recre_expen_prevy" 
+"real_phone_expen"           
+"real_trips_expen_prevy"    
+"real_valuehouse_ifrent"      
+following G.Kaplan(2016) to best of my ability and availability of data
+for now lets exclude 3 month variables (idk it could be rounding method or what)
+
+
+nondur_vars <- c(
+  "real_car_mainten_expen",     
+  "real_child_expen_prevy",     
+  "real_educ_expen_prevy",     
+  "real_food_expen",            
+  "real_gas_expen",            
+  "real_health_expen",                       
+  "real_util_expen",            
+  "real_cloth_expen_prevy",    
+  "real_otr_recre_expen_prevy", 
+  "real_phone_expen",           
+  "real_trips_expen_prevy",    
+  "real_valuehouse_ifrent"
+)
+
+existing_vars <- nondur_vars[nondur_vars %in% names(d10_clean)]
+
+d10_clean[, real_nondurcons := rowSums(.SD, na.rm = TRUE), 
+          .SDcols = existing_vars]
+
+NON-SHELTER CONSUMPTION:
+  1999-2015 it's real_tot_expen - real_mort_expen - real_rent_expend - real_prop_tax_expen
+2017-2021 it's total expenditure +  valuehouse_ifrent - mortgage expenditure - rent expenditure - property tax. no insurance substracted
+Total Expenditure: Generated variable combining all expenditures, excluding rent value ER81850.
+
+
+library(data.table)
+setDT(d10_clean)
+
+# Create real_nonshelcons with proper year-specific formulas
+d10_clean[, real_nonshelcons := fcase(
+  # 1999-2015 formula
+  year %in% 1999:2015,
+  real_tot_expen - real_mort_expen - real_rent_expen - real_proptax_expen,
+  
+  # 2017-2021 formula (with valuehouse_ifrent added)
+  year %in% 2017:2021,
+  real_tot_expen + real_valuehouse_ifrent - real_mort_expen - real_rent_expen - real_proptax_expen,
+  
+  # Default for other years (2016, etc.)
+  default = NA_real_
+)]
+
+# Verify the calculation
+d10_clean[, .(
+  years = paste(min(year), max(year), sep = "-"),
+  mean_nonshelcons = mean(real_nonshelcons, na.rm = TRUE),
+  by = .(formula_group = fifelse(year %in% 1999:2015, "1999-2015", 
+                                 fifelse(year %in% 2017:2021, "2017-2021", "Other")))
+]
+
+ADDITIONAL VARIABLE REAL_TOT_MORT    
+REAL_MORT1+REAL_MORT2
+
+mort_vars <- c("real_mort1", "real_mort2")
+existing_vars <- mort_vars[mort_vars %in% names(d10_clean)]
+
+#  real_mort (sum existing components)
+if(length(existing_vars) > 0) {
+  d10_clean[, real_mort := rowSums(.SD, na.rm = TRUE), .SDcols = existing_vars]
+} else {
+  warning("No mortgage variables found - 'real_mort1' and 'real_mort2' missing")
+}
+
+
+library(data.table)
+setDT(d10_clean)
+
+### STEP 1: Clean placeholder codes (if not already done)
+mort_placeholders <- c(9999999, 9999998, 999999999, 1e9)
+d10_clean[, `:=`(
+  real_mort1 = fifelse(real_mort1 %in% mort_placeholders, NA_real_, real_mort1),
+  real_mort2 = fifelse(real_mort2 %in% mort_placeholders, NA_real_, real_mort2)
+)]
+
+### STEP 2: Calculate 95th percentiles (excluding NAs)
+mort1_95 <- quantile(d10_clean$real_mort1, 0.95, na.rm = TRUE)
+mort2_95 <- quantile(d10_clean$real_mort2, 0.95, na.rm = TRUE)
+
+### STEP 3: Cap values at 95th percentile
+d10_clean[, `:=`(
+  real_mort1 = fifelse(real_mort1 > mort1_95, mort1_95, real_mort1),
+  real_mort2 = fifelse(real_mort2 > mort2_95, mort2_95, real_mort2)
+)]
+
+### STEP 4: Recalculate real_mort (sum of capped values)
+d10_clean[, real_mort := rowSums(.SD, na.rm = TRUE), 
+          .SDcols = c("real_mort1", "real_mort2")]
+
+### VERIFICATION:
+# View new distributions
+d10_clean[, .(
+  real_mort1 = list(summary(real_mort1)),
+  real_mort2 = list(summary(real_mort2)),
+  real_mort = list(summary(real_mort))
+]
+
+# Plot distributions
+library(ggplot2)
+ggplot(melt(d10_clean[, .(real_mort1, real_mort2, real_mort)]), 
+       aes(value)) +
+  geom_histogram(bins = 50) +
+  facet_wrap(~variable, scales = "free") +
+  scale_x_continuous(labels = scales::comma)
+
+
+
+
+
+
+
+
+
+
+
+library(data.table)
+setDT(d10_clean)
+
+### STEP 1: Clean placeholder codes (if not already done)
+mort_placeholders <- c(9999999, 9999998, 999999999, 1e9)
+d10_clean[, `:=`(
+  real_mort1 = fifelse(real_mort1 %in% mort_placeholders, NA_real_, real_mort1),
+  real_mort2 = fifelse(real_mort2 %in% mort_placeholders, NA_real_, real_mort2)
+)]
+
+### STEP 2: Calculate 95th percentiles (excluding NAs)
+mort1_95 <- quantile(d10_clean$real_mort1, 0.95, na.rm = TRUE)
+mort2_95 <- quantile(d10_clean$real_mort2, 0.95, na.rm = TRUE)
+
+### STEP 3: Cap values at 95th percentile
+d10_clean[, `:=`(
+  real_mort1 = fifelse(real_mort1 > mort1_99, mort1_99, real_mort1),
+  real_mort2 = fifelse(real_mort2 > mort2_99, mort2_99, real_mort2)
+)]
+
+### STEP 4: Recalculate real_mort (sum of capped values)
+d10_clean[, real_mort := rowSums(.SD, na.rm = TRUE), 
+          .SDcols = c("real_mort1", "real_mort2")]
+
+### VERIFICATION (FIXED SYNTAX):
+# Option 1: Simple summary
+d10_clean[, .(
+  real_mort1_p99 = mort1_99,
+  real_mort2_p99 = mort2_99,
+  max_mort1 = max(real_mort1, na.rm = TRUE),
+  max_mort2 = max(real_mort2, na.rm = TRUE))
+]
+
+# Option 2: Detailed summary (corrected)
+summary_list <- list(
+  real_mort1 = summary(d10_clean$real_mort1),
+  real_mort2 = summary(d10_clean$real_mort2),
+  real_mort = summary(d10_clean$real_mort)
+)
+print(summary_list)
+
+# Plot distributions
+if(require(ggplot2)) {
+  ggplot(melt(d10_clean[, .(real_mort1, real_mort2, real_mort)]), 
+         aes(value)) +
+    geom_histogram(bins = 50) +
+    facet_wrap(~variable, scales = "free") +
+    scale_x_continuous(labels = scales::comma)
+}
+
+library(data.table)
+setDT(d10_clean)
+
+# Remove rows where ref_age < 25 or > 65
+d10_clean <- d10_clean[age_ref >= 25 & age_ref <= 65]
+
+# Verify the age range after filtering
+summary(d10_clean$ref_age)
+
+
+
+
+
+
+
+####overlap
+
+
+
+
+nondur_vars <- c(
+  "real_car_mainten_expen",     
+  "real_child_expen_prevy",     
+  "real_educ_expen_prevy",     
+  "real_food_expen",            
+  "real_gas_expen",            
+  "real_health_expen",                       
+  "real_util_expen",            
+  "real_cloth_expen_prevy",    
+  "real_otr_recre_expen_prevy", 
+  "real_phone_expen",           
+  "real_trips_expen_prevy",    
+  "real_valuehouse_ifrent"
+)
+
+existing_vars <- nondur_vars[nondur_vars %in% names(d10_clean)]
+
+d10_clean[, real_nondurcons := rowSums(.SD, na.rm = TRUE), 
+          .SDcols = existing_vars]
+
+NON-SHELTER CONSUMPTION:
+  1999-2015 it's real_tot_expen - real_mort_expen - real_rent_expend - real_prop_tax_expen
+2017-2021 it's total expenditure +  valuehouse_ifrent - mortgage expenditure - rent expenditure - property tax. no insurance substracted
+Total Expenditure: Generated variable combining all expenditures, excluding rent value ER81850.
+
+
+library(data.table)
+setDT(d10_clean)
+
+# Create real_nonshelcons with proper year-specific formulas
+d10_clean[, real_nonshelcons := fcase(
+  # 1999-2015 formula
+  year %in% 1999:2015,
+  real_tot_expen - real_mort_expen - real_rent_expen - real_proptax_expen,
+  
+  # 2017-2021 formula (with valuehouse_ifrent added)
+  year %in% 2017:2021,
+  real_tot_expen + real_valuehouse_ifrent - real_mort_expen - real_rent_expen - real_proptax_expen,
+  
+  # Default for other years (2016, etc.)
+  default = NA_real_
+)]
+
+# Verify the calculation
+d10_clean[, .(
+  years = paste(min(year), max(year), sep = "-"),
+  mean_nonshelcons = mean(real_nonshelcons, na.rm = TRUE),
+  by = .(formula_group = fifelse(year %in% 1999:2015, "1999-2015", 
+                                 fifelse(year %in% 2017:2021, "2017-2021", "Other")))
+]
+
+ADDITIONAL VARIABLE REAL_TOT_MORT    
+REAL_MORT1+REAL_MORT2
+
+mort_vars <- c("real_mort1", "real_mort2")
+existing_vars <- mort_vars[mort_vars %in% names(d10_clean)]
+
+#  real_mort (sum existing components)
+if(length(existing_vars) > 0) {
+  d10_clean[, real_mort := rowSums(.SD, na.rm = TRUE), .SDcols = existing_vars]
+} else {
+  warning("No mortgage variables found - 'real_mort1' and 'real_mort2' missing")
+}
+
+
+library(data.table)
+setDT(d10_clean)
+
+### STEP 1: Clean placeholder codes (if not already done)
+mort_placeholders <- c(9999999, 9999998, 999999999, 1e9)
+d10_clean[, `:=`(
+  real_mort1 = fifelse(real_mort1 %in% mort_placeholders, NA_real_, real_mort1),
+  real_mort2 = fifelse(real_mort2 %in% mort_placeholders, NA_real_, real_mort2)
+)]
+
+### STEP 2: Calculate 95th percentiles (excluding NAs)
+mort1_95 <- quantile(d10_clean$real_mort1, 0.95, na.rm = TRUE)
+mort2_95 <- quantile(d10_clean$real_mort2, 0.95, na.rm = TRUE)
+
+### STEP 3: Cap values at 95th percentile
+d10_clean[, `:=`(
+  real_mort1 = fifelse(real_mort1 > mort1_95, mort1_95, real_mort1),
+  real_mort2 = fifelse(real_mort2 > mort2_95, mort2_95, real_mort2)
+)]
+
+### STEP 4: Recalculate real_mort (sum of capped values)
+d10_clean[, real_mort := rowSums(.SD, na.rm = TRUE), 
+          .SDcols = c("real_mort1", "real_mort2")]
+
+### VERIFICATION:
+# View new distributions
+d10_clean[, .(
+  real_mort1 = list(summary(real_mort1)),
+  real_mort2 = list(summary(real_mort2)),
+  real_mort = list(summary(real_mort))
+]
+
+# Plot distributions
+library(ggplot2)
+ggplot(melt(d10_clean[, .(real_mort1, real_mort2, real_mort)]), 
+       aes(value)) +
+  geom_histogram(bins = 50) +
+  facet_wrap(~variable, scales = "free") +
+  scale_x_continuous(labels = scales::comma)
+
+
+
+
+
+
+
+
+
+
+
+library(data.table)
+setDT(d10_clean)
+
+### STEP 1: Clean placeholder codes (if not already done)
+mort_placeholders <- c(9999999, 9999998, 999999999, 1e9)
+d10_clean[, `:=`(
+  real_mort1 = fifelse(real_mort1 %in% mort_placeholders, NA_real_, real_mort1),
+  real_mort2 = fifelse(real_mort2 %in% mort_placeholders, NA_real_, real_mort2)
+)]
+
+### STEP 2: Calculate 95th percentiles (excluding NAs)
+mort1_95 <- quantile(d10_clean$real_mort1, 0.95, na.rm = TRUE)
+mort2_95 <- quantile(d10_clean$real_mort2, 0.95, na.rm = TRUE)
+
+### STEP 3: Cap values at 95th percentile
+d10_clean[, `:=`(
+  real_mort1 = fifelse(real_mort1 > mort1_99, mort1_99, real_mort1),
+  real_mort2 = fifelse(real_mort2 > mort2_99, mort2_99, real_mort2)
+)]
+
+### STEP 4: Recalculate real_mort (sum of capped values)
+d10_clean[, real_mort := rowSums(.SD, na.rm = TRUE), 
+          .SDcols = c("real_mort1", "real_mort2")]
+
+### VERIFICATION (FIXED SYNTAX):
+# Option 1: Simple summary
+d10_clean[, .(
+  real_mort1_p99 = mort1_99,
+  real_mort2_p99 = mort2_99,
+  max_mort1 = max(real_mort1, na.rm = TRUE),
+  max_mort2 = max(real_mort2, na.rm = TRUE))
+]
+
+# Option 2: Detailed summary (corrected)
+summary_list <- list(
+  real_mort1 = summary(d10_clean$real_mort1),
+  real_mort2 = summary(d10_clean$real_mort2),
+  real_mort = summary(d10_clean$real_mort)
+)
+print(summary_list)
+
+# Plot distributions
+if(require(ggplot2)) {
+  ggplot(melt(d10_clean[, .(real_mort1, real_mort2, real_mort)]), 
+         aes(value)) +
+    geom_histogram(bins = 50) +
+    facet_wrap(~variable, scales = "free") +
+    scale_x_continuous(labels = scales::comma)
+}
+
+library(data.table)
+setDT(d10_clean)
+
+# Remove rows where ref_age < 25 or > 65
+d10_clean <- d10_clean[age_ref >= 25 & age_ref <= 65]
+
+# Verify the age range after filtering
+summary(d10_clean$ref_age)
+save(d2, file = "C:/Users/2022/Desktop/d2.RData")
+
+library(data.table)
+library(ggplot2)
+setDT(d10_clean)
+
+# 1. Calculate year-to-year changes by pid
+d10_clean <- d10_clean[order(pid, year), 
+][, `:=`(
+  chg_nondurcons = real_nondurcons - shift(real_nondurcons),
+  chg_nonshelcons = real_nonshelcons - shift(real_nonshelcons),
+  chg_mort = real_mort - shift(real_mort)
+), by = pid]
+
+# 2. Aggregate changes by year
+yearly_changes <- d10_clean[!is.na(chg_mort),
+                            .(avg_chg_nondur = mean(chg_nondurcons, na.rm = TRUE),
+                              avg_chg_nonshel = mean(chg_nonshelcons, na.rm = TRUE),
+                              avg_chg_mort = mean(chg_mort, na.rm = TRUE)),
+                            by = year]
+
+# 3. Plot with trendlines
+ggplot(melt(yearly_changes, id.vars = "year", 
+            measure.vars = c("avg_chg_nondur", "avg_chg_nonshel")), 
+       aes(x = avg_chg_mort, y = value, color = variable)) +
+  geom_point(size = 3) +
+  geom_smooth(method = "lm", se = FALSE) +
+  facet_wrap(~variable, scales = "free_y") +
+  labs(title = "Annual Changes: Consumption vs Mortgage",
+       subtitle = "Trendlines show linear relationships",
+       x = "Change in Real Mortgage",
+       y = "Change in Consumption",
+       color = "Consumption Type") +
+  scale_color_manual(values = c("avg_chg_nondur" = "blue", 
+                                "avg_chg_nonshel" = "red"),
+                     labels = c("Non-durable", "Non-shelter")) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+
+# 4. Output regression results
+models <- list(
+  nondur = lm(avg_chg_nondur ~ avg_chg_mort, data = yearly_changes),
+  nonshel = lm(avg_chg_nonshel ~ avg_chg_mort, data = yearly_changes)
+)
+
+lapply(models, summary)
+# Non-durable consumption vs mortgage changes
+ggplot(d10_clean, aes(x = delta_mort, y = delta_nondur)) +
+  geom_point(alpha = 0.3, color = "steelblue") +
+  geom_smooth(method = "lm", color = "red", se = FALSE) +
+  labs(title = "Δ Non-Durable Consumption vs Δ Mortgage",
+       x = "Change in Mortgage (real)",
+       y = "Change in Non-Durable Consumption (real)") +
+  theme_minimal()
+
+# Non-shelter consumption vs mortgage changes
+ggplot(d10_clean, aes(x = delta_mort, y = delta_nonshel)) +
+  geom_point(alpha = 0.3, color = "darkgreen") +
+  geom_smooth(method = "lm", color = "orange", se = FALSE) +
+  labs(title = "Δ Non-Shelter Consumption vs Δ Mortgage",
+       x = "Change in Mortgage (real)",
+       y = "Change in Non-Shelter Consumption (real)") +
+  theme_minimal()
+
+library(data.table)
+library(ggplot2)
+setDT(d10_clean)
+
+# Calculate annual changes (Δ) for each household
+d10_clean <- d10_clean[order(pid, year), 
+][, `:=`(
+  # Calculate changes from previous year
+  delta_nondur = real_nondurcons - shift(real_nondurcons),
+  delta_nonshel = real_nonshelcons - shift(real_nonshelcons),
+  delta_mort = real_mort - shift(real_mort)
+), by = pid]
+# Non-durable consumption vs mortgage changes
+ggplot(d10_clean, aes(x = delta_mort, y = delta_nondur)) +
+  geom_point(alpha = 0.3, color = "steelblue") +
+  geom_smooth(method = "lm", color = "red", se = FALSE) +
+  labs(title = "Δ Non-Durable Consumption vs Δ Mortgage",
+       x = "Change in Mortgage (real)",
+       y = "Change in Non-Durable Consumption (real)") +
+  theme_minimal()
+
+# Non-shelter consumption vs mortgage changes
+ggplot(d10_clean, aes(x = delta_mort, y = delta_nonshel)) +
+  geom_point(alpha = 0.3, color = "darkgreen") +
+  geom_smooth(method = "lm", color = "orange", se = FALSE) +
+  labs(title = "Δ Non-Shelter Consumption vs Δ Mortgage",
+       x = "Change in Mortgage (real)",
+       y = "Change in Non-Shelter Consumption (real)") +
+  theme_minimal()
+
+
+library(data.table)
+setDT(d10_clean)
+
+# Define analysis periods (year vs baseline)
+periods <- list(
+  "2001" = list(year = 2001, base = 1999),
+  "2009" = list(year = 2009, base = 2007), 
+  "2021" = list(year = 2021, base = 2019)
+)
+
+# Calculate deltas for each period
+period_changes <- rbindlist(lapply(periods, function(p) {
+  d10_clean[year %in% c(p$base, p$year),
+            .(delta_nondur = diff(real_nondurcons),
+              delta_nonshel = diff(real_nonshelcons),
+              delta_mort = diff(real_mort),
+              period = paste(p$base, p$year, sep="-")),
+            by = pid]
+}, idcol = "period_label")
+
+# Set up 2x3 plot grid
+par(mfrow = c(2, 3), mar = c(4, 4, 2, 1))
+
+# Plot non-durable consumption changes
+for (per in unique(period_changes$period)) {
+  dat <- period_changes[period == per]
+  plot(dat$delta_mort, dat$delta_nondur,
+       main = paste("Non-Dur:", per),
+       xlab = "Δ Mortgage", ylab = "Δ Consumption")
+  abline(lm(delta_nondur ~ delta_mort, data = dat), col = "red")
+}
+
+# Plot non-shelter consumption changes  
+for (per in unique(period_changes$period)) {
+  dat <- period_changes[period == per]
+  plot(dat$delta_mort, dat$delta_nonshel,
+       main = paste("Non-Shel:", per),
+       xlab = "Δ Mortgage", ylab = "Δ Consumption")
+  abline(lm(delta_nonshel ~ delta_mort, data = dat), col = "blue")
+}
+
+# Reset plot settings
+par(mfrow = c(1, 1))
+
+# Function to extract key stats
+get_model_stats <- function(formula, data) {
+  model <- lm(formula, data)
+  c(slope = coef(model)[2], 
+    p_value = summary(model)$coefficients[2,4],
+    r_squared = summary(model)$r.squared)
+}
+
+# Calculate for all periods
+results <- period_changes[, {
+  list(
+    nondur_stats = get_model_stats(delta_nondur ~ delta_mort, .SD),
+    nonshel_stats = get_model_stats(delta_nonshel ~ delta_mort, .SD)
+  )
+}, by = period]
+
+# View results
+print(results)
+
+library(data.table)
+setDT(d10_clean)
+
+# Create a unified dataset with period labels
+period_data <- d10_clean[, period := fcase(
+  year %in% 1999:2001, "1999-2001",
+  year %in% 2007:2009, "2007-2009",
+  year %in% 2019:2021, "2019-2021"
+)][!is.na(period)]
+
+# Calculate within-household changes (Δ)
+period_changes <- period_data[order(pid, year),
+][, .(
+  delta_nondur = diff(real_nondurcons),
+  delta_nonshel = diff(real_nonshelcons),
+  delta_mort = diff(real_mort)
+), by = .(pid, period)]
+
+# Fit a model with period-mortgage interaction
+model_nondur <- lm(delta_nondur ~ delta_mort * period, data = period_changes)
+
+# Test if slopes differ significantly
+anova_results_nondur <- anova(
+  lm(delta_nondur ~ delta_mort, data = period_changes), # Reduced model
+  model_nondur # Full model with interactions
+)
+
+# View results
+print(anova_results_nondur)
+
+model_nonshel <- lm(delta_nonshel ~ delta_mort * period, data = period_changes)
+anova_results_nonshel <- anova(
+  lm(delta_nonshel ~ delta_mort, data = period_changes),
+  model_nonshel
+)
+print(anova_results_nonshel)
+
+library(emmeans)
+
+# Non-durable pairwise comparisons
+emmeans_nondur <- emtrends(model_nondur, pairwise ~ period, var = "delta_mort")
+summary(emmeans_nondur$contrasts, adjust = "tukey")
+
+# Non-shelter pairwise comparisons
+emmeans_nonshel <- emtrends(model_nonshel, pairwise ~ period, var = "delta_mort")
+summary(emmeans_nonshel$contrasts, adjust = "tukey")
+
+library(data.table)
+setDT(d10_clean)
+
+# Define all periods of interest (baseline → target year)
+periods <- list(
+  "2001" = list(year = 2001, base = 1999),
+  "2009" = list(year = 2009, base = 2007),
+  "2011" = list(year = 2011, base = 2009), 
+  "2013" = list(year = 2013, base = 2011),
+  "2015" = list(year = 2015, base = 2013),
+  "2021" = list(year = 2021, base = 2019)
+)
+
+# Calculate changes for all periods
+period_changes <- rbindlist(lapply(periods, function(p) {
+  d10_clean[year %in% c(p$base, p$year),
+            .(delta_nondur = diff(real_nondurcons),
+              delta_nonshel = diff(real_nonshelcons),
+              delta_mort = diff(real_mort),
+              period = paste(p$base, p$year, sep = "-")),
+            by = pid]
+}), idcol = "period_label")
+
+library(ggplot2)
+library(patchwork) # For arranging plots
+
+# Non-durable consumption trends
+p_nondur <- ggplot(period_changes, aes(delta_mort, delta_nondur, color = period)) +
+  geom_point(alpha = 0.05) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(title = "Non-Durable Consumption Trends",
+       x = "Δ Mortgage", y = "Δ Consumption") +
+  theme_minimal() +
+  scale_color_brewer(palette = "Set1")
+
+# Non-shelter consumption trends
+p_nonshel <- ggplot(period_changes, aes(delta_mort, delta_nonshel, color = period)) +
+  geom_point(alpha = 0.05) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(title = "Non-Shelter Consumption Trends",
+       x = "Δ Mortgage", y = "Δ Consumption") +
+  theme_minimal() +
+  scale_color_brewer(palette = "Set1")
+
+# Combine plots
+p_nondur / p_nonshel + 
+  plot_layout(guides = "collect") &
+  theme(legend.position = "bottom")
+
+# Post-Great Recession recovery (2011-2015)
+post_recession <- period_changes[period %in% c("2009-2011", "2011-2013", "2013-2015")]
+
+ggplot(post_recession, aes(delta_mort, delta_nondur, color = period)) +
+  geom_smooth(method = "lm") +
+  labs(title = "Post-2009 Recovery Trends",
+       subtitle = "Non-durable consumption response to mortgage changes",
+       x = "Δ Mortgage", y = "Δ Consumption")
+
+slope_table <- period_changes[, {
+  nd_model <- lm(delta_nondur ~ delta_mort)
+  ns_model <- lm(delta_nonshel ~ delta_mort)
+  list(
+    nondur_slope = coef(nd_model)[2],
+    nondur_p = summary(nd_model)$coefficients[2,4],
+    nonshel_slope = coef(ns_model)[2],
+    nonshel_p = summary(ns_model)$coefficients[2,4]
+  )
+}, by = period]
+
+# Sort chronologically
+slope_table[order(match(period, c("1999-2001", "2007-2009", "2009-2011", 
+                                  "2011-2013", "2013-2015", "2019-2021")))]
+library(ggplot2)
+ggplot(slope_table, aes(x = factor(period, levels = unique(period)), 
+                        group = 1)) +
+  geom_line(aes(y = nondur_slope, color = "Non-Durable"), linewidth = 1) +
+  geom_line(aes(y = nonshel_slope, color = "Non-Shelter"), linewidth = 1) +
+  geom_point(aes(y = nondur_slope, shape = "Non-Durable"), size = 3) +
+  geom_point(aes(y = nonshel_slope, shape = "Non-Shelter"), size = 3) +
+  labs(title = "Slope Coefficients Over Time",
+       subtitle = "Impact of $1 Mortgage Change on Consumption",
+       x = "Period", y = "Slope Coefficient") +
+  scale_color_manual(values = c("Non-Durable" = "blue", "Non-Shelter" = "red")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+library(ggplot2)
+ggplot(slope_table, aes(period, nonshel_slope - nondur_slope)) +
+  geom_col(aes(fill = nonshel_slope > nondur_slope)) +
+  labs(title = "Non-Shelter vs Non-Durable Responsiveness", 
+       subtitle = "Positive values = Non-shelter more responsive",
+       x = "Period", y = "Slope Difference") +
+  scale_fill_manual(values = c("TRUE" = "steelblue", "FALSE" = "salmon")) +
+  theme_minimal()

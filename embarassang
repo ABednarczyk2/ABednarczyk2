@@ -266,6 +266,8 @@ d3[, (gsub("_month$", "", monthly_vars)) := lapply(.SD, "*", 12),
    .SDcols = monthly_vars]
 
 # 2.  transformations ?
+
+
 d3[, .(
   mort1_check = mean(mort1_instal_month * 12, na.rm = TRUE) == mean(mort1_instal, na.rm = TRUE),
   taxi_check = mean(taxi_expen_month * 12, na.rm = TRUE) == mean(taxi_expen, na.rm = TRUE)
@@ -273,5 +275,831 @@ d3[, .(
 
 # 3. DONT remove original monthly columns 
 # d3[, (monthly_vars) := NULL]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+above is the same it will reoeat below is winsorizing
+##################################
+####whole stupidfucking file #####
+
+library(psidR)
+library(data.table)
+library(SAScii)
+library(readr)
+dictdir<-"C:/Users/2022/Desktop/R data"         
+datadir<-"C:/Users/2022/Desktop/R data/data/PSID" 
+
+
+f <- fread("C:/Users/2022/Desktop/famvars_test9.txt") # you can find both .txt files on thesis--idea board
+i<-fread("indvars_test2.txt") # this one is unproblematic every time  
+
+
+i <- dcast(i[, list(year, name, variable)], year ~ name, value.var = "variable")
+f <- dcast(f[, list(year, name, variable)], year ~ name, value.var = "variable")
+
+
+
+d <- build.panel(
+  datadir = datadir,  # i don't have this r thing because whatever path i set it shows this " will download family files: 1999, 2001, 2003, 2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019, 2021" idk if that's a problem but it runs otherwise so....
+  fam.vars = f,
+  ind.vars = i,
+  heads.only = TRUE,
+  sample = "SRC",
+  design = "all"
+)
+
+# Set the correct path to your PSID files
+psid_dir <- "C:/Users/2022/Desktop/R data/data/PSID"
+
+# List all files to verify
+psid_files <- list.files(psid_dir, pattern = "FAM.*ER\\.(rda|RData)$", full.names = TRUE, ignore.case = TRUE)
+print(psid_files)
+
+# Function to process each year
+process_psid_year <- function(year) {
+  # Find the file for this year (case-insensitive)
+  file_pattern <- paste0("FAM", year, "ER\\.(rda|RData)$")
+  year_file <- list.files(psid_dir, pattern = file_pattern, full.names = TRUE, ignore.case = TRUE)
+  
+  if(length(year_file) == 0) {
+    warning(paste("No file found for year", year))
+    return(NULL)
+  }
+  
+  # Load the file (it might contain an object named 'x' or similar)
+  loaded_obj <- load(year_file)
+  psid_data <- get(loaded_obj)
+  
+  # Define year-specific variables
+  id_var <- switch(as.character(year),
+                   "1999" = "ER13002",
+                   "2001" = "ER17002",
+                   "2003" = "ER21002",
+                   "2005" = "ER25002",
+                   "2007" = "ER36002",
+                   "2009" = "ER42002",
+                   "2011" = "ER47302",
+                   "2013" = "ER53002",
+                   "2015" = "ER60002",
+                   "2017" = "ER66002",
+                   "2019" = "ER72002",
+                   "2021" = "ER78002")
+  
+  mort1_var <- switch(as.character(year),
+                      "1999" = "ER13061",
+                      "2001" = "ER17059",
+                      "2003" = "ER21058",
+                      "2005" = "ER25049",
+                      "2007" = "ER36050",
+                      "2009" = "ER42051",
+                      "2011" = "ER47358",
+                      "2013" = "ER53058",
+                      "2015" = "ER60059",
+                      "2017" = "ER66061",
+                      "2019" = "ER72061",
+                      "2021" = "ER78061")
+  
+  mort2_var <- switch(as.character(year),
+                      "1999" = "ER13070",
+                      "2001" = "ER17070",
+                      "2003" = "ER21069",
+                      "2005" = "ER25060",
+                      "2007" = "ER36062",
+                      "2009" = "ER42070",
+                      "2011" = "ER47379",
+                      "2013" = "ER53079",
+                      "2015" = "ER60080",
+                      "2017" = "ER66082",
+                      "2019" = "ER72082",
+                      "2021" = "ER78083")
+  
+  # Create data.table with needed variables
+  result <- data.table(
+    year = year,
+    int_no_ind = psid_data[[id_var]],
+    mort1year = psid_data[[mort1_var]],
+    mort2year = psid_data[[mort2_var]]
+  )
+  
+  return(result)
+}
+
+# Process all years
+years <- c(1999, 2001, 2003, 2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019, 2021)
+mort_data <- rbindlist(lapply(years, process_psid_year), fill = TRUE)
+
+# Merge with your main dataset
+d <- merge(d, mort_data, by = c("year", "int_no_ind"), all.x = TRUE)
+
+# Function to process each year with clear variable naming
+process_psid_year <- function(year) {
+  # Find the file for this year
+  file_pattern <- paste0("FAM", year, "ER\\.(rda|RData)$")
+  year_file <- list.files(psid_dir, pattern = file_pattern, full.names = TRUE, ignore.case = TRUE)
+  
+  if(length(year_file) == 0) {
+    warning(paste("No file found for year", year))
+    return(NULL)
+  }
+  
+  # Load the file
+  loaded_obj <- load(year_file)
+  psid_data <- get(loaded_obj)
+  
+  # Define year-specific variables with clear names
+  id_var <- switch(as.character(year),
+                   "1999" = "ER13002",
+                   "2001" = "ER17002",
+                   "2003" = "ER21002",
+                   "2005" = "ER25002",
+                   "2007" = "ER36002",
+                   "2009" = "ER42002",
+                   "2011" = "ER47302",
+                   "2013" = "ER53002",
+                   "2015" = "ER60002",
+                   "2017" = "ER66002",
+                   "2019" = "ER72002",
+                   "2021" = "ER78002")
+  
+  # Mortgage year OBTAINED variables (clear prefix)
+  mort1_year_obtained_var <- switch(as.character(year),
+                                    "1999" = "ER13051",
+                                    "2001" = "ER17058",
+                                    "2003" = "ER21057",
+                                    "2005" = "ER25048",
+                                    "2007" = "ER36049",
+                                    "2009" = "ER42050",
+                                    "2011" = "ER47357",
+                                    "2013" = "ER53057",
+                                    "2015" = "ER60058",
+                                    "2017" = "ER66060",
+                                    "2019" = "ER72060",
+                                    "2021" = "ER78061")
+  
+  mort2_year_obtained_var <- switch(as.character(year),
+                                    "1999" = "ER13060",
+                                    "2001" = "ER17069",
+                                    "2003" = "ER21068",
+                                    "2005" = "ER25059",
+                                    "2007" = "ER36061",
+                                    "2009" = "ER42069",
+                                    "2011" = "ER47378",
+                                    "2013" = "ER53078",
+                                    "2015" = "ER60079",
+                                    "2017" = "ER66081",
+                                    "2019" = "ER72081",
+                                    "2021" = "ER78082")
+  
+  # Create data.table with clear variable names
+  result <- data.table(
+    year = year,
+    int_no_ind = psid_data[[id_var]],
+    mort1_year_obtained = psid_data[[mort1_year_obtained_var]],
+    mort2_year_obtained = psid_data[[mort2_year_obtained_var]]
+  )
+  
+  return(result)
+}
+
+
+years <- c(1999, 2001, 2003, 2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019, 2021)
+mortgage_years_obtained <- rbindlist(lapply(years, process_psid_year), fill = TRUE)
+
+
+d2 <- merge(d, mortgage_years_obtained, by = c("year", "int_no_ind"), all.x = TRUE)
+
+colnames(d2)
+d3<-copy(d2)
+# For a specific column (e.g., "food_expen")
+d3$otr_recre_expen_prevy <- gsub("\t", "", d3$otr_recre_expen_prevy, fixed = TRUE)
+d3$otr_recre_expen_prevy <- trimws(d3$otr_recre_expen_prevy)
+colnames(d3)
+
+###THIS TIME IT WORKED#####
+# First, clean all column names by removing extra whitespace
+clean_names <- trimws(names(d3))
+
+# Then select only the first occurrence of each unique name
+clean_d3 <- d3[, .SD, .SDcols = !duplicated(clean_names)]
+
+# Verify the results
+colnames(d3)
+d3<-copy(clean_d3)
+library(data.table)
+
+
+
+
+
+
+
+
+
+
+
+######REMOVAL OF 99999 ###########has to be here cause monthly also have 999s####
+# placeholder values line231
+placeholder_rules <- list(
+  mort1 = c(9999999, 9999998),
+  mort2 = c(9999999, 9999998),
+  int1prc = c(98, 99),
+  int2prc = c(98, 99),
+  mort_rate1fv = c(8, 9),
+  age_ref = 999,
+  mort1_year_obtained = c(9998, 9999),
+  mort2_year_obtained = c(9998, 9999),
+  is2refin = c(8, 9),
+  `refin1_y/n` = c(8, 9),  # Backticks for special characters
+  mort_rate2fv = c(8, 9),
+  `mort_y/n` = c(8, 9),    # Backticks here too
+  house_value = c(99999999, 99999998),
+  educ_ref = 99,
+  mort1_instal_month = c(99998, 99999),
+  mort2_instal_month = c(99998, 99999),
+  yr_mort1_left = c(99, 98),
+  yr_mort2_left = c(99, 98),
+  behin_mort1 = c(8, 9), 
+  behin_mort2 = c(8, 9), 
+  mths_behin_mort1 = c(98, 99),
+  mths_behin_mort1 = c(98, 99),
+  mort1_restruct = c(8, 9),
+  mort2_restruct = c(8, 9),
+  prob_behin_mort1 = c(8, 9),
+  prob_behin_mort2 = c(8, 9),
+  covid_behin = c(8, 9)
+  
+)
+# Instead of filtering rows, replace placeholder values with NA
+for (var in names(placeholder_rules)) {
+  if (var %in% names(d3)) {  # Check if column exists
+    values_to_remove <- placeholder_rules[[var]]
+    d3[get(var) %in% values_to_remove, (var) := NA]
+  }
+}
+d3$house_value[d3$house_value %in% c(99999999, 99999998)] <- NA
+d3[house_value >= 9999998, house_value := NA]  # Catches 9999998, 9999999, etc.
+d11<-copy(d3)
+d3<-copy(d11)
+#####making yearly columns#########
+monthly_vars <- c("mort1_instal_month", "mort2_instal_month", 
+                  "park_expen_month", "pub_trans_expen_month", 
+                  "taxi_expen_month")
+# by 12 and + new annual columns
+d3[, (gsub("_month$", "", monthly_vars)) := lapply(.SD, "*", 12), 
+   .SDcols = monthly_vars]
+
+# 2.  transformations ?
+d3[, .(
+  mort1_check = mean(mort1_instal_month * 12, na.rm = TRUE) == mean(mort1_instal, na.rm = TRUE),
+  taxi_check = mean(taxi_expen_month * 12, na.rm = TRUE) == mean(taxi_expen, na.rm = TRUE)
+)]
+
+# 3. DONT remove original monthly columns 
+# d3[, (monthly_vars) := NULL]
+
+deflfirst<-copy(d3)
+outlierfirst<-copy(d3)
+
+
+
+
+
+####DEFLATION#########line321######
+library(data.table)
+
+# not needed just checking if data table 
+setDT(cpi_fred)
+
+# Check structure (should show 'year' and 'cpi' columns)
+str(cpi_fred)
+
+# Ensure 'year' is numeric (not factor or character)
+cpi_fred[, year := as.numeric(year)]
+
+# Verify 1998 CPI exists
+cpi_fred[year == 1998]
+
+if(!1998 %in% cpi_fred$year) {
+  cpi_fred <- rbindlist(list(
+    data.table(year = 1998, cpi = 163.00833),
+    cpi_fred
+  ))[order(year)]
+}
+base_year <- 2021
+base_cpi <- cpi_fred[year == base_year, cpi]  # Will now work
+cpi_fred[, cpi_rebased := (cpi / base_cpi) * 100]
+
+# Verify rebasing
+cpi_fred[year %in% c(1998, 1999, 2021)]
+
+# Current year CPI
+d3 <- merge(d3, cpi_fred[, .(year, cpi_rebased)], by = "year", all.x = TRUE)
+
+# Previous year CPI (shifted)
+cpi_prev <- copy(cpi_fred)[, .(year, cpi_rebased_prev = cpi_rebased)]
+cpi_prev[, year := year + 1]  # 1999 data uses 1998 CPI, etc.
+d3 <- merge(d3, cpi_prev, by = "year", all.x = TRUE)
+
+# Verify merging
+d3[year == 1999, .(year, cpi_rebased, cpi_rebased_prev)]
+
+library(data.table)
+d3[year == 2021, .(cpi_rebased, cpi_rebased_prev)]  # Both should be 100
+
+
+
+
+current_vars <- c(
+  "med_debt", "proptax_expen", "rent_expen", "tot_expen", "util_expen",
+  "car_mainten_expen", "food_expen", "gas_expen", "health_expen", 
+  "house_expen", "house_value", "mort1", "mort2", "mort_expen",
+  "other_debt", "card_debt", "family_debt", "legal_debt", "phone_expen",
+  "stu_debt", "value_business", "valuehouse_ifrent", "wlth_no_equity", "wlth_w_equity","mort1_instal","mort2_instal","pub_trans_expen","park_expen","taxi_expen"
+)
+
+d3[, (paste0("r_", current_vars)) := lapply(.SD, function(x) x / cpi_rebased * 100),
+   .SDcols = current_vars]
+
+prevy_vars <- c(
+  "cloth_expen_prevy", "trans_incom_prevy", "child_expen_prevy",
+  "educ_expen_prevy", "fam_income_prevy", "trips_expen_prevy",
+  "otr_recre_expen_prevy"
+)
+# Check if column exists
+"cpi_rebased_prev" %in% names(d3)
+d3[, lapply(.SD, class), .SDcols = prevy_vars]
+# Convert all 'prevy_vars' to numeric (invalid entries become NA)
+d3[, (prevy_vars) := lapply(.SD, function(x) as.numeric(as.character(x))), .SDcols = prevy_vars]
+
+# Verify conversions
+d3[, lapply(.SD, class), .SDcols = prevy_vars]  # All should now be "numeric"
+
+# Check data type
+class(d3$cpi_rebased_prev)  # Should be "numeric" or "integer"
+d3[, (paste0("r_", prevy_vars)) := lapply(.SD, function(x) x / cpi_rebased_prev * 100),
+   .SDcols = prevy_vars]
+# Check 2021 (base year) - nominal and real should match
+d3[year == 2021, .(
+  food_expen, r_food_expen, 
+  fam_income_prevy, r_fam_income_prevy
+)][1:5]
+# Check other years - real values should differ
+d3[year == 2000, .(
+  food_expen, r_food_expen,
+  ratio = r_food_expen / food_expen  # Should show inflation factor
+)][1:5]
+cols_to_view <- c("year", "pid", "food_expen", "r_food_expen", 
+                  "fam_income_prevy", "r_fam_income_prevy")
+View(d3[, ..cols_to_view])
+d5<-copy(d3)
+# Save multiple objects (e.g., d4, d5) in one file
+save(d5, file = "D:/R data/d/d2/d3/d4.RData")
+# Alternative: If you need to keep specific versions
+# clean_d3 <- d3[, .SD, .SDcols = unique(names(d3), fromLast = TRUE)] # Keeps last occurrence
+colnames(d5)
+#here d3 is ok and branches off to d5 
+library(data.table)
+
+
+#comparing d5 to d2 for outliers it dropped from 62k to 58k
+# still lots 12mil obs in mortgage
+library(dplyr)
+#  view specific columns
+d5[, .(year, pid, real_mort1, real_mort2)] %>% View()
+
+
+cols_to_view <- c("year", "pid","house_value" , "fam_income_prevy" , "r_fam_income_prevy", 
+                  "mort1", "r_mort1","mort2","r_mort2")
+                  
+View(d6[, ..cols_to_view])
+
+d6<-copy(d5)# in case shit went south 
+
+
+#now d5 looks really good no weird values to see as far as i see
+# Remove rows where EITHER mortgage variable exceeds 5.5M
+#d5_clean <- d5[real_mort1 <= 5500000 & real_mort2 <= 5500000]no need for that as no mortgages are weird
+
+#d5_clean[, .(max_mort1 = max(real_mort1, na.rm = TRUE), 
+             max_mort2 = max(real_mort2, na.rm = TRUE))]
+
+d5[house_value == 9999999, house_value := NA] I USED THIS 
+
+#  1st and 99th percentiles for family income
+income_cutoffs <- quantile(d6$r_fam_income_prevy, 
+                           probs = c(0.01, 0.99), 
+                           na.rm = TRUE)
+nrow(d6[r_fam_income_prevy < income_cutoffs[1] | r_fam_income_prevy > income_cutoffs[2]]) # this is for rows only so obs in one year not whole family dropped and it says it will cut out 1256 rows 
+
+# Filter to keep only rows between the 1st and 99th percentiles
+d6tr <- d6[r_fam_income_prevy >= income_cutoffs[1] & 
+                   r_fam_income_prevy <= income_cutoffs[2]]
+library(data.table)
+setDT(d5)
+
+#to check how many obs would be trimmed if all real varaibles were cleaned
+
+
+r_vars <- grep("^r_", names(d6tr), value = TRUE)  
+print(r_vars) 
+
+# Get all 'r_' variables
+r_vars <- grep("^r_", names(d6tr), value = TRUE)  
+
+# Calculate 1st and 99th percentiles for each
+percentiles <- lapply(d6tr[, ..r_vars], function(x) {
+  quantile(x, probs = c(0.01, 0.99), na.rm = TRUE)
+})
+
+# Convert to a readable data.table
+percentile_dt <- data.table(
+  variable = names(percentiles),
+  p1 = sapply(percentiles, `[`, 1),
+  p99 = sapply(percentiles, `[`, 2)
+)
+print(percentile_dt)
+
+trim_counts <- rbindlist(lapply(r_vars, function(var) {
+  cuts <- quantile(d6tr[[var]], probs = c(0.01, 0.99), na.rm = TRUE)
+  d3[, .(
+    variable = var,
+    below_p1 = sum(get(var) < cuts[1], na.rm = TRUE),
+    above_p99 = sum(get(var) > cuts[2], na.rm = TRUE),
+    total_trimmed = sum(get(var) < cuts[1] | get(var) > cuts[2], na.rm = TRUE)
+  )]
+}))
+print(trim_counts)
+
+# 1. Calculate 1st/99th percentiles for ALL 'r_' variables
+r_vars <- grep("^r_", names(d7tr), value = TRUE)  
+percentiles <- lapply(d7tr[, ..r_vars], function(x) {
+  quantile(x, probs = c(0.01, 0.99), na.rm = TRUE)
+})
+
+# 2. Identify rows to KEEP (all 'r_' vars within their percentiles)
+d7tr[, keep_row := TRUE]  # Initialize flag
+for (var in r_vars) {
+  p1 <- percentiles[[var]][1]
+  p99 <- percentiles[[var]][2]
+  d7tr[get(var) < p1 | get(var) > p99, keep_row := FALSE]  # Mark outliers
+}
+
+# 3. Create d7tr by DROPPING marked rows (strict trimming)
+d7tr <- d7tr[keep_row == TRUE, -"keep_row"]  # Remove helper column
+
+# 4. Verify
+cat(
+  "Rows removed:", nrow(d7tr) - nrow(d7tr), 
+  "\nRemaining rows:", nrow(d7tr)
+
+
+library(dplyr)
+library(purrr)
+
+real_vars <- c(
+  "real_car_mainten_expen", "real_child_expen_prevy", "real_educ_expen_prevy",
+  "real_food_expen", "real_gas_expen",
+  "real_health_expen", "real_house_expen", "real_house_value",
+  "real_mort_expen", "real_proptax_expen",
+  "real_rent_expen", "real_tot_expen", "real_trans_incom_prevy",
+  "real_util_expen", "real_cloth_expen_prevy", "real_otr_recre_expen_prevy",
+  "real_phone_expen", "real_trips_expen_prevy", "real_valuehouse_ifrent",
+  "real_wlth_no_equity", "real_wlth_w_equity" 
+)
+#  winsorize  (5th-95th percentiles)
+#winsorize_5_95 <- function(x, na.rm = TRUE) {
+  p5 <- quantile(x, probs = 0.05, na.rm = na.rm)
+  p95 <- quantile(x, probs = 0.95, na.rm = na.rm)
+  x[x < p5] <- p5  # Cap below 5th percentile
+  x[x > p95] <- p95  # Cap above 95th percentile
+  return(x)
+}
+
+# Apply to all variables in `real_vars`
+#d5_clean <- d5_clean %>%
+  mutate(across(all_of(real_vars), winsorize_5_95))
+
+#d10_clean <- copy(d5_clean)
+#d10_clean <- d10_clean[order(pid, year), #drops to whooping 39k BOSS???
+#][, .SD[!any(diff(year) > 4) & .N >= 3], by = pid]  # no cons gaps bigger than 4y and at least 3 times in the survey # better dropped to 48k obs
+
+
+#  education levels
+d7tr[, educ := fcase(
+  educ_ref %in% 0:11, 1L,       # 0-11 grades (including no schooling)
+  educ_ref == 12, 2L,           # High school (12 grades)
+  educ_ref %in% 13:17, 3L,      # College (13-17 grades)
+  default = NA_integer_         # Set missing for values >17 or NA
+)]
+
+# SForward/backward missing education values filled
+d7tr <- d7tr[order(pid, year), 
+][, educ := nafill(educ, "locf"), by = pid]  # Forward fill
+
+d7tr <- d7tr[order(pid, -year), 
+][, educ := nafill(educ, "locf"), by = pid]  # Backward fill
+
+#  original sort order
+setorder(d7tr, pid, year)
+
+#  maximum education achieved per person
+d7tr[, maxed := if(any(!is.na(educ))) max(educ, na.rm = TRUE), by = pid
+][, educ := fifelse(is.na(educ), maxed, educ)
+][, maxed := NULL]
+
+#CONSUMPTION VARIABLE CONSTRUCTION
+
+nondur_vars <- c(
+  "r_car_mainten_expen",     
+  "r_child_expen_prevy",     
+  "r_educ_expen_prevy",     
+  "r_food_expen",            
+  "r_gas_expen",            
+  "r_health_expen",                       
+  "r_util_expen",            
+  "r_cloth_expen_prevy",    
+  "r_otr_recre_expen_prevy", 
+  "r_phone_expen",           
+  "r_trips_expen_prevy",    
+  "r_valuehouse_ifrent",
+  "r_park_expen", 
+  "r_pub_trans_expen", 
+  "r_taxi_expen"
+)
+
+existing_vars <- nondur_vars[nondur_vars %in% names(d7tr)]
+
+d7tr[, r_nondurcons := rowSums(.SD, na.rm = TRUE), 
+          .SDcols = existing_vars]
+
+
+d7tr[, r_nonshelcons := fcase(
+  # 1999-2015 formula
+  year %in% 1999:2015, 
+  r_tot_expen - r_mort_expen - r_rent_expen - r_proptax_expen,
+  
+  # 2017-2021 formula
+  year %in% 2017:2021, 
+  r_tot_expen + r_valuehouse_ifrent - r_mort_expen - r_rent_expen - r_proptax_expen,
+  
+  # Explicit default for other years (including 2016)
+  default = NA_real_
+)]
+
+#d7tr[, r_nonshelcons := fcase( IDK THIS IS HERE WHY 
+  # 1999-2015 formula
+  #year %in% 1999:2015, 
+  #r_tot_expen - r_mort_expen - r_rent_expen - r_proptax_expen,
+  
+  # 2017-2021 formula
+ # year %in% 2017:2021, 
+  #r_tot_expen + r_valuehouse_ifrent - r_mort_expen - r_rent_expen - r_proptax_expen,
+)]
+
+mort_vars <- c("r_mort1", "r_mort2")
+existing_vars <- mort_vars[mort_vars %in% names(d7tr)]
+
+#  real_mort (sum existing components)
+if(length(existing_vars) > 0) {
+  d7tr[, real_mort := rowSums(.SD, na.rm = TRUE), .SDcols = existing_vars]
+} else {
+  warning("No mortgage variables found - 'r_mort1' and 'r_mort2' missing")
+}
+
+
+# Remove rows where ref_age < 25 or > 65
+d8tr <- d7tr[age_ref >= 25 & age_ref <= 65] #from 50558 to 38771
+
+d10tr <- d8tr[order(pid, year), 
+][, .SD[!any(diff(year) > 4) & .N >= 2], by = pid]  # Changed to >2 # better it's d10_clean 52k obs
+
+summary(d10_clean$ref_age)
+save(d5, file = "D:/towinsorize.RData")  # Forward slashes work in R
+saveRDS(d5, file = "~/Documents/towinsorize.rds")
+save(d5, file = "D:/towinsorize.RData")  # Using D: drive as in your working example
+saveRDS(d5, file = "C:/Users/2022/Desktop/towinsor.rds")
+saveRDS(d5, file = "C:/Users/2022/Desktop/d5_data.rds")
+save(d9tr, file = "C:/Users/2022/Desktop/smol.RData")
+
+
+
+
+
+
+
+##########################################################
+##########this is only wnsorizing part####################
+library(dplyr)
+library(purrr)
+
+r_vars <- grep("^r_", names(d5), value = TRUE)
+
+library(data.table)
+
+# Make a copy to preserve original data
+d5_win <- copy(d5)
+
+for(var in r_vars) {
+  # Calculate percentiles (ignoring NAs)
+  p <- quantile(d5[[var]], probs = c(0.01, 0.99), na.rm = TRUE)
+  p1 <- p[1]
+  p99 <- p[2]
+  
+  # Winsorize (cap values at percentiles)
+  d5_win[, (var) := pmax(pmin(get(var), p99), p1)]
+}
+
+# Make a new copy of the data
+d5_win_5_95 <- copy(d5)
+
+# Winsorize all r_ variables at 5th/95th percentiles
+for(var in r_vars) {
+  # Calculate 5th and 95th percentiles
+  p <- quantile(d5[[var]], probs = c(0.05, 0.95), na.rm = TRUE)
+  p5 <- p[1]
+  p95 <- p[2]
+  
+  # Cap values
+  d5_win_5_95[, (var) := pmax(pmin(get(var), p95), p5)]
+}
+
+cols_to_view <- c("year", "pid","house_value" , "fam_income_prevy" , "r_fam_income_prevy", 
+                  "mort1", "r_mort1","mort2","r_mort2")
+
+View(d5_win[, ..cols_to_view])
+
+
+#d10_clean <- copy(d5_clean)
+
+d5_win <- d5_win[order(pid, year), #drops from 62719 to 50501
+][, .SD[!any(diff(year) > 3) & .N >= 3], by = pid]  # no cons gaps bigger than 4y and at least 3 times in the survey # better dropped to 48k obs
+
+
+#  education levels
+d5_win[, educ := fcase(
+  educ_ref %in% 0:11, 1L,       # 0-11 grades (including no schooling)
+  educ_ref == 12, 2L,           # High school (12 grades)
+  educ_ref %in% 13:17, 3L,      # College (13-17 grades)
+  default = NA_integer_         # Set missing for values >17 or NA
+)]
+
+# SForward/backward missing education values filled
+d5_win <- d5_win[order(pid, year), 
+][, educ := nafill(educ, "locf"), by = pid]  # Forward fill
+
+d5_win <- d5_win[order(pid, -year), 
+][, educ := nafill(educ, "locf"), by = pid]  # Backward fill
+
+#  original sort order
+setorder(d5_win, pid, year)
+
+#  maximum education achieved per person
+d5_win[, maxed := if(any(!is.na(educ))) max(educ, na.rm = TRUE), by = pid
+][, educ := fifelse(is.na(educ), maxed, educ)
+][, maxed := NULL]
+
+#CONSUMPTION VARIABLE CONSTRUCTION
+
+nondur_vars <- c(
+  "r_car_mainten_expen",     
+  "r_child_expen_prevy",     
+  "r_educ_expen_prevy",     
+  "r_food_expen",            
+  "r_gas_expen",            
+  "r_health_expen",                       
+  "r_util_expen",            
+  "r_cloth_expen_prevy",    
+  "r_otr_recre_expen_prevy", 
+  "r_phone_expen",           
+  "r_trips_expen_prevy",    
+  "r_valuehouse_ifrent",
+  "r_park_expen", 
+  "r_pub_trans_expen", 
+  "r_taxi_expen"
+)
+
+existing_vars <- nondur_vars[nondur_vars %in% names(d5_win)]
+
+d5_win[, r_nondurcons := rowSums(.SD, na.rm = TRUE), 
+     .SDcols = existing_vars]
+
+
+d5_win[, r_nonshelcons := fcase(
+  # 1999-2015 formula
+  year %in% 1999:2015, 
+  r_tot_expen - r_mort_expen - r_rent_expen - r_proptax_expen,
+  
+  # 2017-2021 formula
+  year %in% 2017:2021, 
+  r_tot_expen + r_valuehouse_ifrent - r_mort_expen - r_rent_expen - r_proptax_expen,
+  
+  # Explicit default for other years (including 2016)
+  default = NA_real_
+)]
+
+#d7tr[, r_nonshelcons := fcase( IDK THIS IS HERE WHY 
+# 1999-2015 formula
+#year %in% 1999:2015, 
+#r_tot_expen - r_mort_expen - r_rent_expen - r_proptax_expen,
+
+# 2017-2021 formula
+# year %in% 2017:2021, 
+#r_tot_expen + r_valuehouse_ifrent - r_mort_expen - r_rent_expen - r_proptax_expen,
+)]
+
+mort_vars <- c("r_mort1", "r_mort2")
+existing_vars <- mort_vars[mort_vars %in% names(d5_win)]
+
+#  real_mort (sum existing components)
+if(length(existing_vars) > 0) {
+  d5_win[, real_mort := rowSums(.SD, na.rm = TRUE), .SDcols = existing_vars]
+} else {
+  warning("No mortgage variables found - 'r_mort1' and 'r_mort2' missing")
+}
+
+
+# Remove rows where ref_age < 25 or > 65
+d8tr <- d5_win[age_ref >= 25 & age_ref <= 65] #from 50501 to 38875
+
+
+
+####################the asme but for the narrower winsorizing thung##############
+# 1. Apply the same filtering and sorting to d5_win_5_95
+d5_win_5_95 <- d5_win_5_95[order(pid, year),
+][, .SD[!any(diff(year) > 3) & .N >= 3], by = pid]
+
+# 2. Education level coding (same as before)
+d5_win_5_95[, educ := fcase(
+  educ_ref %in% 0:11, 1L,       # 0-11 grades
+  educ_ref == 12, 2L,           # High school
+  educ_ref %in% 13:17, 3L,      # College
+  default = NA_integer_
+)]
+
+# 3. Forward/backward fill education
+d5_win_5_95 <- d5_win_5_95[order(pid, year), 
+][, educ := nafill(educ, "locf"), by = pid]
+d5_win_5_95 <- d5_win_5_95[order(pid, -year), 
+][, educ := nafill(educ, "locf"), by = pid]
+
+# 4. Restore original order and handle max education
+setorder(d5_win_5_95, pid, year)
+d5_win_5_95[, maxed := if(any(!is.na(educ))) max(educ, na.rm = TRUE), by = pid
+][, educ := fifelse(is.na(educ), maxed, educ)
+][, maxed := NULL]
+
+# 5. Consumption variable construction (same as before)
+nondur_vars <- c("r_car_mainten_expen", "r_child_expen_prevy", ...) # your full list
+existing_vars <- nondur_vars[nondur_vars %in% names(d5_win_5_95)]
+d5_win_5_95[, r_nondurcons := rowSums(.SD, na.rm = TRUE), .SDcols = existing_vars]
+
+d5_win_5_95[, r_nonshelcons := fcase(
+  year %in% 1999:2015, 
+  r_tot_expen - r_mort_expen - r_rent_expen - r_proptax_expen,
+  year %in% 2017:2021, 
+  r_tot_expen + r_valuehouse_ifrent - r_mort_expen - r_rent_expen - r_proptax_expen,
+  default = NA_real_
+)]
+
+# 6. Mortgage variable construction
+mort_vars <- c("r_mort1", "r_mort2")
+existing_vars <- mort_vars[mort_vars %in% names(d5_win_5_95)]
+if(length(existing_vars) > 0) {
+  d5_win_5_95[, real_mort := rowSums(.SD, na.rm = TRUE), .SDcols = existing_vars]
+} else {
+  warning("No mortgage variables found")
+}
+
+# 7. Final age filtering to create d8tr_5_95
+d8tr_5_95 <- d5_win_5_95[age_ref >= 25 & age_ref <= 65]
+
+summary(d10_clean$ref_age)
+save(d5, file = "D:/towinsorize.RData")  # Forward slashes work in R
+saveRDS(d5, file = "~/Documents/towinsorize.rds")
+save(d5, file = "D:/towinsorize.RData")  # Using D: drive as in your working example
+saveRDS(d5, file = "C:/Users/2022/Desktop/towinsor.rds")
+saveRDS(d5, file = "C:/Users/2022/Desktop/d5_data.rds")
+save(d8tr_5_95, file = "C:/Users/2022/Desktop/595winsr.RData")
+
+#in the end i saved 595winsr this is 5 to 95 all r_winsorizing
+and 199winsr this is 1 to 99 winsr
 
 

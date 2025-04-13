@@ -1102,4 +1102,556 @@ save(d8tr_5_95, file = "C:/Users/2022/Desktop/595winsr.RData")
 #in the end i saved 595winsr this is 5 to 95 all r_winsorizing
 and 199winsr this is 1 to 99 winsr
 
+##########################################################################################
+###########stupid 1 to 99 winsorization code contination aka 199winsr#####################
+library(dplyr)
+library(purrr)
+
+r_vars <- grep("^r_", names(d5), value = TRUE)
+
+library(data.table)
+
+# Make a copy to preserve original data
+d5_win <- copy(d5)
+
+for(var in r_vars) {
+  # Calculate percentiles (ignoring NAs)
+  p <- quantile(d5[[var]], probs = c(0.01, 0.99), na.rm = TRUE)
+  p1 <- p[1]
+  p99 <- p[2]
+  
+  # Winsorize (cap values at percentiles)
+  d5_win[, (var) := pmax(pmin(get(var), p99), p1)]
+}
+
+# Make a new copy of the data
+d5_win_5_95 <- copy(d5)
+
+# Winsorize all r_ variables at 5th/95th percentiles
+for(var in r_vars) {
+  # Calculate 5th and 95th percentiles
+  p <- quantile(d5[[var]], probs = c(0.05, 0.95), na.rm = TRUE)
+  p5 <- p[1]
+  p95 <- p[2]
+  
+  # Cap values
+  d5_win_5_95[, (var) := pmax(pmin(get(var), p95), p5)]
+}
+
+cols_to_view <- c("year", "pid","house_value" , "fam_income_prevy" , "r_fam_income_prevy", 
+                  "mort1", "r_mort1","mort2","r_mort2")
+
+View(d5_win[, ..cols_to_view])
+
+
+#d10_clean <- copy(d5_clean)
+
+d5_win <- d5_win[order(pid, year), #drops from 62719 to 50501
+][, .SD[!any(diff(year) > 3) & .N >= 3], by = pid]  # no cons gaps bigger than 4y and at least 3 times in the survey # better dropped to 48k obs
+
+
+#  education levels
+d5_win[, educ := fcase(
+  educ_ref %in% 0:11, 1L,       # 0-11 grades (including no schooling)
+  educ_ref == 12, 2L,           # High school (12 grades)
+  educ_ref %in% 13:17, 3L,      # College (13-17 grades)
+  default = NA_integer_         # Set missing for values >17 or NA
+)]
+
+# SForward/backward missing education values filled
+d5_win <- d5_win[order(pid, year), 
+][, educ := nafill(educ, "locf"), by = pid]  # Forward fill
+
+d5_win <- d5_win[order(pid, -year), 
+][, educ := nafill(educ, "locf"), by = pid]  # Backward fill
+
+#  original sort order
+setorder(d5_win, pid, year)
+
+#  maximum education achieved per person
+d5_win[, maxed := if(any(!is.na(educ))) max(educ, na.rm = TRUE), by = pid
+][, educ := fifelse(is.na(educ), maxed, educ)
+][, maxed := NULL]
+
+#CONSUMPTION VARIABLE CONSTRUCTION
+
+nondur_vars <- c(
+  "r_car_mainten_expen",     
+  "r_child_expen_prevy",     
+  "r_educ_expen_prevy",     
+  "r_food_expen",            
+  "r_gas_expen",            
+  "r_health_expen",                       
+  "r_util_expen",            
+  "r_cloth_expen_prevy",    
+  "r_otr_recre_expen_prevy", 
+  "r_phone_expen",           
+  "r_trips_expen_prevy",    
+  "r_valuehouse_ifrent",
+  "r_park_expen", 
+  "r_pub_trans_expen", 
+  "r_taxi_expen"
+)
+
+existing_vars <- nondur_vars[nondur_vars %in% names(d5_win)]
+
+d5_win[, r_nondurcons := rowSums(.SD, na.rm = TRUE), 
+     .SDcols = existing_vars]
+
+
+d5_win[, r_nonshelcons := fcase(
+  # 1999-2015 formula
+  year %in% 1999:2015, 
+  r_tot_expen - r_mort_expen - r_rent_expen - r_proptax_expen,
+  
+  # 2017-2021 formula
+  year %in% 2017:2021, 
+  r_tot_expen + r_valuehouse_ifrent - r_mort_expen - r_rent_expen - r_proptax_expen,
+  
+  # Explicit default for other years (including 2016)
+  default = NA_real_
+)]
+
+#d7tr[, r_nonshelcons := fcase( IDK THIS IS HERE WHY 
+# 1999-2015 formula
+#year %in% 1999:2015, 
+#r_tot_expen - r_mort_expen - r_rent_expen - r_proptax_expen,
+
+# 2017-2021 formula
+# year %in% 2017:2021, 
+#r_tot_expen + r_valuehouse_ifrent - r_mort_expen - r_rent_expen - r_proptax_expen,
+)]
+
+mort_vars <- c("r_mort1", "r_mort2")
+existing_vars <- mort_vars[mort_vars %in% names(d5_win)]
+
+#  real_mort (sum existing components)
+if(length(existing_vars) > 0) {
+  d5_win[, real_mort := rowSums(.SD, na.rm = TRUE), .SDcols = existing_vars]
+} else {
+  warning("No mortgage variables found - 'r_mort1' and 'r_mort2' missing")
+}
+
+
+# Remove rows where ref_age < 25 or > 65
+d8tr <- d5_win[age_ref >= 25 & age_ref <= 65] #from 50501 to 38875
+
+
+
+####################the asme but for the narrower winsorizing thung##############
+# 1. Apply the same filtering and sorting to d5_win_5_95
+d5_win_5_95 <- d5_win_5_95[order(pid, year),
+][, .SD[!any(diff(year) > 3) & .N >= 3], by = pid]
+
+# 2. Education level coding (same as before)
+d5_win_5_95[, educ := fcase(
+  educ_ref %in% 0:11, 1L,       # 0-11 grades
+  educ_ref == 12, 2L,           # High school
+  educ_ref %in% 13:17, 3L,      # College
+  default = NA_integer_
+)]
+
+# 3. Forward/backward fill education
+d5_win_5_95 <- d5_win_5_95[order(pid, year), 
+][, educ := nafill(educ, "locf"), by = pid]
+d5_win_5_95 <- d5_win_5_95[order(pid, -year), 
+][, educ := nafill(educ, "locf"), by = pid]
+
+# 4. Restore original order and handle max education
+setorder(d5_win_5_95, pid, year)
+d5_win_5_95[, maxed := if(any(!is.na(educ))) max(educ, na.rm = TRUE), by = pid
+][, educ := fifelse(is.na(educ), maxed, educ)
+][, maxed := NULL]
+
+# 5. Consumption variable construction (same as before)
+nondur_vars <- c("r_car_mainten_expen", "r_child_expen_prevy", ...) # your full list
+existing_vars <- nondur_vars[nondur_vars %in% names(d5_win_5_95)]
+d5_win_5_95[, r_nondurcons := rowSums(.SD, na.rm = TRUE), .SDcols = existing_vars]
+
+d5_win_5_95[, r_nonshelcons := fcase(
+  year %in% 1999:2015, 
+  r_tot_expen - r_mort_expen - r_rent_expen - r_proptax_expen,
+  year %in% 2017:2021, 
+  r_tot_expen + r_valuehouse_ifrent - r_mort_expen - r_rent_expen - r_proptax_expen,
+  default = NA_real_
+)]
+
+# 6. Mortgage variable construction
+mort_vars <- c("r_mort1", "r_mort2")
+existing_vars <- mort_vars[mort_vars %in% names(d5_win_5_95)]
+if(length(existing_vars) > 0) {
+  d5_win_5_95[, real_mort := rowSums(.SD, na.rm = TRUE), .SDcols = existing_vars]
+} else {
+  warning("No mortgage variables found")
+}
+
+# 7. Final age filtering to create d8tr_5_95
+d8tr_5_95 <- d5_win_5_95[age_ref >= 25 & age_ref <= 65]
+
+summary(d10_clean$ref_age)
+save(d5, file = "D:/towinsorize.RData")  # Forward slashes work in R
+saveRDS(d5, file = "~/Documents/towinsorize.rds")
+save(d5, file = "D:/towinsorize.RData")  # Using D: drive as in your working example
+saveRDS(d5, file = "C:/Users/2022/Desktop/towinsor.rds")
+saveRDS(d5, file = "C:/Users/2022/Desktop/d5_data.rds")
+save(d8tr_5_95, file = "C:/Users/2022/Desktop/595winsr.RData")
+
+
+# 1. Count 1st mortgage refinances in 2021 (refin1_y/n == 2 AND year == 2021)
+mort1_refin_2021 <- d8tr[year == 2021 & `refin1_y/n` == 2, .N]  # Use backticks for special chars
+
+# 2. Count 1st mortgage originations in 2021 (mort1_year_obtained == 2021)
+mort1_new_2021 <- d8tr[year == 2021 & mort1_year_obtained == 2021, .N]
+
+# 3. Count 2nd mortgage refinances in 2021 (is2refin == 2 AND year == 2021)
+mort2_refin_2021 <- d8tr[year == 2021 & is2refin == 2, .N]
+
+# 4. Count 2nd mortgage originations in 2021 (mort2_year_obtained == 2021)
+mort2_new_2021 <- d8tr[year == 2021 & mort2_year_obtained == 2021, .N]
+
+# Print results
+cat(sprintf(
+  "2021 Mortgage Activity:
+1st Mortgage Refinances: %d
+1st Mortgage New Loans: %d
+2nd Mortgage Refinances: %d
+2nd Mortgage New Loans: %d",
+  mort1_refin_2021, mort1_new_2021, mort2_refin_2021, mort2_new_2021
+))
+
+# 1. Identify refinancers (1st mortgage) and get their original loan years
+refinancers <- d8tr[`refin1_y/n` == 2, .(pid, orig_year = mort1_year_obtained)]
+
+# 2. Create histogram of original loan years
+library(ggplot2)
+ggplot(refinancers, aes(x = orig_year)) +
+  geom_histogram(binwidth = 1, fill = "steelblue", color = "white") +
+  labs(title = "Original Loan Year Distribution for Refinancers",
+       x = "Original Loan Year",
+       y = "Number of Borrowers") +
+  theme_minimal()
+
+# 3. Create frequency table
+year_counts <- refinancers[, .(count = .N), by = orig_year][order(orig_year)]
+print(year_counts)
+
+# 4. Additional stats
+cat(sprintf("\nKey Stats:
+Earliest loan year: %d
+Most common year: %d (%d refinancers)
+Median loan year: %.1f",
+            min(year_counts$orig_year, na.rm = TRUE),
+            year_counts[which.max(count), orig_year],
+            year_counts[which.max(count), count],
+            median(year_counts$orig_year, na.rm = TRUE)))
+
+# 1. Count refinancers (original loan taken in any year EXCEPT 2021)
+refinancers_2021 <- d8tr[year == 2021 & `refin1_y/n` == 2 & mort1_year_obtained != 2021]
+n_refin <- nrow(refinancers_2021)
+
+# 2. Count new loans (originated in 2021)
+new_loans_2021 <- d8tr[year == 2021 & mort1_year_obtained == 2021 & `refin1_y/n` != 2]
+n_new <- nrow(new_loans_2021)
+
+# 3. Print clean results
+cat(sprintf(
+  "2021 Mortgage Activity:
+1st Mortgage Refinances: %d (original loans from prior years)
+1st Mortgage New Loans: %d (originated in 2021)",
+  n_refin,
+  n_new
+))
+
+
+
+# 1. Filter to only include 1995-2021 loans (excluding NAs and outliers)
+refinancers_filtered <- refinancers_2021[
+  mort1_year_obtained >= 1995 & 
+    mort1_year_obtained <= 2021 & 
+    !is.na(mort1_year_obtained)
+]
+
+# 2. Base R histogram with guaranteed valid range
+hist(refinancers_filtered$mort1_year_obtained,
+     breaks = seq(1995, 2021, by = 1),
+     main = "Original Loan Years (1995-2021)",
+     xlab = "Year",
+     col = "lightblue",
+     xaxt = "n")  # Temporarily remove default x-axis
+axis(1, at = seq(1995, 2021, by = 2))  # Custom x-axis with 2-year intervals
+
+# 3. ggplot2 version (more elegant)
+library(ggplot2)
+ggplot(refinancers_filtered, aes(x = mort1_year_obtained)) +
+  geom_histogram(
+    breaks = seq(1995, 2021.5, by = 1),  # Extended slightly to include 2021
+    fill = "steelblue",
+    color = "white"
+  ) +
+  scale_x_continuous(
+    limits = c(1995, 2021),
+    breaks = seq(1995, 2021, by = 2)  # Labels every 2 years
+  ) +
+  labs(title = "When Loans Refinanced in 2021 Were Originated (1995-2021)") +
+  theme_minimal()
+
+# Get the frequency table
+year_counts_base <- table(refinancers$orig_year)
+
+# Convert to clean data frame
+year_counts_df <- data.frame(
+  orig_year = as.numeric(names(year_counts_base)),
+  count = as.vector(year_counts_base)
+)
+
+# Sort by year and print
+year_counts_df <- year_counts_df[order(year_counts_df$orig_year), ]
+print(year_counts_df)
+
+# 1. Convert year to numeric safely (handles factors/characters)
+refinancers$orig_year <- as.numeric(as.character(refinancers$orig_year))
+
+# 2. Create histogram WITHOUT filtering (keeps all years)
+hist(refinancers$orig_year,
+     breaks = seq(min(refinancers$orig_year, na.rm=TRUE), 
+                  max(refinancers$orig_year, na.rm=TRUE), 
+                  by=1),
+     main = "Original Loan Years for All Refinancers",
+     xlab = "Year",
+     ylab = "Number of Borrowers",
+     col = "steelblue",
+     xaxt = "n")
+
+# 3. Add smart x-axis labels (automatic spacing)
+year_range <- range(refinancers$orig_year, na.rm=TRUE)
+axis(1, at = pretty(year_range, n=10), las=2)
+
+
+# 1. First ensure years are numeric (won't affect original data)
+refinancers$orig_year <- as.numeric(as.character(refinancers$orig_year))
+
+# 2. Create filtered version for analysis
+refinancers_filtered <- refinancers[orig_year >= 1995 & orig_year <= 2021 & !is.na(orig_year)]
+
+# 3. Verify what's being excluded
+excluded_years <- refinancers[orig_year < 1995 | orig_year > 2021, .N, by = orig_year]
+print(paste("Excluded", sum(excluded_years$N), "cases outside 1995-2021 range:"))
+print(excluded_years)
+
+# 4. Create histogram with filtered data
+hist(refinancers_filtered$orig_year,
+     breaks = seq(1995, 2021, by = 1),
+     main = "When Refinancing Last Originated (1995-2021)",
+     xlab = "Year", 
+     ylab = "Number of Refinances",
+     col = "steelblue",
+     xaxt = "n")
+axis(1, at = seq(1995, 2021, by = 2), las = 2)
+
+# 5. Frequency table for filtered range
+year_counts_filtered <- refinancers_filtered[, .(count = .N), by = orig_year][order(orig_year)]
+print(year_counts_filtered)
+
+# Set up layout for 2 plots
+par(mfrow = c(1, 2))
+
+# Plot 1: Non-refinancers (original loans kept)
+hist(d8tr[`refin1_y/n` == 1 & between(mort1_year_obtained, 1995, 2021)]$mort1_year_obtained,
+     breaks = seq(1995, 2021, 1),
+     main = "Loans never Refinanced,\n Origination",
+     xlab = "Year",
+     col = "salmon")
+
+# Plot 2: Refinancers
+hist(d8tr[`refin1_y/n` == 2 & between(mort1_year_obtained, 1995, 2021)]$mort1_year_obtained,
+     breaks = seq(1995, 2021, 1),
+     main = "Loans Last Time \n Refinanced",
+     xlab = "Year",
+     col = "steelblue")
+
+# Reset layout
+par(mfrow = c(1, 1))
+
+
+# Create refinancer-focused dataset
+refinancers <- d8tr[`refin1_y/n` == 2, .(
+  pid,
+  original_year = mort1_year_obtained,
+  refinance_year = year  # Assuming 'year' is survey year
+)]
+
+
+# Filter for plausible timeframes (5-30 years typically)
+refinancers <- refinancers[years_held >= 1 & years_held <= 30]
+
+# Histogram with better scaling
+hist(refinancers$years_held,
+     breaks = seq(0, 30, by = 2),  # 2-year bins
+     main = "Years Held Before Refinancing (1-30 year range)",
+     xlab = "Years Until Refinance",
+     col = "lightgreen",
+     xaxt = "n")
+axis(1, at = seq(0, 30, by = 5))  # Cleaner x-axis labels
+
+# Add median line
+abline(v = median(refinancers$years_held, na.rm = TRUE), 
+       col = "red", lwd = 2)
+text(x = median(refinancers$years_held) + 3, y = par("usr")[4]*0.9,
+     labels = paste("Median:", median(refinancers$years_held), "years"),
+     col = "red")
+
+# Exclude cases with no mortgage (0 values)
+valid_loans <- d8tr[mort1_year_obtained > 1900 & mort1_year_obtained <= year(Sys.Date())]
+
+ggplot(valid_loans, aes(x = mort1_year_obtained, fill = factor(`refin1_y/n`))) +
+  geom_density(alpha = 0.6, adjust = 1.5) +  # Smoother curve
+  scale_fill_manual(
+    values = c("1" = "#999999", "2" = "#E69F00"),
+    labels = c("Active Loan", "Refinanced"),
+    na.value = "transparent"  # Hide NA cases
+  ) +
+  labs(
+    title = "Original Loan Years (Excluding Invalid/Missing Data)",
+    subtitle = "Comparing non-refinanced vs refinanced loans",
+    x = "Original Loan Year",
+    y = "Density"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+
+
+
+
+# 1. First clean ALL interest rate variables (per your earlier preprocessing)
+d8tr[, mort_rate1 := ifelse(mort_rate1 %in% c(98,99), NA_real_, mort_rate1)]
+d8tr[, mort_rate1fv := ifelse(mort_rate1fv %in% c(98,99), NA_real_, mort_rate1fv)]
+d8tr[, int1prc := ifelse(int1prc %in% c(98,99), NA_integer_, int1prc)]
+
+# 2. Now safely extract refinancer data
+refinancers <- d8tr[`refin1_y/n` == 2 & 
+                      !is.na(mort_rate1fv) & 
+                      !is.na(mort_rate1fv), .(
+                        pid,
+                        original_year = mort1_year_obtained,
+                        refinance_year = year,
+                        loan_type = factor(int1prc, 
+                                           levels = 1:2, 
+                                           labels = c("Fixed", "Variable")),
+                        original_rate = mort_rate1fv,
+                        new_rate = mort_rate1fv
+                      )]
+
+# 3. Verify
+summary(refinancers)
+
+
+# Count refinanced loans by original type
+refinance_types <- d8tr[`refin1_y/n` == 2, 
+                        .(count = .N), 
+                        by = .(original_type = fcase(
+                          int1prc == 1, "Fixed",
+                          int1prc == 2, "Variable",
+                          default = "Unknown"
+                        ))][order(-count)]
+
+# 1. Count fixed vs. variable loans (using the correct binary variable)
+loan_type_counts <- d8tr[
+  !is.na(mort_rate1fv),  # Exclude missing
+  .(count = .N),
+  by = .(loan_type = ifelse(mort_rate1fv == 1, "Fixed", "Variable"))
+]
+
+# 2. Compare with refinance status
+refinance_comparison <- d8tr[
+  !is.na(mort_rate1fv),
+  .(count = .N),
+  by = .(
+    loan_type = ifelse(mort_rate1fv == 1, "Fixed", "Variable"),
+    refinanced = ifelse(`refin1_y/n` == 2, "Yes", "No")
+  )
+]
+
+# 3. Pivot table for clarity
+dcast(refinance_comparison,
+      loan_type ~ refinanced,
+      value.var = "count",
+      fill = 0)
+
+
+refinancers <- d8tr[`refin1_y/n` == 2 & !is.na(mort_rate1fv) & !is.na(mort_rate1fv),
+                    .(pid, 
+                      original_rate = mort_rate1fv, 
+                      new_rate = mort_rate1fv,
+                      year_refinanced = year)]
+
+# Calculate rate drop
+refinancers[, rate_drop := original_rate - new_rate]
+
+# Summary stats
+refinancers[, .(
+  count = .N
+  avg_drop = mean(rate_drop),
+  median_drop = median(rate_drop),
+  min_drop = min(rate_drop),
+  max_drop = max(rate_drop)
+]
+
+
+
+
+
+
+
+
+# 1. Count refinancing events per borrower
+refinance_counts <- d8tr[`refin1_y/n` == 2,
+                         .(refinances = .N),
+                         by = pid][order(-refinances)]
+
+# 2. Calculate summary statistics (PROPER SYNTAX)
+refinance_stats <- refinance_counts[, {
+  list(
+    total_borrowers = .N,
+    max_refinances = max(refinances),
+    avg_refinances = mean(refinances),
+    median_refinances = median(refinances)
+  )
+}]
+
+# 3. View results
+print(refinance_stats)
+
+# 4. View distribution
+print(refinance_counts[, .(count = .N), by = refinances][order(refinances)])
+
+library(ggplot2)
+
+# Simple bar plot
+ggplot(refinance_counts, aes(x = refinances)) + 
+  geom_bar(fill = "hotpink2", color = "white") +
+  labs(title = "Number of Times Borrowers Refinance",
+       x = "Number of Refinances", 
+       y = "Number of Borrowers") +
+  theme_minimal() +
+  scale_x_continuous(breaks = 0:max(refinance_counts$refinances)) +
+  geom_text(stat = 'count', aes(label = ..count..), 
+            vjust = -0.5, color = "black")
+
+
+
+
+
+print(borrower_40005)
+
+# Enhanced borrower analysis
+borrower_analysis <- d8tr[pid == 60181, 
+                          .(year,
+                            int1prc,
+                            mort_rate1fv,
+                            yr_mort1_left,
+                            refinanced = ifelse(`refin1_y/n` == 2, "YES", ""),
+                            mort1_balance = mort1)][order(year)]
+
+print(borrower_analysis)
+
 

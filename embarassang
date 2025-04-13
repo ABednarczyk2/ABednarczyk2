@@ -1,0 +1,277 @@
+
+library(psidR)
+library(data.table)
+library(SAScii)
+library(readr)
+dictdir<-"C:/Users/2022/Desktop/R data"         
+datadir<-"C:/Users/2022/Desktop/R data/data/PSID" 
+
+
+f <- fread("C:/Users/2022/Desktop/famvars_test9.txt") # you can find both .txt files on thesis--idea board
+i<-fread("indvars_test2.txt") # this one is unproblematic every time  
+
+
+i <- dcast(i[, list(year, name, variable)], year ~ name, value.var = "variable")
+f <- dcast(f[, list(year, name, variable)], year ~ name, value.var = "variable")
+
+
+
+d <- build.panel(
+  datadir = datadir,  # i don't have this r thing because whatever path i set it shows this " will download family files: 1999, 2001, 2003, 2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019, 2021" idk if that's a problem but it runs otherwise so....
+  fam.vars = f,
+  ind.vars = i,
+  heads.only = TRUE,
+  sample = "SRC",
+  design = "all"
+)
+
+# Set the correct path to your PSID files
+psid_dir <- "C:/Users/2022/Desktop/R data/data/PSID"
+
+# List all files to verify
+psid_files <- list.files(psid_dir, pattern = "FAM.*ER\\.(rda|RData)$", full.names = TRUE, ignore.case = TRUE)
+print(psid_files)
+
+# Function to process each year
+process_psid_year <- function(year) {
+  # Find the file for this year (case-insensitive)
+  file_pattern <- paste0("FAM", year, "ER\\.(rda|RData)$")
+  year_file <- list.files(psid_dir, pattern = file_pattern, full.names = TRUE, ignore.case = TRUE)
+  
+  if(length(year_file) == 0) {
+    warning(paste("No file found for year", year))
+    return(NULL)
+  }
+  
+  # Load the file (it might contain an object named 'x' or similar)
+  loaded_obj <- load(year_file)
+  psid_data <- get(loaded_obj)
+  
+  # Define year-specific variables
+  id_var <- switch(as.character(year),
+                   "1999" = "ER13002",
+                   "2001" = "ER17002",
+                   "2003" = "ER21002",
+                   "2005" = "ER25002",
+                   "2007" = "ER36002",
+                   "2009" = "ER42002",
+                   "2011" = "ER47302",
+                   "2013" = "ER53002",
+                   "2015" = "ER60002",
+                   "2017" = "ER66002",
+                   "2019" = "ER72002",
+                   "2021" = "ER78002")
+  
+  mort1_var <- switch(as.character(year),
+                      "1999" = "ER13061",
+                      "2001" = "ER17059",
+                      "2003" = "ER21058",
+                      "2005" = "ER25049",
+                      "2007" = "ER36050",
+                      "2009" = "ER42051",
+                      "2011" = "ER47358",
+                      "2013" = "ER53058",
+                      "2015" = "ER60059",
+                      "2017" = "ER66061",
+                      "2019" = "ER72061",
+                      "2021" = "ER78061")
+  
+  mort2_var <- switch(as.character(year),
+                      "1999" = "ER13070",
+                      "2001" = "ER17070",
+                      "2003" = "ER21069",
+                      "2005" = "ER25060",
+                      "2007" = "ER36062",
+                      "2009" = "ER42070",
+                      "2011" = "ER47379",
+                      "2013" = "ER53079",
+                      "2015" = "ER60080",
+                      "2017" = "ER66082",
+                      "2019" = "ER72082",
+                      "2021" = "ER78083")
+  
+  # Create data.table with needed variables
+  result <- data.table(
+    year = year,
+    int_no_ind = psid_data[[id_var]],
+    mort1year = psid_data[[mort1_var]],
+    mort2year = psid_data[[mort2_var]]
+  )
+  
+  return(result)
+}
+
+# Process all years
+years <- c(1999, 2001, 2003, 2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019, 2021)
+mort_data <- rbindlist(lapply(years, process_psid_year), fill = TRUE)
+
+# Merge with your main dataset
+d <- merge(d, mort_data, by = c("year", "int_no_ind"), all.x = TRUE)
+
+# Function to process each year with clear variable naming
+process_psid_year <- function(year) {
+  # Find the file for this year
+  file_pattern <- paste0("FAM", year, "ER\\.(rda|RData)$")
+  year_file <- list.files(psid_dir, pattern = file_pattern, full.names = TRUE, ignore.case = TRUE)
+  
+  if(length(year_file) == 0) {
+    warning(paste("No file found for year", year))
+    return(NULL)
+  }
+  
+  # Load the file
+  loaded_obj <- load(year_file)
+  psid_data <- get(loaded_obj)
+  
+  # Define year-specific variables with clear names
+  id_var <- switch(as.character(year),
+                   "1999" = "ER13002",
+                   "2001" = "ER17002",
+                   "2003" = "ER21002",
+                   "2005" = "ER25002",
+                   "2007" = "ER36002",
+                   "2009" = "ER42002",
+                   "2011" = "ER47302",
+                   "2013" = "ER53002",
+                   "2015" = "ER60002",
+                   "2017" = "ER66002",
+                   "2019" = "ER72002",
+                   "2021" = "ER78002")
+  
+  # Mortgage year OBTAINED variables (clear prefix)
+  mort1_year_obtained_var <- switch(as.character(year),
+                                    "1999" = "ER13051",
+                                    "2001" = "ER17058",
+                                    "2003" = "ER21057",
+                                    "2005" = "ER25048",
+                                    "2007" = "ER36049",
+                                    "2009" = "ER42050",
+                                    "2011" = "ER47357",
+                                    "2013" = "ER53057",
+                                    "2015" = "ER60058",
+                                    "2017" = "ER66060",
+                                    "2019" = "ER72060",
+                                    "2021" = "ER78061")
+  
+  mort2_year_obtained_var <- switch(as.character(year),
+                                    "1999" = "ER13060",
+                                    "2001" = "ER17069",
+                                    "2003" = "ER21068",
+                                    "2005" = "ER25059",
+                                    "2007" = "ER36061",
+                                    "2009" = "ER42069",
+                                    "2011" = "ER47378",
+                                    "2013" = "ER53078",
+                                    "2015" = "ER60079",
+                                    "2017" = "ER66081",
+                                    "2019" = "ER72081",
+                                    "2021" = "ER78082")
+  
+  # Create data.table with clear variable names
+  result <- data.table(
+    year = year,
+    int_no_ind = psid_data[[id_var]],
+    mort1_year_obtained = psid_data[[mort1_year_obtained_var]],
+    mort2_year_obtained = psid_data[[mort2_year_obtained_var]]
+  )
+  
+  return(result)
+}
+
+
+years <- c(1999, 2001, 2003, 2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019, 2021)
+mortgage_years_obtained <- rbindlist(lapply(years, process_psid_year), fill = TRUE)
+
+
+d2 <- merge(d, mortgage_years_obtained, by = c("year", "int_no_ind"), all.x = TRUE)
+
+colnames(d2)
+d3<-copy(d2)
+# For a specific column (e.g., "food_expen")
+d3$otr_recre_expen_prevy <- gsub("\t", "", d3$otr_recre_expen_prevy, fixed = TRUE)
+d3$otr_recre_expen_prevy <- trimws(d3$otr_recre_expen_prevy)
+colnames(d3)
+
+###THIS TIME IT WORKED#####
+# First, clean all column names by removing extra whitespace
+clean_names <- trimws(names(d3))
+
+# Then select only the first occurrence of each unique name
+clean_d3 <- d3[, .SD, .SDcols = !duplicated(clean_names)]
+
+# Verify the results
+colnames(d3)
+d3<-copy(clean_d3)
+library(data.table)
+
+
+
+
+
+
+
+
+
+
+
+######REMOVAL OF 99999 ###########has to be here cause monthly also have 999s####
+# placeholder values line231
+placeholder_rules <- list(
+  mort1 = c(9999999, 9999998),
+  mort2 = c(9999999, 9999998),
+  int1prc = c(98, 99),
+  int2prc = c(98, 99),
+  mort_rate1fv = c(8, 9),
+  age_ref = 999,
+  mort1_year_obtained = c(9998, 9999),
+  mort2_year_obtained = c(9998, 9999),
+  is2refin = c(8, 9),
+  `refin1_y/n` = c(8, 9),  # Backticks for special characters
+  mort_rate2fv = c(8, 9),
+  `mort_y/n` = c(8, 9),    # Backticks here too
+  house_value = c(99999999, 99999998),
+  educ_ref = 99,
+  mort1_instal_month = c(99998, 99999),
+  mort2_instal_month = c(99998, 99999),
+  yr_mort1_left = c(99, 98),
+  yr_mort2_left = c(99, 98),
+  behin_mort1 = c(8, 9), 
+  behin_mort2 = c(8, 9), 
+  mths_behin_mort1 = c(98, 99),
+  mths_behin_mort1 = c(98, 99),
+  mort1_restruct = c(8, 9),
+  mort2_restruct = c(8, 9),
+  prob_behin_mort1 = c(8, 9),
+  prob_behin_mort2 = c(8, 9),
+  covid_behin = c(8, 9)
+  
+)
+# Instead of filtering rows, replace placeholder values with NA
+for (var in names(placeholder_rules)) {
+  if (var %in% names(d3)) {  # Check if column exists
+    values_to_remove <- placeholder_rules[[var]]
+    d3[get(var) %in% values_to_remove, (var) := NA]
+  }
+}
+d3$house_value[d3$house_value %in% c(99999999, 99999998)] <- NA
+d3[house_value >= 9999998, house_value := NA]  # Catches 9999998, 9999999, etc.
+d11<-copy(d3)
+d3<-copy(d11)
+#####making yearly columns#########
+monthly_vars <- c("mort1_instal_month", "mort2_instal_month", 
+                  "park_expen_month", "pub_trans_expen_month", 
+                  "taxi_expen_month")
+# by 12 and + new annual columns
+d3[, (gsub("_month$", "", monthly_vars)) := lapply(.SD, "*", 12), 
+   .SDcols = monthly_vars]
+
+# 2.  transformations ?
+d3[, .(
+  mort1_check = mean(mort1_instal_month * 12, na.rm = TRUE) == mean(mort1_instal, na.rm = TRUE),
+  taxi_check = mean(taxi_expen_month * 12, na.rm = TRUE) == mean(taxi_expen, na.rm = TRUE)
+)]
+
+# 3. DONT remove original monthly columns 
+# d3[, (monthly_vars) := NULL]
+
+

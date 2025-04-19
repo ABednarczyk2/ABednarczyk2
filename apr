@@ -1,0 +1,3325 @@
+library(psidR)
+library(data.table)
+library(SAScii)
+library(readr)
+
+# =============================================
+# ADJUSTED PATHS FOR YOUR LOCAL SYSTEM
+# =============================================
+rawdir <- "C:/Users/2022/Desktop/R data"  # Base directory
+dictdir <- "C:/Users/2022/Desktop/R data/psid_dict"  # Dictionary files
+r <- "C:/Users/2022/Desktop/R data/data/PSID"  # Output directory
+
+# =============================================
+# FILE PATHS WITH YOUR FOLDER STRUCTURE
+# =============================================
+fn <- file.path(rawdir, ".txt/IND2021ER.txt")       # .txt in .txt subfolder
+sas_ri <- file.path(rawdir, ".nottxt/IND2021ER.sas") # .sas in .nottxt subfolder
+
+# =============================================
+# CORE PROCESSING (PRESERVED AS-IS)
+# =============================================
+x <- read.SAScii(fn, sas_ri)
+save(x, file = file.path(r, "IND2021ER.rda"))
+
+# =============================================
+# DICTIONARY FILES (PRESERVED AS-IS)
+# =============================================
+f <- fread(file.path(dictdir, "famvars_test.txt"))
+i <- fread(file.path(dictdir, "indvars_test.txt"))
+
+f<-fread("famvars_test4.txt")  # copied to C:/Users/2022/Documents/
+i<-fread("indvars_test2.txt") 
+# =============================================
+# DATA RESHAPING (PRESERVED AS-IS)
+# =============================================
+i <- dcast(i[, list(year, name, variable)], year ~ name, value.var = "variable")
+f <- dcast(f[, list(year, name, variable)], year ~ name, value.var = "variable")
+
+# =============================================
+# PANEL BUILDING (PRESERVED AS-IS)
+# =============================================
+d222 <- build.panel(
+  datadir = r,
+  fam.vars = f,
+  ind.vars = i,
+  heads.only = TRUE,
+  sample = "SRC",
+  design = "all"
+)
+
+
+
+#######
+the code
+########
+library(psidR)
+library(data.table)
+library(SAScii)
+library(readr)
+
+rawdir <- "C:/Users/2022/Desktop/R data/raw_data"  # Raw files
+outputdir <- "C:/Users/2022/Desktop/R data/processed_data"  # Output
+# Load the package
+library(SAScii)
+
+# Define paths (same as before)
+rawdir <- "C:/Users/2022/Desktop/R data/raw_data"
+outputdir <- "C:/Users/2022/Desktop/R data/processed_data"
+
+# Specify the missing year
+year <- 2015  # <--- Only process 2015
+
+# Construct file paths
+family_txt <- paste0(rawdir, "/FAM", year, "ER.txt")
+family_sas <- paste0(rawdir, "/FAM", year, "ER.sas")
+
+# Check if files exist
+if (file.exists(family_txt) && file.exists(family_sas)) {
+  cat("Processing FAM", year, "...\n")
+  family_data <- read.SAScii(family_txt, family_sas)
+  save(family_data, file = paste0(outputdir, "/FAM", year, "ER.rda"))
+  rm(family_data)
+  cat("Successfully saved FAM", year, "!\n")
+} else {
+  warning("Files for 2015 not found. Check if these exist:\n",
+          family_txt, "\n", family_sas)
+}
+
+  ###########2017############
+
+library(data.table)
+library(SAScii)
+library(readr)
+
+###########################################################################
+# EXACT PATHS (NO CHANGES)
+###########################################################################
+rawdir <- "C:/Users/2022/Desktop/R data"  
+dictdir <- "C:/Users/2022/Desktop/R data/psid_dict"  
+r <- "C:/Users/2022/Desktop/R data/data/PSID"  
+
+##################################################
+# 2017-SPECIFIC FILE PATHS (ONLY YEAR CHANGED)
+##################################################
+fn <- paste0(rawdir, "/.txt/FAM2017ER.txt")      # Changed to 2017
+sas_ri <- paste0(rawdir, "/.nottxt/FAM2017ER.sas") # Changed to 2017
+
+###################################################
+# PROCESSING (IDENTICAL STRUCTURE)
+##################################################
+start_time <- Sys.time()
+cat("Starting FAM2017ER processing at:", format(start_time, "%H:%M:%S"), "\n")
+
+x <- read.SAScii(fn, sas_ri, verbose = TRUE)  # Same function call
+
+cat("Completed in", round(difftime(Sys.time(), start_time, units = "mins"), 1), "minutes\n")
+save(x, file = paste0(r, "/FAM2017ER.rda"))   # Changed to 2017
+
+cat("\nSuccessfully saved FAM2017ER.rda to:\n", paste0(r, "/FAM2017ER.rda"))
+##########idiot#####################
+
+library(data.table)
+library(SAScii)
+
+# Set paths (same as your original)
+rawdir <- "C:/Users/2022/Desktop/R data"
+r <- "C:/Users/2022/Desktop/R data/data/PSID"
+
+# 2017 file paths (directly swapped from your 2021 example)
+fn <- paste0(rawdir, "/.txt/FAM2017ER.txt")       # .txt file
+sas_ri <- paste0(rawdir, "/.nottxt/FAM2017ER.sas") # .sas file
+
+# Process and save (identical to your working code)
+x <- read.SAScii(fn, sas_ri) 
+save(x, file = paste0(r, "/FAM2017ER.rda")) 
+
+# Optional: Print confirmation
+cat("FAM2017ER.rda saved to:", paste0(r, "/FAM2017ER.rda"))
+ 
+
+
+library(data.table)
+library(SAScii)
+
+# Set paths (same as your original)
+rawdir <- "C:/Users/2022/Desktop/R data"
+r <- "C:/Users/2022/Desktop/R data/data/PSID"
+
+# 2015 file paths (directly swapped from your 2021 example)
+fn <- paste0(rawdir, "/.txt/FAM2015ER.txt")       # .txt file
+sas_ri <- paste0(rawdir, "/.nottxt/FAM2015ER.sas") # .sas file
+
+# Process and save (identical to your working code)
+x <- read.SAScii(fn, sas_ri) 
+save(x, file = paste0(r, "/FAM2015ER.rda")) 
+
+# Optional: Print confirmation
+cat("FAM2015ER.rda saved to:", paste0(r, "/FAM2015ER.rda"))
+
+library(data.table)
+library(SAScii)
+
+# Set paths (same as your original)
+rawdir <- "C:/Users/2022/Desktop/R data"
+r <- "C:/Users/2022/Desktop/R data/data/PSID"
+
+# 2013 file paths (directly swapped from your 2021 example)
+fn <- paste0(rawdir, "/.txt/FAM2013ER.txt")       # .txt file
+sas_ri <- paste0(rawdir, "/.nottxt/FAM2013ER.sas") # .sas file
+
+# Process and save (identical to your working code)
+x <- read.SAScii(fn, sas_ri) 
+save(x, file = paste0(r, "/FAM2013ER.rda")) 
+
+# Optional: Print confirmation
+cat("FAM2013ER.rda saved to:", paste0(r, "/FAM2017ER.rda"))
+
+
+library(data.table)
+library(SAScii)
+
+# Set paths (same as your original)
+rawdir <- "C:/Users/2022/Desktop/R data"
+r <- "C:/Users/2022/Desktop/R data/data/PSID"
+
+# 2011 file paths (directly swapped from your 2021 example)
+fn <- paste0(rawdir, "/.txt/FAM2011ER.txt")       # .txt file
+sas_ri <- paste0(rawdir, "/.nottxt/FAM2011ER.sas") # .sas file
+
+# Process and save (identical to your working code)
+x <- read.SAScii(fn, sas_ri) 
+save(x, file = paste0(r, "/FAM2011ER.rda")) 
+
+# Optional: Print confirmation
+cat("FAM2011ER.rda saved to:", paste0(r, "/FAM2011ER.rda"))
+
+
+library(data.table)
+library(SAScii)
+
+# Set paths (same as your original)
+rawdir <- "C:/Users/2022/Desktop/R data"
+r <- "C:/Users/2022/Desktop/R data/data/PSID"
+
+# 2009 file paths (directly swapped from your 2021 example)
+fn <- paste0(rawdir, "/.txt/FAM2009ER.txt")       # .txt file
+sas_ri <- paste0(rawdir, "/.nottxt/FAM2009ER.sas") # .sas file
+
+# Process and save (identical to your working code)
+x <- read.SAScii(fn, sas_ri) 
+save(x, file = paste0(r, "/FAM2009ER.rda")) 
+
+# Optional: Print confirmation
+cat("FAM2009ER.rda saved to:", paste0(r, "/FAM2009ER.rda"))
+
+
+library(data.table)
+library(SAScii)
+
+# Set paths (same as your original)
+rawdir <- "C:/Users/2022/Desktop/R data"
+r <- "C:/Users/2022/Desktop/R data/data/PSID"
+
+# 2007 file paths (directly swapped from your 2007 example)
+fn <- paste0(rawdir, "/.txt/FAM2007ER.txt")       # .txt file
+sas_ri <- paste0(rawdir, "/.nottxt/FAM2007ER.sas") # .sas file
+
+# Process and save (identical to your working code)
+x <- read.SAScii(fn, sas_ri) 
+save(x, file = paste0(r, "/FAM2007ER.rda")) 
+
+# Optional: Print confirmation
+cat("FAM2007ER.rda saved to:", paste0(r, "/FAM2007ER.rda"))
+
+
+library(data.table)
+library(SAScii)
+
+# Set paths (same as your original)
+rawdir <- "C:/Users/2022/Desktop/R data"
+r <- "C:/Users/2022/Desktop/R data/data/PSID"
+
+# 2005 file paths (directly swapped from your 2021 example)
+fn <- paste0(rawdir, "/.txt/FAM2005ER.txt")       # .txt file
+sas_ri <- paste0(rawdir, "/.nottxt/FAM2005ER.sas") # .sas file
+
+# Process and save (identical to your working code)
+x <- read.SAScii(fn, sas_ri) 
+save(x, file = paste0(r, "/FAM2005ER.rda")) 
+
+# Optional: Print confirmation
+cat("FAM2005ER.rda saved to:", paste0(r, "/FAM2005ER.rda"))
+
+
+library(data.table)
+library(SAScii)
+
+# Set paths (same as your original)
+rawdir <- "C:/Users/2022/Desktop/R data"
+r <- "C:/Users/2022/Desktop/R data/data/PSID"
+
+# 2001 file paths (directly swapped from your 2001 example)
+fn <- paste0(rawdir, "/.txt/FAM2001ER.txt")       # .txt file
+sas_ri <- paste0(rawdir, "/.nottxt/FAM2001ER.sas") # .sas file
+
+# Process and save (identical to your working code)
+x <- read.SAScii(fn, sas_ri) 
+save(x, file = paste0(r, "/FAM2001ER.rda")) 
+
+# Optional: Print confirmation
+cat("FAM2001ER.rda saved to:", paste0(r, "/FAM2001ER.rda"))
+
+
+# Set paths (same as your original)
+rawdir <- "C:/Users/2022/Desktop/R data"
+r <- "C:/Users/2022/Desktop/R data/data/PSID"
+
+# 1999 file paths (directly swapped from your 2021 example)
+fn <- paste0(rawdir, "/.txt/FAM1999ER.txt")       # .txt file
+sas_ri <- paste0(rawdir, "/.nottxt/FAM1999ER.sas") # .sas file
+
+# Process and save (identical to your working code)
+x <- read.SAScii(fn, sas_ri) 
+save(x, file = paste0(r, "/FAM1999ER.rda")) 
+
+# Optional: Print confirmation
+cat("FAM1999ER.rda saved to:", paste0(r, "/FAM1999ER.rda"))
+
+
+dictdir <- "C:/Users/2022/Desktop/R data"  # Set dictionary directory
+
+
+
+
+f = fread(file.path(dictdir,"famvars_test.txt"))
+i = fread(file.path(dictdir,"indvars_test.txt"))
+
+
+i = dcast(i[,list(year,name,variable)],year~name, value.var = "variable")
+f = dcast(f[,list(year,name,variable)],year~name, value.var = "variable")
+
+d = build.panel(datadir = r,fam.vars=f,ind.vars=i, heads.only = TRUE,sample="SRC",design="all")
+
+
+library(psidR)
+
+library(data.table)
+
+# For individual data (i)
+i_wide <- dcast(i, 
+                year ~ name, 
+                value.var = "variable")
+
+# For family data (f)
+f_wide <- dcast(f, 
+                year ~ name, 
+                value.var = "variable")
+
+# Check EXACT column names in both datasets
+names(i)
+names(f)
+
+# Example output might look like:
+# [1] "year" "var_code" "label" "var_name"
+
+# See first 3 rows of each file
+head(i, 3)
+head(f, 3)
+
+library(data.table)
+
+# For Individual Data (i)
+setnames(i, c("source", "year", "var_code", "var_label", "var_name"))
+i <- i[, .(year, var_code, var_name)]  # Keep only needed columns
+
+# For Family Data (f)
+setnames(f, c("source", "year", "var_code", "var_label", "var_name")) 
+f <- f[, .(year, var_code, var_name)]  # Keep only needed columns
+
+# Individual data - wide format
+i_wide <- dcast(i, 
+                year ~ var_name, 
+                value.var = "var_code")
+
+# Family data - wide format
+f_wide <- dcast(f, 
+                year ~ var_name, 
+                value.var = "var_code")
+
+rawdir <- "C:/Users/2022/Desktop/R data"
+r <- "C:/Users/2022/Desktop/R data/data/PSID"
+fn <- paste0(rawdir, "/.txt/FAM2013ER.txt")       # .txt file
+sas_ri <- paste0(rawdir, "/.nottxt/FAM2013ER.sas") # .sas file
+x <- read.SAScii(fn, sas_ri) 
+save(x, file = paste0(r, "/FAM2013ER.rda")) 
+cat("FAM2013ER.rda saved to:", paste0(r, "/FAM2013ER.rda")) #????hmmm??? ill redo it...
+
+library(SAScii)
+library(data.table)
+
+# 1. Set your paths (same as before)
+rawdir <- "C:/Users/2022/Desktop/R data"
+r <- "C:/Users/2022/Desktop/R data/data/PSID"
+
+# 2. Define file paths
+txt_file <- paste0(rawdir, "/.txt/FAM2013ER.txt")      # Raw data
+sas_file <- paste0(rawdir, "/.nottxt/FAM2013ER.sas")   # SAS import script
+output_file <- paste0(r, "/FAM2013ER.rda")             # Output file
+
+# 3. Process and OVERWRITE the file
+tryCatch({
+  # Read raw data using SAS instructions
+  x <- read.SAScii(fn = txt_file, sas_ri = sas_file, verbose = TRUE)
+  
+  # Force overwrite (no warning)
+  save(x, file = output_file)
+  
+  # Verification
+  cat("\nSUCCESS: Overwrote", output_file, 
+      "\nFile size:", round(file.size(output_file)/1024, 1), "KB\n")
+}, error = function(e) {
+  cat("\nFAILED:", e$message, "\n")
+})
+
+# Replace existing file (no questions asked)
+save(x, file = "C:/Users/2022/Desktop/R data/data/PSID/FAM2013ER.rda")
+
+file.info("C:/Users/2022/Desktop/R data/data/PSID/FAM2013ER.rda")$mtime
+
+library(SAScii)
+
+# Set paths
+rawdir <- "C:/Users/2022/Desktop/R data"
+r <- "C:/Users/2022/Desktop/R data/data/PSID"
+
+# Input files
+fn <- paste0(rawdir, "/.txt/FAM2013ER.txt")        # Text data
+sas_ri <- paste0(rawdir, "/.nottxt/FAM2013ER.sas") # SAS script
+
+# 1. Read data
+x <- read.SAScii(fn, sas_ri, verbose = TRUE)
+
+# 2. FORCE overwrite existing file
+save(x, file = paste0(r, "/FAM2013ER.rda"), version = 2)
+
+# 3. Verify with checksum
+cat("\nFile overwritten at:", normalizePath(paste0(r, "/FAM2013ER.rda")))
+cat("\nMD5 checksum:", tools::md5sum(paste0(r, "/FAM2013ER.rda")))
+
+cat("Step 1: Starting SAScii import at", format(Sys.time(), "%H:%M:%S"), "\n")
+x <- read.SAScii(fn, sas_ri, verbose = TRUE)  # Shows progress if working
+cat("Step 2: Saving RDA at", format(Sys.time(), "%H:%M:%S"), "\n")
+save(x, file = paste0(r, "/FAM2013ER.rda"))
+cat("COMPLETED at", format(Sys.time(), "%H:%M:%S"), "\n")
+
+# Check ACTUAL file paths being used
+cat("TXT path:", paste0(rawdir, "/.txt/FAM2013ER.txt"), "\n")
+cat("SAS path:", paste0(rawdir, "/.nottxt/FAM2013ER.sas"), "\n")
+cat("Output path:", paste0(r, "/FAM2013ER.rda"), "\n")
+
+# Confirm files exist
+stopifnot(
+  file.exists(paste0(rawdir, "/.txt/FAM2013ER.txt")),
+  file.exists(paste0(rawdir, "/.nottxt/FAM2013ER.sas"))
+)
+
+
+rawdir <- "C:/Users/2022/Desktop/R data"
+r <- "C:/Users/2022/Desktop"
+fn <- paste0(rawdir, "/.txt/FAM2013ER.txt")       # .txt file
+sas_ri <- paste0(rawdir, "/.nottxt/FAM2013ER.sas") # .sas file
+x <- read.SAScii(fn, sas_ri) 
+save(x, file = paste0(r, "/FAM2013ER.rda")) 
+cat("FAM2013ER.rda saved to:", paste0(r, "/FAM2013ER.rda")) #????hmmm??? ill redo it...
+
+# 2003 file paths (directly swapped from your 2007 example)
+fn <- paste0(rawdir, "/.txt/FAM2003ER.txt")       # .txt file
+sas_ri <- paste0(rawdir, "/.nottxt/FAM2003ER.sas") # .sas file
+
+# Process and save (identical to your working code)
+x <- read.SAScii(fn, sas_ri) 
+save(x, file = paste0(r, "/FAM2003ER.rda")) 
+
+# Optional: Print confirmation
+cat("FAM2003ER.rda saved to:", paste0(r, "/FAM2003ER.rda"))
+
+
+
+# 1. SET PATHS CORRECTLY (critical!)
+dictdir <- "C:/Users/2022/Desktop/R data"          # For metadata TXT files
+datadir <- "C:/Users/2022/Desktop/R data/data/PSID" # For RDA data files
+
+# 2. Load METADATA (unchanged)
+f <- fread(file.path(dictdir, "famvars_test.txt"))
+i <- fread(file.path(dictdir, "indvars_test.txt"))
+
+# 3. Reshape metadata (unchanged)
+i <- dcast(i[, list(year, name, variable)], year ~ name, value.var = "variable")
+f <- dcast(f[, list(year, name, variable)], year ~ name, value.var = "variable")
+
+# 4. BUILD PANEL WITH CORRECT DATA PATH
+d <- build.panel(
+  datadir = datadir,  # MUST point to where RDA files are stored
+  fam.vars = f,
+  ind.vars = i,
+  heads.only = TRUE,
+  sample = "SRC",
+  design = "all"
+)
+
+save(d, file = "D:/R data/my_panel.RData")
+save(d2a, file = "D:/R data/d/d2/d3/my_panelbig.RData")
+
+# Load the individual-level data for each year
+load(file.path(datadir, "FAM2017ER.rda"))
+load(file.path(datadir, "FAM2019ER.rda"))
+load(file.path(datadir, "FAM2021ER.rda"))
+
+
+# Rename columns in each dataset to match int_no_ind
+setnames(FAM2017ER, "ER66002", "int_no_ind")
+setnames(FAM2019ER, "ER72002", "int_no_ind")
+setnames(FAM2021ER, "ER78002", "int_no_ind")
+
+# Create mort_data for 2017
+mort_data_2017 <- data.table(
+  year = 2017,
+  int_no_ind = FAM2017ER$int_no_ind,
+  mort1year = FAM2017ER$ER78061, 
+  mort2year = FAM2017ER$ER78082
+)
+
+# Create mort_data for 2019
+mort_data_2019 <- data.table(
+  year = 2019,
+  int_no_ind = FAM2019ER$int_no_ind,
+  mort1year = FAM2019ER$ER78061, 
+  mort2year = FAM2019ER$ER78082
+)
+
+# Create mort_data for 2021
+mort_data_2021 <- data.table(
+  year = 2021,
+  int_no_ind = FAM2021ER$int_no_ind,
+  mort1year = FAM2021ER$ER78061, 
+  mort2year = FAM2021ER$ER78082
+)
+
+# Combine mort_data for 2017, 2019, and 2021
+mort_data <- rbind(mort_data_2017, mort_data_2019, mort_data_2021, fill = TRUE)
+
+# Merge d with mort_data by both year and int_no_ind
+d <- merge(d, mort_data, by = c("year", "int_no_ind"), all.x = TRUE)
+
+
+
+
+library(data.table)
+
+# 1. Load your metadata AS IS
+f <- fread(file.path(dictdir, "famvars_test.txt"))
+
+# 2. Find and replace ONLY the problematic mortgage variables
+# --------------------------------------------------------
+# First verify which ER codes correspond to your mortgage variables
+mortgage_mapping <- f[name %in% c("mort1year", "mort2year"), 
+                      .(year, er_code = variable, original_name = name)]
+
+# Replace problematic names with their official ER codes
+f[name == "mort1year", name := variable]  # Use the ER code directly
+f[name == "mort2year", name := variable]  # Use the ER code directly
+
+# 3. Build panel with cleaned names
+# --------------------------------
+d <- build.panel(
+  datadir = datadir,
+  fam.vars = f,  # Using the long format directly
+  ind.vars = i,
+  heads.only = TRUE,
+  sample = "SRC",
+  design = "all"
+)
+
+# 4. Optional: Create reverse mapping for analysis
+# ----------------------------------------------
+variable_dictionary <- unique(f[, .(er_code = variable, original_name = name)])
+
+
+library(data.table)
+library(psidR)
+
+# 1. Clean metadata with STRICT ER code enforcement
+f <- fread(file.path(dictdir, "famvars_test.txt"))
+
+# Force ALL variables to use ER codes (bypass name issues)
+f[, name := variable]  # Use raw ER codes as names
+
+# 2. Build panel with purified metadata
+d <- build.panel(
+  datadir = datadir,
+  fam.vars = f[, .(year, name = variable)],  # Only year + ER codes
+  ind.vars = i[, .(year, name = variable)],  # Same for individual
+  heads.only = TRUE,
+  sample = "SRC",
+  design = "all"
+)
+
+# 3. Post-process to restore labels
+var_labels <- unique(f[, .(variable, label)])
+setkey(var_labels, "variable")
+setkey(d, "variable")
+d <- d[var_labels, nomatch = 0]
+
+
+library(data.table)
+library(psidR)
+
+# 1. FIRST verify your metadata structure
+f <- fread(file.path(dictdir, "famvars_test.txt"))
+print(names(f))  # Check ACTUAL column names
+print(head(f, 3)) # See sample data
+
+# 2. Based on your previous output, we know columns are:
+# [dataset, year, variable, label, name]
+# So we need to:
+
+# OPTION A: If you want to use ER codes directly
+f_clean <- f[, .(year, name = variable)]  # Use raw ER codes as names
+
+# OPTION B: If you need custom names (with ER code fallback)
+f_clean <- f[, .(year, name = ifelse(
+  name %in% c("mort1year", "mort2year"), 
+  variable,  # Use ER code for problem variables
+  name        # Keep original name for others
+))]
+
+# 3. Build panel with verified columns
+d <- build.panel(
+  datadir = datadir,
+  fam.vars = f_clean,
+  ind.vars = i[, .(year, name = variable)],  # Apply same to individual
+  heads.only = TRUE,
+  sample = "SRC",
+  design = "all"
+)
+
+# 4. Post-process to restore labels if needed
+if("label" %in% names(f)){
+  label_map <library(data.table)
+  library(psidR)
+  
+  # 1. Load metadata - using your ACTUAL column names
+  f <- fread(file.path(dictdir, "famvars_test.txt"))
+  i <- fread(file.path(dictdir, "indvars_test.txt"))
+  
+  # 2. Clean problematic names by replacing with ER codes
+  #    Only for mortgage variables, keep others unchanged
+  f[name %in% c("mort1year", "mort2year"), name := variable]
+  
+  # 3. Prepare clean metadata for build.panel()
+  fam_meta <- f[, .(year, name)]  # Only these two columns needed
+  ind_meta <- i[, .(year, name)]
+  
+  # 4. Build panel - this will now work
+  d <- build.panel(
+    datadir = datadir,
+    fam.vars = fam_meta,
+    ind.vars = ind_meta,
+    heads.only = TRUE,
+    sample = "SRC",
+    design = "all"
+  )
+  
+  # 5. Optional: Add back original labels
+  d <- merge(d, 
+             unique(f[, .(variable, label)]),
+             by.x = "variable", 
+             by.y = "variable",
+             all.x = TRUE)- unique(f[, .(variable, label)])
+  d <- merge(d, label_map, by.x = "variable", by.y = "variable", all.x = TRUE)
+}
+
+library(data.table)
+library(psidR)
+
+# 1. Load metadata - using your ACTUAL column names
+f <- fread(file.path(dictdir, "famvars_test.txt"))
+i <- fread(file.path(dictdir, "indvars_test.txt"))
+
+# 2. Clean problematic names by replacing with ER codes
+#    Only for mortgage variables, keep others unchanged
+f[name %in% c("mort1year", "mort2year"), name := variable]
+
+# 3. Prepare clean metadata for build.panel()
+fam_meta <- f[, .(year, name)]  # Only these two columns needed
+ind_meta <- i[, .(year, name)]
+
+# 4. Build panel - this will now work
+d <- build.panel(
+  datadir = datadir,
+  fam.vars = fam_meta,
+  ind.vars = ind_meta,
+  heads.only = TRUE,
+  sample = "SRC",
+  design = "all"
+)
+
+# 5. Optional: Add back original labels
+d <- merge(d, 
+           unique(f[, .(variable, label)]),
+           by.x = "variable", 
+           by.y = "variable",
+           all.x = TRUE)
+
+library(data.table)
+library(psidR)
+
+# 1. Load metadata - using your ACTUAL column names
+f <- fread(file.path(dictdir, "famvars_test.txt"))
+i <- fread(file.path(dictdir, "indvars_test.txt"))
+
+# 2. Clean problematic names by replacing with ER codes
+#    Only for mortgage variables, keep others unchanged
+f[name %in% c("mort1year", "mort2year"), name := variable]
+
+# 3. Prepare clean metadata for build.panel()
+fam_meta <- f[, .(year, name)]  # Only these two columns needed
+ind_meta <- i[, .(year, name)]
+
+# 4. Build panel - this will now work
+d <- build.panel(
+  datadir = datadir,
+  fam.vars = fam_meta,
+  ind.vars = ind_meta,
+  heads.only = TRUE,
+  sample = "SRC",
+  design = "all"
+)
+
+# 5. Optional: Add back original labels
+d <- merge(d, 
+           unique(f[, .(variable, label)]),
+           by.x = "variable", 
+           by.y = "variable",
+           all.x = TRUE)
+
+library(data.table)
+library(psidR)
+
+library(data.table)
+library(psidR)
+
+# 1. Load metadata files
+f <- fread(file.path(dictdir, "famvars_test.txt"))
+i <- fread(file.path(dictdir, "indvars_test.txt"))
+
+# 2. Clean family variables - replace custom mortgage names with ER codes
+f[name %in% c("mort1year", "mort2year"), name := variable]
+
+# 3. Clean individual variables - standardize all to ER codes
+i[, name := variable]  # Use raw ER codes for all individual vars
+
+# 4. Create minimal metadata tables
+fam_meta <- unique(f[, .(year, name)])
+ind_meta <- unique(i[, .(year, name)])
+
+# 5. Verify no duplicates
+stopifnot(
+  !anyDuplicated(fam_meta, by = c("year", "name")),
+  !anyDuplicated(ind_meta, by = c("year", "name"))
+)
+
+# 6. Build panel
+d <- build.panel(
+  datadir = datadir,
+  fam.vars = fam_meta,
+  ind.vars = ind_meta,
+  heads.only = TRUE,
+  sample = "SRC",
+  design = "all"
+)
+
+# 7. Add back labels (optional)
+var_labels <- unique(rbind(
+  f[, .(variable = name, label)],
+  i[, .(variable = name, label)]
+))
+d <- merge(d, var_labels, by = "variable", all.x = TRUE)
+
+fam.vars <- read.table("C:/Users/2022/Desktop/R data/famvars_test.txt", header = TRUE, stringsAsFactors = FALSE)
+
+
+str(i)
+str(f)
+
+print(d)      # Shows the panel data
+str(d)        # Displays its structure
+summary(d)    # Provides a quick summary of the data
+
+# 1. SET PATHS CORRECTLY (critical!)
+dictdir <- "C:/Users/2022/Desktop/R data"          # For metadata TXT files
+datadir <- "C:/Users/2022/Desktop/R data/data/PSID" # For RDA data files
+
+# 2. Load METADATA (unchanged)
+f <- fread(file.path(dictdir, "famvars_test2.txt"))
+i <- fread(file.path(dictdir, "indvars_test2.txt"))
+
+# 3. Reshape metadata (unchanged)
+i <- dcast(i[, list(year, name, variable)], year ~ name, value.var = "variable")
+f <- dcast(f[, list(year, name, variable)], year ~ name, value.var = "variable")
+
+# 4. BUILD PANEL WITH CORRECT DATA PATH
+d22 <- build.panel(
+  datadir = datadir,  # MUST point to where RDA files are stored
+  fam.vars = f,
+  ind.vars = i,
+  heads.only = TRUE,
+  sample = "SRC",
+  design = "all"
+)
+
+
+
+
+
+
+
+
+
+
+
+# 1. SETTING PATHS 
+dictdir<-"C:/Users/2022/Desktop/R data"          #  metadata TXT files
+datadir<-"C:/Users/2022/Desktop/R data/data/PSID" #  RDA data files
+
+# 2. LOADING METADATA 
+
+f<-fread("famvars_test5.txt")# copied to C:/Users/2022/Documents/
+f <- fread("C:/Users/2022/Desktop/famvars_test7.txt")
+i<-fread("indvars_test2.txt") 
+
+# 3. RESHAPING METADATA (unchanged)
+i <- dcast(i[, list(year, name, variable)], year ~ name, value.var = "variable")
+f <- dcast(f[, list(year, name, variable)], year ~ name, value.var = "variable")
+
+
+# 4. BUILDING PANEL 
+d2 <- build.panel(
+  datadir = datadir,  #  where RDA files are stored
+  fam.vars = f,
+  ind.vars = i,
+  heads.only = TRUE,
+  sample = "SRC",
+  design = "all"
+)
+
+colnames(d)
+warnings()
+# Load 2017 data
+env_2017 <- new.env()
+load(file.path(datadir, "FAM2017ER.rda"), envir = env_2017)
+FAM2017ER <- env_2017$x  # Assign it correctly
+
+# Load 2019 data
+env_2019 <- new.env()
+load(file.path(datadir, "FAM2019ER.rda"), envir = env_2019)
+FAM2019ER <- env_2019$x  # Assign it correctly
+
+# Load 2021 data
+env_2021 <- new.env()
+load(file.path(datadir, "FAM2021ER.rda"), envir = env_2021)
+FAM2021ER <- env_2021$x  # Assign it correctly
+
+# 1999 data
+env_1999 <- new.env()
+load(file.path(datadir, "FAM1999ER.rda"), envir = env_1999)
+FAM1999ER <- env_1999$x  # assign correctly
+
+# 2001 data
+env_2001 <- new.env()
+load(file.path(datadir, "FAM2001ER.rda"), envir = env_2001)
+FAM2001ER <- env_2001$x 
+
+# 2003 data
+env_2003 <- new.env()
+load(file.path(datadir, "FAM2003ER.rda"), envir = env_2003)
+FAM2003ER <- env_2003$x 
+
+# 2005 data
+env_2005 <- new.env()
+load(file.path(datadir, "FAM2005ER.rda"), envir = env_2005)
+FAM2005ER <- env_2005$x 
+
+# 2007 data
+env_2007 <- new.env()
+load(file.path(datadir, "FAM2007ER.rda"), envir = env_2007)
+FAM2007ER <- env_2007$x  
+
+# 2009 data
+env_2009 <- new.env()
+load(file.path(datadir, "FAM2009ER.rda"), envir = env_2009)
+FAM2009ER <- env_2009$x  
+
+# 2011 data
+env_2011 <- new.env()
+load(file.path(datadir, "FAM2011ER.rda"), envir = env_2011)
+FAM2011ER <- env_2011$x  
+
+# 2013 data
+env_2013 <- new.env()
+load(file.path(datadir, "FAM2013ER.rda"), envir = env_2013)
+FAM2013ER <- env_2013$x 
+
+# 2015 data
+env_2015 <- new.env()
+load(file.path(datadir, "FAM2015ER.rda"), envir = env_2015)
+FAM2015ER <- env_2015$x  
+
+load(file.path(datadir, "FAM1999ER.rda"))
+load(file.path(datadir, "FAM2001ER.rda"))
+load(file.path(datadir, "FAM2003ER.rda"))
+load(file.path(datadir, "FAM2005ER.rda"))
+load(file.path(datadir, "FAM2007ER.rda"))
+load(file.path(datadir, "FAM2009ER.rda"))
+load(file.path(datadir, "FAM2011ER.rda"))
+load(file.path(datadir, "FAM2013ER.rda"))
+load(file.path(datadir, "FAM2015ER.rda"))
+load(file.path(datadir, "FAM2017ER.rda"))
+load(file.path(datadir, "FAM2019ER.rda"))
+load(file.path(datadir, "FAM2021ER.rda"))
+
+
+setnames(FAM1999ER, "ER13002", "int_no_ind")
+setnames(FAM2001ER, "ER17002", "int_no_ind")
+setnames(FAM2003ER, "ER21002", "int_no_ind")
+setnames(FAM2005ER, "ER25002", "int_no_ind")
+setnames(FAM2007ER, "ER36002", "int_no_ind")
+setnames(FAM2009ER, "ER42002", "int_no_ind")
+setnames(FAM2011ER, "ER47302", "int_no_ind")
+setnames(FAM2013ER, "ER53002", "int_no_ind")
+setnames(FAM2015ER, "ER60002", "int_no_ind")
+setnames(FAM2017ER, "ER66002", "int_no_ind")
+setnames(FAM2019ER, "ER72002", "int_no_ind")
+setnames(FAM2021ER, "ER78002", "int_no_ind")
+
+
+# mort_data for 1999 + income :(
+mort_data_1999 <- data.table(
+  year = 1999,
+  int_no_ind = FAM1999ER$int_no_ind,
+  mort1year = FAM1999ER$ER13051, 
+  mort2year = FAM1999ER$ER13060
+)
+
+mort_data_2001 <- data.table(
+  year = 2001,
+  int_no_ind = FAM2001ER$int_no_ind,
+  mort1year = FAM2001ER$ER17058, 
+  mort2year = FAM2001ER$ER17069
+)
+
+
+mort_data_2003 <- data.table(
+  year = 2003,
+  int_no_ind = FAM2003ER$int_no_ind,
+  mort1year = FAM2003ER$ER21057, 
+  mort2year = FAM2003ER$ER21068
+)
+
+
+mort_data_2005 <- data.table(
+  year = 2005,
+  int_no_ind = FAM2005ER$int_no_ind,
+  mort1year = FAM2005ER$ER25048, 
+  mort2year = FAM2005ER$ER25059
+)
+
+
+mort_data_2007 <- data.table(
+  year = 2007,
+  int_no_ind = FAM2007ER$int_no_ind,
+  mort1year = FAM2007ER$ER36049, 
+  mort2year = FAM2007ER$ER36061
+)
+
+
+mort_data_2009 <- data.table(
+  year = 2009,
+  int_no_ind = FAM2009ER$int_no_ind,
+  mort1year = FAM2009ER$ER42050, 
+  mort2year = FAM2009ER$ER42069
+)
+
+
+mort_data_2011 <- data.table(
+  year = 2011,
+  int_no_ind = FAM2011ER$int_no_ind,
+  mort1year = FAM2011ER$ER47357, 
+  mort2year = FAM2011ER$ER47378
+)  
+  
+  mort_data_2013 <- data.table(
+    year = 2013,
+    int_no_ind = FAM2013ER$int_no_ind,
+    mort1year = FAM2013ER$ER53057, 
+    mort2year = FAM2013ER$ER53078
+  )
+  
+  
+  mort_data_2015 <- data.table(
+    year = 2015,
+    int_no_ind = FAM2015ER$int_no_ind,
+    mort1year = FAM2015ER$ER60058, 
+    mort2year = FAM2015ER$ER60079
+  )
+  
+  
+  mort_data_2017 <- data.table(
+    year = 2017,
+    int_no_ind = FAM2017ER$int_no_ind,
+    mort1year = FAM2017ER$ER66060, 
+    mort2year = FAM2017ER$ER66081
+  )
+  
+  
+  mort_data_2019 <- data.table(
+    year = 2019,
+    int_no_ind = FAM2019ER$int_no_ind,
+    mort1year = FAM2019ER$ER72060, 
+    mort2year = FAM2019ER$ER72081
+  )
+  
+  
+  mort_data_2021 <- data.table(
+    year = 2021,
+    int_no_ind = FAM2021ER$int_no_ind,
+    mort1year = FAM2021ER$ER78061, 
+    mort2year = FAM2021ER$ER78082
+  )
+  
+  #  mort_data 1999 -  2021 combined
+  mort_data <- rbind(mort_data_1999,mort_data_2001,mort_data_2003,mort_data_2005,mort_data_2007,mort_data_2009,mort_data_2011,mort_data_2013,mort_data_2015,mort_data_2017, mort_data_2019, mort_data_2021, fill = TRUE)
+  
+  #  d2a merged with mort_data by both year and int_no_ind
+  d2 <- merge(d2, mort_data, by = c("year", "int_no_ind"), all.x = TRUE)
+  save(d2, file = "D:/R data/d/d2/thistimeok.RData")
+  colnames(d2)
+  library(tidyverse) 
+  base_cpi <- 271
+class(d4a)  
+library(data.table)
+
+# Ensure both are data.tables
+setDT(d4a)
+setDT(cpi_data)
+d4a[cpi_data, cpi := i.cpi, on = "year"]
+colnames(d)
+nominal_vars <- c("mort1","mort2","mort_expen","proptax_expen","rent_expen","tot_expen","valuehouse_ifrent","wlth_no_equity","wlth_w_equity") 
+d4a[, paste0("real_", nominal_vars) := lapply(.SD, function(x) (x * base_cpi)/cpi),
+    .SDcols = nominal_vars]
+fwrite(d4a, "psid_real_adjusted.csv")  
+getwd()  # Prints the full folder path where files are saved
+library(haven)
+write_dta(d4a, "psid_real_adjusted.dta")
+colnames(d2) <- trimws(colnames(d))  # Removes leading/trailing whitespace from all names
+d2 <- d2[!duplicated(colnames(d2))]
+# For data.table (best approach)
+d2 <- d2[, .SD, .SDcols = !duplicated(colnames(d2))]
+cwf <- openxlsx::read.xlsx("C:/Users/2022/Desktop/psid.xlsx")
+getNamesPSID("ER72081", cwf, years = NULL)
+colnames(d2) <- trimws(colnames(d2))  # Removes leading/trailing spaces/tabs
+d2 <- d2[, .SD, .SDcols = !duplicated(colnames(d2))]
+colnames(d2) <- trimws(colnames(d2))  # Removes leading/trailing spaces/tabs
+d2 <- d2[, .SD, .SDcols = !duplicated(colnames(d2))]
+colnames(d2)
+base_cpi <- 271
+setDT(cpi_data) #really sure its data.table
+d2[cpi_data, cpi := i.cpi, on = "year"]
+nominal_vars <- c("car_mainten_expen","child_expen_prevy","educ_expen_prevy","fam_income_prevy","food_expen","gas_expen","health_expen","house_expen","house_value","mort1","mort2","mort_expen","park_expen_month","proptax_expen","pub_trans_expen_month","rent_expen","taxi_expen_month","tot_expen","trans_incom_prevy","util_expen","cloth_expen_prevy","otr_recre_expen_prevy","phone_expen","trips_expen_prevy","valuehouse_ifrent","wlth_no_equity","wlth_w_equity")
+
+d2[, paste0("real_", nominal_vars) := lapply(.SD, function(x) (x * base_cpi)/cpi),
+   .SDcols = nominal_vars]
+
+library(data.table)
+
+# Create a copy of d2
+
+d20 <- copy(d2)
+library(data.table)
+setDT(d20)  # Ensure data is a data.table
+
+
+# Define placeholder values (using proper variable names)
+placeholder_rules <- list(
+  real_mort1 = c(9999999, 9999998),
+  real_mort2 = c(9999999, 9999998),
+  int1prc = c(98, 99),
+  int2prc = c(98, 99),
+  mort_rate1fv = c(8, 9),
+  mort1year = c(9998, 9999),
+  mort2year = c(9998, 9999),
+  is2refin = c(8, 9),
+  `refin1_y/n` = c(8, 9),  # Backticks for special characters
+  mort_rate2fv = c(8, 9),
+  `mort_y/n` = c(8, 9),    # Backticks here too
+  real_house_value = c(99999999, 99999998),
+  educ_ref = 99
+)
+
+# Corrected placeholder checker
+is_placeholder <- function(var_name, values) {
+  if (var_name %in% names(d20)) {
+    d20[[var_name]] %in% values
+  } else {
+    rep(FALSE, nrow(d20))  # Fixed to reference d20
+  }
+}
+
+# Apply filtering
+d20_clean <- d20[!Reduce(`|`, lapply(names(placeholder_rules), function(var) {
+  is_placeholder(var, placeholder_rules[[var]])
+}))]
+
+
+library(data.table)
+
+# Ensure d20_clean is a data.table
+setDT(d20_clean)
+
+# List of variables to winsorize (same as your list)
+real_vars <- c(
+  "real_car_mainten_expen", "real_child_expen_prevy", "real_educ_expen_prevy",
+  "real_fam_income_prevy", "real_food_expen", "real_gas_expen",
+  "real_health_expen", "real_house_expen", "real_house_value",
+  "real_mort1", "real_mort2", "real_mort_expen", "real_proptax_expen",
+  "real_rent_expen", "real_tot_expen", "real_trans_incom_prevy",
+  "real_util_expen", "real_cloth_expen_prevy", "real_otr_recre_expen_prevy",
+  "real_phone_expen", "real_trips_expen_prevy", "real_valuehouse_ifrent",
+  "real_wlth_no_equity", "real_wlth_w_equity"
+)
+
+# Winsorization function (1st and 99th percentiles)
+winsorize <- function(x) {
+  q1 <- quantile(x, 0.01, na.rm = TRUE)
+  q99 <- quantile(x, 0.99, na.rm = TRUE)
+  x[x < q1] <- q1
+  x[x > q99] <- q99
+  return(x)
+}
+
+# Apply winsorization to each variable in d20_clean
+for (var in real_vars) {
+  if (var %in% names(d20_clean)) {
+    d20_clean[, (var) := winsorize(get(var))]
+  } else {
+    warning(paste("Variable", var, "not found in d20_clean. Skipping."))
+  }
+}
+summary(d2[, .SD, .SDcols = real_vars])
+# Verify results
+summary(d20_clean[, .SD, .SDcols = real_vars])
+
+# Method 1: Base R subsetting
+library(data.table)
+setDT(d10_clean)
+
+# Create real_nonshelcons with year-specific formulas
+d10_clean[, real_nonshelcons := fcase(
+  # 1999-2015 formula
+  year %in% 1999:2015,
+  real_tot_expen - real_mort_expen - real_rent_expen - real_proptax_expen,
+  
+  # 2017-2021 formula (with valuehouse_ifrent added)
+  year %in% 2017:2021,
+  real_tot_expen + valuehouse_ifrent - real_mort_expen - real_rent_expen - real_proptax_expen,
+  
+  # Default for other years (2016, etc.)
+  default = NA_real_
+)]
+
+# Add methodology warning for 2017+ (fixed parentheses)
+if (any(d10_clean$year %in% 2017:2021)) {
+  message("NOTE: 2017-2021 non-shelter consumption includes valuehouse_ifrent")
+}
+# Method 2: dplyr approach
+library(dplyr)
+d20_clean %>% 
+  select(year, age_ref, pid) %>% 
+  View()
+d10 <- copy(d20_clean)# for sorting and dropping abmitious 
+library(data.table)
+setDT(d10) # Ensure it's a data.table
+
+d10 <- copy(d20)
+d10_clean <- d10[order(pid, year), 
+][, .SD[!any(diff(year) > 2) & .N >= 2], by = pid]  # Changed to >2
+
+library(data.table)
+setDT(d10_clean)
+
+# Step 1: Recode education levels
+d10_clean[, educ := fcase(
+  educ_ref %in% 0:11, 1L,       # 0-11 grades (including no schooling)
+  educ_ref == 12, 2L,           # High school (12 grades)
+  educ_ref %in% 13:17, 3L,      # College (13-17 grades)
+  default = NA_integer_         # Set missing for values >17 or NA
+)]
+
+# Step 2: Forward/backward fill missing education values within person timelines
+d10_clean <- d10_clean[order(pid, year), 
+][, educ := nafill(educ, "locf"), by = pid]  # Forward fill
+
+d10_clean <- d10_clean[order(pid, -year), 
+][, educ := nafill(educ, "locf"), by = pid]  # Backward fill
+
+# Restore original sort order
+setorder(d10_clean, pid, year)
+
+# Step 3: Take maximum education achieved per person
+d10_clean[, maxed := if(any(!is.na(educ))) max(educ, na.rm = TRUE), by = pid
+][, educ := fifelse(is.na(educ), maxed, educ)
+][, maxed := NULL]
+
+# Optional: Create educ2 to preserve original values
+d10_clean[, educ2 := educ_ref]
+
+
+library(data.table)
+setDT(d10_clean)
+
+# List of variables to sum
+nondur_vars <- c(
+  "real_car_mainten_expen",     
+  "real_child_expen_prevy",     
+  "real_educ_expen_prevy",     
+  "real_food_expen",            
+  "real_gas_expen",            
+  "real_health_expen",                       
+  "real_util_expen",            
+  "real_cloth_expen_prevy",    
+  "real_otr_recre_expen_prevy", 
+  "real_phone_expen",           
+  "real_trips_expen_prevy",    
+  "real_valuehouse_ifrent"
+)
+
+# Check if all variables exist in dataset
+existing_vars <- nondur_vars[nondur_vars %in% names(d10_clean)]
+
+# Create new variable by summing components
+d10_clean[, real_nondurcons := rowSums(.SD, na.rm = TRUE), 
+          .SDcols = existing_vars]
+
+library(data.table)
+setDT(d10_clean)
+
+# First, verify variable names match your dataset
+expected_vars <- c("real_tot_expen", "real_mort_expen", "real_rent_expen",
+                   "real_proptax_expen", "valuehouse_ifrent")
+
+# Check which variables exist
+existing_vars <- expected_vars[expected_vars %in% names(d10_clean)]
+if(length(missing <- setdiff(expected_vars, existing_vars)) > 0) {
+  warning("Missing variables: ", paste(missing, collapse = ", "))
+}
+
+library(data.table)
+setDT(d10_clean)
+
+# Create real_nonshelcons with year-specific formulas
+d10_clean[, real_nonshelcons := fcase(
+  # 1999-2015 formula
+  year %in% 1999:2015,
+  real_tot_expen - real_mort_expen - real_rent_expen - real_proptax_expen,
+  
+  # 2017-2021 formula (with valuehouse_ifrent added)
+  year %in% 2017:2021,
+  real_tot_expen + valuehouse_ifrent - real_mort_expen - real_rent_expen - real_proptax_expen,
+  
+  # Default for other years (2016, etc.)
+  default = NA_real_
+)]
+
+# Add methodology warning for 2017+ (fixed parentheses)
+if (any(d10_clean$year %in% 2017:2021)) {
+  message("NOTE: 2017-2021 non-shelter consumption includes valuehouse_ifrent")
+}
+colnames(d10_clean)
+library(data.table)
+setDT(d10_clean)
+
+# Create real_nonshelcons with year-specific formulas
+d10_clean[, real_nonshelcons := fcase(
+  # 1999-2015 formula
+  year %in% 1999:2015,
+  real_tot_expen - real_mort_expen - real_rent_expen - real_proptax_expen,
+  
+  # 2017-2021 formula (with valuehouse_ifrent added)
+  year %in% 2017:2021,
+  real_tot_expen + valuehouse_ifrent - real_mort_expen - real_rent_expen - real_proptax_expen,
+  
+  # Default for other years (2016, etc.)
+  default = NA_real_
+)]
+
+# Add methodology warning for 2017+ (fixed parentheses)
+if (any(d10_clean$year %in% 2017:2021)) {
+  message("NOTE: 2017-2021 non-shelter consumption includes valuehouse_ifrent")
+}
+
+# With identifiers
+d10_clean[1:1000, .(pid, year, real_nondurcons, real_nonshelcons)]
+
+
+library(data.table)
+setDT(d10_clean)
+
+# Check if variables exist
+mort_vars <- c("real_mort1", "real_mort2")
+existing_vars <- mort_vars[mort_vars %in% names(d10_clean)]
+
+# Create real_mort (sum existing components)
+if(length(existing_vars) > 0) {
+  d10_clean[, real_mort := rowSums(.SD, na.rm = TRUE), .SDcols = existing_vars]
+} else {
+  warning("No mortgage variables found - 'real_mort1' and 'real_mort2' missing")
+}
+
+# Verify results
+d10_clean[, .(real_mort1, real_mort2, real_mort)][1:10]
+
+library(data.table)
+setDT(d10_clean)
+
+### STEP 1: Clean mortgage variables ###
+# Define placeholder codes to replace with NA
+mort_placeholders <- c(9999999, 9999998)
+
+d10_clean[, `:=`(
+  real_mort1 = fifelse(real_mort1 %in% mort_placeholders, NA_real_, real_mort1),
+  real_mort2 = fifelse(real_mort2 %in% mort_placeholders, NA_real_, real_mort2)
+)]
+
+### OPTIONAL: Winsorize after cleaning ###
+# (If you want to cap extreme values instead of NA)
+winsorize <- function(x, p = 0.01) {
+  q <- quantile(x, c(p, 1-p), na.rm = TRUE)
+  x[x < q[1]] <- q[1]
+  x[x > q[2]] <- q[2]
+  x
+}
+
+d10_clean[, `:=`(
+  real_mort1 = winsorize(real_mort1),
+  real_mort2 = winsorize(real_mort2)
+)]
+
+### STEP 2: Create real_mort ###
+d10_clean[, real_mort := rowSums(.SD, na.rm = TRUE), 
+          .SDcols = c("real_mort1", "real_mort2")]
+
+### STEP 3: Verify ###
+d10_clean[, .(
+  real_mort1 = summary(real_mort1),
+  real_mort2 = summary(real_mort2), 
+  real_mort = summary(real_mort)
+)]
+library(ggplot2)
+ggplot(d10_clean) +
+  geom_histogram(aes(real_mort1), binwidth = 1000) +
+  geom_vline(xintercept = quantile(d10_clean$real_mort1, c(0.01, 0.99), na.rm = TRUE), 
+             color = "red", linetype = "dashed")
+library(data.table)
+setDT(d10_clean)
+
+# 1. Remove placeholder codes first (critical)
+d10_clean[, `:=`(
+  real_mort1 = fifelse(real_mort1 %in% c(9999999, 9999998), NA_real_, real_mort1),
+  real_mort2 = fifelse(real_mort2 %in% c(9999999, 9999998), NA_real_, real_mort2)
+)]
+
+# 2. Calculate 99th percentile (excluding NAs)
+mort1_99 <- quantile(d10_clean$real_mort1, 0.95, na.rm = TRUE)
+mort2_99 <- quantile(d10_clean$real_mort2, 0.95, na.rm = TRUE)
+
+# 3. Trim values above percentile
+d10_clean[, `:=`(
+  real_mort1 = fifelse(real_mort1 > mort1_95, NA_real_, real_mort1),
+  real_mort2 = fifelse(real_mort2 > mort2_95, NA_real_, real_mort2)
+)]
+
+# 4. Create real_mort sum
+d10_clean[, real_mort := rowSums(.SD, na.rm = TRUE), 
+          .SDcols = c("real_mort1", "real_mort2")]
+
+# Verify
+summary(d10_clean[, .(real_mort1, real_mort2, real_mort)])
+summary(d10[, .(real_mort1, real_mort2)])
+# Count observations where real_mort1 > 1,000,000
+d10_clean[real_mort1 > 1e6, .N]  # .N gives the count
+library(ggplot2)
+ggplot(d10_clean, aes(real_mort1)) + 
+  geom_histogram(binwidth = 1e5) + 
+  geom_vline(xintercept = 1e6, color = "red") +
+  scale_x_continuous(labels = scales::comma) +
+  labs(title = "Distribution of real_mort1 (1m threshold in red)")
+ggplot(d10_clean, aes(real_mort2)) + 
+  geom_histogram(binwidth = 1e5) + 
+  geom_vline(xintercept = 1e6, color = "red") +
+  scale_x_continuous(labels = scales::comma) +
+  labs(title = "Distribution of real_mort2 (1m threshold in red)")
+# Cap mortgages at 10,000,000 (for non-NA values)
+d10_clean[, `:=`(
+  real_mort1 = fifelse(real_mort1 > 1e7, 1e7, real_mort1),
+  real_mort2 = fifelse(real_mort2 > 1e7, 1e7, real_mort2)
+)]
+# Recalculate the sum (if previously created)
+d10_clean[, real_mort := rowSums(.SD, na.rm = TRUE), 
+          .SDcols = c("real_mort1", "real_mort2")]
+d200 <- copy(d10_clean)
+######################
+# placeholder values 
+placeholder_rules <- list(
+  real_mort1 = c(9999999, 9999998),
+  real_mort2 = c(9999999, 9999998),
+  int1prc = c(98, 99),
+  int2prc = c(98, 99),
+  mort_rate1fv = c(8, 9),
+  mort1year = c(9998, 9999),
+  mort2year = c(9998, 9999),
+  is2refin = c(8, 9),
+  `refin1_y/n` = c(8, 9),  #  special characters
+  mort_rate2fv = c(8, 9),
+  `mort_y/n` = c(8, 9),    # special
+  real_house_value = c(99999999, 99999998),
+  educ_ref = 99
+)
+
+#  placeholder checker corrected
+is_placeholder <- function(var_name, values) {
+  if (var_name %in% names(d20)) {
+    d20[[var_name]] %in% values
+  } else {
+    rep(FALSE, nrow(d20))  # Fixed to reference d20
+  }
+}
+
+#  filtering applied
+d20_clean <- d20[!Reduce(`|`, lapply(names(placeholder_rules), function(var) {
+  is_placeholder(var, placeholder_rules[[var]])
+}))]
+
+GETTING RID OF OUTLIERS 1-99th percentile 
+
+library(data.table)
+
+# make sure d20_clean is a data.table
+setDT(d20_clean)
+
+# List of variables to winsorize (same as your list)
+real_vars <- c(
+  "real_car_mainten_expen", "real_child_expen_prevy", "real_educ_expen_prevy",
+  "real_fam_income_prevy", "real_food_expen", "real_gas_expen",
+  "real_health_expen", "real_house_expen", "real_house_value",
+  "real_mort1", "real_mort2", "real_mort_expen", "real_proptax_expen",
+  "real_rent_expen", "real_tot_expen", "real_trans_incom_prevy",
+  "real_util_expen", "real_cloth_expen_prevy", "real_otr_recre_expen_prevy",
+  "real_phone_expen", "real_trips_expen_prevy", "real_valuehouse_ifrent",
+  "real_wlth_no_equity", "real_wlth_w_equity"
+)
+
+# Winsorization function (1st and 99th percentiles)
+winsorize <- function(x) {
+  q1 <- quantile(x, 0.01, na.rm = TRUE)
+  q99 <- quantile(x, 0.99, na.rm = TRUE)
+  x[x < q1] <- q1
+  x[x > q99] <- q99
+  return(x)
+}
+
+
+for (var in real_vars) {
+  if (var %in% names(d20_clean)) {
+    d20_clean[, (var) := winsorize(get(var))]
+  } else {
+    warning(paste("Variable", var, "not found in d20_clean. Skipping."))
+  }
+}
+
+NOW AS IN BLUNDELL
+1 sorting by person amd year and dropping intermittent 
+d10 <- copy(d20_clean)# for sorting and dropping abmitious 
+
+d10 <- d10[order(pid, year),  # Sort by person-year (STEP 1)
+][, .SD[!any(diff(year) > 1) & .N >= 2], by = pid]  # Drop intermittents (STEP 2) ahahah its 2 year survey everyone disappeared 
+
+d10_clean <- d10[order(pid, year), 
+][, .SD[!any(diff(year) > 2) & .N >= 2], by = pid]  # Changed to >2 # better it's d10_clean 52k obs
+
+
+#  education levels
+d10_clean[, educ := fcase(
+  educ_ref %in% 0:11, 1L,       # 0-11 grades (including no schooling)
+  educ_ref == 12, 2L,           # High school (12 grades)
+  educ_ref %in% 13:17, 3L,      # College (13-17 grades)
+  default = NA_integer_         # Set missing for values >17 or NA
+)]
+
+# SForward/backward missing education values filled
+d10_clean <- d10_clean[order(pid, year), 
+][, educ := nafill(educ, "locf"), by = pid]  # Forward fill
+
+d10_clean <- d10_clean[order(pid, -year), 
+][, educ := nafill(educ, "locf"), by = pid]  # Backward fill
+
+#  original sort order
+setorder(d10_clean, pid, year)
+
+#  maximum education achieved per person
+d10_clean[, maxed := if(any(!is.na(educ))) max(educ, na.rm = TRUE), by = pid
+][, educ := fifelse(is.na(educ), maxed, educ)
+][, maxed := NULL]
+
+
+
+
+CREATING 2 CONSUMPTION VARIABLES AS DEFINED IN LITERATURE: NON-SHELTER, NON-DURABLE
+I define NON-DURABLE CONSUMPTION as a sum of:
+  "real_car_mainten_expen"     
+"real_child_expen_prevy"     
+"real_educ_expen_prevy"     
+"real_food_expen"            
+"real_gas_expen"            
+"real_health_expen"                       
+"real_park_expen_month"  # sus            
+"real_pub_trans_expen_month" #kinda sus some values repeat couple times...suggestion?
+"real_taxi_expen_month"  # cant be used. values are suspicious there are negative values, absolute majority is 0 and those that appear repeat so i discard it. I also would need to multiply it by 12. mess.            
+"real_util_expen"            
+"real_cloth_expen_prevy"    
+"real_otr_recre_expen_prevy" 
+"real_phone_expen"           
+"real_trips_expen_prevy"    
+"real_valuehouse_ifrent"      
+following G.Kaplan(2016) to best of my ability and availability of data
+for now lets exclude 3 month variables (idk it could be rounding method or what)
+
+
+nondur_vars <- c(
+  "real_car_mainten_expen",     
+  "real_child_expen_prevy",     
+  "real_educ_expen_prevy",     
+  "real_food_expen",            
+  "real_gas_expen",            
+  "real_health_expen",                       
+  "real_util_expen",            
+  "real_cloth_expen_prevy",    
+  "real_otr_recre_expen_prevy", 
+  "real_phone_expen",           
+  "real_trips_expen_prevy",    
+  "real_valuehouse_ifrent"
+)
+
+existing_vars <- nondur_vars[nondur_vars %in% names(d10_clean)]
+
+d10_clean[, real_nondurcons := rowSums(.SD, na.rm = TRUE), 
+          .SDcols = existing_vars]
+
+NON-SHELTER CONSUMPTION:
+  1999-2015 it's real_tot_expen - real_mort_expen - real_rent_expend - real_prop_tax_expen
+2017-2021 it's total expenditure +  valuehouse_ifrent - mortgage expenditure - rent expenditure - property tax. no insurance substracted
+Total Expenditure: Generated variable combining all expenditures, excluding rent value ER81850.
+
+
+#  real_nonshelcons with year-specific formulas
+d10_clean[, real_nonshelcons := fcase(
+  
+  # 1999-2015 formula
+  year %in% 1999:2015,
+  real_tot_expen - real_mort_expen - real_rent_expen - real_proptax_expen,
+  
+  # 2017-2021 formula (with valuehouse_ifrent added)
+  year %in% 2017:2021,
+  real_tot_expen + valuehouse_ifrent - real_mort_expen - real_rent_expen - real_proptax_expen,
+  
+  }
+
+ADDITIONAL VARIABLE REAL_TOT_MORT    
+REAL_MORT1+REAL_MORT2
+
+mort_vars <- c("real_mort1", "real_mort2")
+existing_vars <- mort_vars[mort_vars %in% names(d10_clean)]
+
+#  real_mort (sum existing components)
+if(length(existing_vars) > 0) {
+  d10_clean[, real_mort := rowSums(.SD, na.rm = TRUE), .SDcols = existing_vars]
+} else {
+  warning("No mortgage variables found - 'real_mort1' and 'real_mort2' missing")
+}
+rm(d10)
+
+
+
+
+
+
+
+
+
+
+
+
+
+REAL VARIABLES
+
+library(tidyverse) 
+base_cpi <- 271 # source: www.minneapolisfed.org https://www.minneapolisfed.org/about-us/monetary-policy/inflation-calculator/consumer-price-index-1913-
+class(d4a)  
+library(data.table)
+
+setDT(d4a)
+setDT(cpi_data) #really sure its data.table
+d2[cpi_data, cpi := i.cpi, on = "year"]
+colnames(d2)
+####################################################################
+nominal_vars <- c("mort1","mort2","mort_expen","proptax_expen","rent_expen","tot_expen","valuehouse_ifrent","wlth_no_equity","wlth_w_equity") 
+d4a[, paste0("real_", nominal_vars) := lapply(.SD, function(x) (x * base_cpi)/cpi),
+    .SDcols = nominal_vars]
+###########################edit:####################################
+nominal_vars <- c("car_mainten_expen","child_expen_prevy","educ_expen_prevy","fam_income_prevy","food_expen","gas_expen","health_expen","house_expen","house_value","mort1","mort2","mort_expen","park_expen_month","proptax_expen","pub_trans_expen_month","rent_expen","taxi_expen_month","tot_expen","trans_incom_prevy","util_expen","cloth_expen_prevy","otr_recre_expen_prevy","phone_expen","trips_expen_prevy","valuehouse_ifrent","wlth_no_equity","wlth_w_equity")
+
+d2[, paste0("real_", nominal_vars) := lapply(.SD, function(x) (x * base_cpi)/cpi),
+   .SDcols = nominal_vars]
+
+creating yearly variables out of monthly:
+  
+  "real_park_expen_month","real_pub_trans_expen_month","real_taxi_expen_month"                
+
+
+GETTING RID OF 9,999,999 and 9,999,998 values from:
+  
+  real_mort1 (9,999,999 and 9,999,998) "real_mort1"
+real_mort2 (9,999,999 and 9,999,998) "real_mort2"
+current interest rate whole % (98 and 99)"int1prc" 
+current interest rate whole % (98 and 99) "int2prc"
+current interest rate fixed variable (8 and 9) "mort_rate1fv"
+current interest rate fixed variable (8 and 9) "mort_rate2fv"
+year obtained loan (9,998 and 9,999) "mort1year" 
+year obtained loan (9,998 and 9,999) "mort2year" 
+2 refinanced? (8 and 9) "is2refin"
+1 refinanced? (8 and 9) "refin1_y/n" 
+age (999) "age_ref"
+have mortgage? (8 and 9) "mort_y/n" 
+house value (99,999,999 and 99,999,998) "real_house_value"
+education (99) "educ_ref"   
+
+my main data.table is d2 so 
+d20 <- copy(d2)
+library(data.table)
+
+
+# placeholder values 
+placeholder_rules <- list(
+  real_mort1 = c(9999999, 9999998),
+  real_mort2 = c(9999999, 9999998),
+  int1prc = c(98, 99),
+  int2prc = c(98, 99),
+  mort_rate1fv = c(8, 9),
+  mort1year = c(9998, 9999),
+  mort2year = c(9998, 9999),
+  is2refin = c(8, 9),
+  `refin1_y/n` = c(8, 9),  #  special characters
+  mort_rate2fv = c(8, 9),
+  `mort_y/n` = c(8, 9),    # special
+  real_house_value = c(99999999, 99999998),
+  educ_ref = 99
+)
+
+#  placeholder checker corrected
+is_placeholder <- function(var_name, values) {
+  if (var_name %in% names(d20)) {
+    d20[[var_name]] %in% values
+  } else {
+    rep(FALSE, nrow(d20))  # Fixed to reference d20
+  }
+}
+
+#  filtering applied
+d20_clean <- d20[!Reduce(`|`, lapply(names(placeholder_rules), function(var) {
+  is_placeholder(var, placeholder_rules[[var]])
+}))]
+
+GETTING RID OF OUTLIERS 1-99th percentile 
+
+library(data.table)
+
+# make sure d20_clean is a data.table
+setDT(d20_clean)
+
+# List of variables to winsorize (same as your list)
+real_vars <- c(
+  "real_car_mainten_expen", "real_child_expen_prevy", "real_educ_expen_prevy",
+  "real_fam_income_prevy", "real_food_expen", "real_gas_expen",
+  "real_health_expen", "real_house_expen", "real_house_value",
+  "real_mort1", "real_mort2", "real_mort_expen", "real_proptax_expen",
+  "real_rent_expen", "real_tot_expen", "real_trans_incom_prevy",
+  "real_util_expen", "real_cloth_expen_prevy", "real_otr_recre_expen_prevy",
+  "real_phone_expen", "real_trips_expen_prevy", "real_valuehouse_ifrent",
+  "real_wlth_no_equity", "real_wlth_w_equity"
+)
+
+# Winsorization function (1st and 99th percentiles)
+winsorize <- function(x) {
+  q1 <- quantile(x, 0.01, na.rm = TRUE)
+  q99 <- quantile(x, 0.99, na.rm = TRUE)
+  x[x < q1] <- q1
+  x[x > q99] <- q99
+  return(x)
+}
+
+
+for (var in real_vars) {
+  if (var %in% names(d20_clean)) {
+    d20_clean[, (var) := winsorize(get(var))]
+  } else {
+    warning(paste("Variable", var, "not found in d20_clean. Skipping."))
+  }
+}
+
+NOW AS IN BLUNDELL
+1 sorting by person amd year and dropping intermittent 
+d10 <- copy(d20_clean)# for sorting and dropping abmitious 
+
+# d10 <- d10[order(pid, year),  # Sort by person-year (STEP 1)
+# ][, .SD[!any(diff(year) > 1) & .N >= 2], by = pid]  # Drop intermittents (STEP 2) ahahah its 2 year survey everyone disappeared 
+
+d10_clean <- d10[order(pid, year), 
+][, .SD[!any(diff(year) > 2) & .N >= 2], by = pid]  # Changed to >2 # better it's d10_clean 52k obs
+
+
+#  education levels
+d10_clean[, educ := fcase(
+  educ_ref %in% 0:11, 1L,       # 0-11 grades (including no schooling)
+  educ_ref == 12, 2L,           # High school (12 grades)
+  educ_ref %in% 13:17, 3L,      # College (13-17 grades)
+  default = NA_integer_         # Set missing for values >17 or NA
+)]
+
+# SForward/backward missing education values filled
+d10_clean <- d10_clean[order(pid, year), 
+][, educ := nafill(educ, "locf"), by = pid]  # Forward fill
+
+d10_clean <- d10_clean[order(pid, -year), 
+][, educ := nafill(educ, "locf"), by = pid]  # Backward fill
+
+#  original sort order
+setorder(d10_clean, pid, year)
+
+#  maximum education achieved per person
+d10_clean[, maxed := if(any(!is.na(educ))) max(educ, na.rm = TRUE), by = pid
+][, educ := fifelse(is.na(educ), maxed, educ)
+][, maxed := NULL]
+
+
+
+
+CREATING 2 CONSUMPTION VARIABLES AS DEFINED IN LITERATURE: NON-SHELTER, NON-DURABLE
+I define NON-DURABLE CONSUMPTION as a sum of:
+  "real_car_mainten_expen"     
+"real_child_expen_prevy"     
+"real_educ_expen_prevy"     
+"real_food_expen"            
+"real_gas_expen"            
+"real_health_expen"                       
+"real_park_expen_month"  # sus            
+"real_pub_trans_expen_month" #kinda sus some values repeat couple times...suggestion?
+"real_taxi_expen_month"  # cant be used. values are suspicious there are negative values, absolute majority is 0 and those that appear repeat so i discard it. I also would need to multiply it by 12. mess.            
+"real_util_expen"            
+"real_cloth_expen_prevy"    
+"real_otr_recre_expen_prevy" 
+"real_phone_expen"           
+"real_trips_expen_prevy"    
+"real_valuehouse_ifrent"      
+following G.Kaplan(2016) to best of my ability and availability of data
+for now lets exclude 3 month variables (idk it could be rounding method or what)
+
+cwf <- psid_3_  # Copies the data into `cwf`
+getNamesPSID("ER78061", cwf, years = NULL)
+install.packages("PSIDR")  # Install if not already installed
+library(PSIDR)            # Load the package
+
+nondur_vars <- c(
+  "real_car_mainten_expen",     
+  "real_child_expen_prevy",     
+  "real_educ_expen_prevy",     
+  "real_food_expen",            
+  "real_gas_expen",            
+  "real_health_expen",                       
+  "real_util_expen",            
+  "real_cloth_expen_prevy",    
+  "real_otr_recre_expen_prevy", 
+  "real_phone_expen",           
+  "real_trips_expen_prevy",    
+  "real_valuehouse_ifrent"
+)
+
+existing_vars <- nondur_vars[nondur_vars %in% names(d10_clean)]
+
+d10_clean[, real_nondurcons := rowSums(.SD, na.rm = TRUE), 
+          .SDcols = existing_vars]
+
+NON-SHELTER CONSUMPTION:
+  1999-2015 it's real_tot_expen - real_mort_expen - real_rent_expend - real_prop_tax_expen
+2017-2021 it's total expenditure +  valuehouse_ifrent - mortgage expenditure - rent expenditure - property tax. no insurance substracted
+Total Expenditure: Generated variable combining all expenditures, excluding rent value ER81850.
+
+
+library(data.table)
+setDT(d10_clean)
+
+# Create real_nonshelcons with proper year-specific formulas
+d10_clean[, real_nonshelcons := fcase(
+  # 1999-2015 formula
+  year %in% 1999:2015,
+  real_tot_expen - real_mort_expen - real_rent_expen - real_proptax_expen,
+  
+  # 2017-2021 formula (with valuehouse_ifrent added)
+  year %in% 2017:2021,
+  real_tot_expen + real_valuehouse_ifrent - real_mort_expen - real_rent_expen - real_proptax_expen,
+  
+  # Default for other years (2016, etc.)
+  default = NA_real_
+)]
+
+# Verify the calculation
+d10_clean[, .(
+  years = paste(min(year), max(year), sep = "-"),
+  mean_nonshelcons = mean(real_nonshelcons, na.rm = TRUE),
+  by = .(formula_group = fifelse(year %in% 1999:2015, "1999-2015", 
+                                 fifelse(year %in% 2017:2021, "2017-2021", "Other")))
+]
+
+ADDITIONAL VARIABLE REAL_TOT_MORT    
+REAL_MORT1+REAL_MORT2
+
+mort_vars <- c("real_mort1", "real_mort2")
+existing_vars <- mort_vars[mort_vars %in% names(d10_clean)]
+
+#  real_mort (sum existing components)
+if(length(existing_vars) > 0) {
+  d10_clean[, real_mort := rowSums(.SD, na.rm = TRUE), .SDcols = existing_vars]
+} else {
+  warning("No mortgage variables found - 'real_mort1' and 'real_mort2' missing")
+}
+
+
+library(data.table)
+setDT(d10_clean)
+
+### STEP 1: Clean placeholder codes (if not already done)
+mort_placeholders <- c(9999999, 9999998, 999999999, 1e9)
+d10_clean[, `:=`(
+  real_mort1 = fifelse(real_mort1 %in% mort_placeholders, NA_real_, real_mort1),
+  real_mort2 = fifelse(real_mort2 %in% mort_placeholders, NA_real_, real_mort2)
+)]
+
+### STEP 2: Calculate 95th percentiles (excluding NAs)
+mort1_95 <- quantile(d10_clean$real_mort1, 0.95, na.rm = TRUE)
+mort2_95 <- quantile(d10_clean$real_mort2, 0.95, na.rm = TRUE)
+
+### STEP 3: Cap values at 95th percentile
+d10_clean[, `:=`(
+  real_mort1 = fifelse(real_mort1 > mort1_95, mort1_95, real_mort1),
+  real_mort2 = fifelse(real_mort2 > mort2_95, mort2_95, real_mort2)
+)]
+
+### STEP 4: Recalculate real_mort (sum of capped values)
+d10_clean[, real_mort := rowSums(.SD, na.rm = TRUE), 
+          .SDcols = c("real_mort1", "real_mort2")]
+
+### VERIFICATION:
+# View new distributions
+d10_clean[, .(
+  real_mort1 = list(summary(real_mort1)),
+  real_mort2 = list(summary(real_mort2)),
+  real_mort = list(summary(real_mort))
+]
+
+# Plot distributions
+library(ggplot2)
+ggplot(melt(d10_clean[, .(real_mort1, real_mort2, real_mort)]), 
+       aes(value)) +
+  geom_histogram(bins = 50) +
+  facet_wrap(~variable, scales = "free") +
+  scale_x_continuous(labels = scales::comma)
+
+
+
+
+
+
+
+
+
+
+
+library(data.table)
+setDT(d10_clean)
+
+### STEP 1: Clean placeholder codes (if not already done)
+mort_placeholders <- c(9999999, 9999998, 999999999, 1e9)
+d10_clean[, `:=`(
+  real_mort1 = fifelse(real_mort1 %in% mort_placeholders, NA_real_, real_mort1),
+  real_mort2 = fifelse(real_mort2 %in% mort_placeholders, NA_real_, real_mort2)
+)]
+
+### STEP 2: Calculate 95th percentiles (excluding NAs)
+mort1_95 <- quantile(d10_clean$real_mort1, 0.95, na.rm = TRUE)
+mort2_95 <- quantile(d10_clean$real_mort2, 0.95, na.rm = TRUE)
+
+### STEP 3: Cap values at 95th percentile
+d10_clean[, `:=`(
+  real_mort1 = fifelse(real_mort1 > mort1_99, mort1_99, real_mort1),
+  real_mort2 = fifelse(real_mort2 > mort2_99, mort2_99, real_mort2)
+)]
+
+### STEP 4: Recalculate real_mort (sum of capped values)
+d10_clean[, real_mort := rowSums(.SD, na.rm = TRUE), 
+          .SDcols = c("real_mort1", "real_mort2")]
+
+### VERIFICATION (FIXED SYNTAX):
+# Option 1: Simple summary
+d10_clean[, .(
+  real_mort1_p99 = mort1_99,
+  real_mort2_p99 = mort2_99,
+  max_mort1 = max(real_mort1, na.rm = TRUE),
+  max_mort2 = max(real_mort2, na.rm = TRUE))
+]
+
+# Option 2: Detailed summary (corrected)
+summary_list <- list(
+  real_mort1 = summary(d10_clean$real_mort1),
+  real_mort2 = summary(d10_clean$real_mort2),
+  real_mort = summary(d10_clean$real_mort)
+)
+print(summary_list)
+
+# Plot distributions
+if(require(ggplot2)) {
+  ggplot(melt(d10_clean[, .(real_mort1, real_mort2, real_mort)]), 
+         aes(value)) +
+    geom_histogram(bins = 50) +
+    facet_wrap(~variable, scales = "free") +
+    scale_x_continuous(labels = scales::comma)
+}
+
+library(data.table)
+setDT(d10_clean)
+
+# Remove rows where ref_age < 25 or > 65
+d10_clean <- d10_clean[age_ref >= 25 & age_ref <= 65]
+
+# Verify the age range after filtering
+summary(d10_clean$ref_age)
+save(d2, file = "C:/Users/2022/Desktop/d2.RData")
+
+library(data.table)
+library(ggplot2)
+setDT(d10_clean)
+
+# 1. Calculate year-to-year changes by pid
+d10_clean <- d10_clean[order(pid, year), 
+][, `:=`(
+  chg_nondurcons = real_nondurcons - shift(real_nondurcons),
+  chg_nonshelcons = real_nonshelcons - shift(real_nonshelcons),
+  chg_mort = real_mort - shift(real_mort)
+), by = pid]
+
+# 2. Aggregate changes by year
+yearly_changes <- d10_clean[!is.na(chg_mort),
+                            .(avg_chg_nondur = mean(chg_nondurcons, na.rm = TRUE),
+                              avg_chg_nonshel = mean(chg_nonshelcons, na.rm = TRUE),
+                              avg_chg_mort = mean(chg_mort, na.rm = TRUE)),
+                            by = year]
+
+# 3. Plot with trendlines
+ggplot(melt(yearly_changes, id.vars = "year", 
+            measure.vars = c("avg_chg_nondur", "avg_chg_nonshel")), 
+       aes(x = avg_chg_mort, y = value, color = variable)) +
+  geom_point(size = 3) +
+  geom_smooth(method = "lm", se = FALSE) +
+  facet_wrap(~variable, scales = "free_y") +
+  labs(title = "Annual Changes: Consumption vs Mortgage",
+       subtitle = "Trendlines show linear relationships",
+       x = "Change in Real Mortgage",
+       y = "Change in Consumption",
+       color = "Consumption Type") +
+  scale_color_manual(values = c("avg_chg_nondur" = "blue", 
+                                "avg_chg_nonshel" = "red"),
+                     labels = c("Non-durable", "Non-shelter")) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+
+# 4. Output regression results
+models <- list(
+  nondur = lm(avg_chg_nondur ~ avg_chg_mort, data = yearly_changes),
+  nonshel = lm(avg_chg_nonshel ~ avg_chg_mort, data = yearly_changes)
+)
+
+lapply(models, summary)
+# Non-durable consumption vs mortgage changes
+ggplot(d10_clean, aes(x = delta_mort, y = delta_nondur)) +
+  geom_point(alpha = 0.3, color = "steelblue") +
+  geom_smooth(method = "lm", color = "red", se = FALSE) +
+  labs(title = "Δ Non-Durable Consumption vs Δ Mortgage",
+       x = "Change in Mortgage (real)",
+       y = "Change in Non-Durable Consumption (real)") +
+  theme_minimal()
+
+# Non-shelter consumption vs mortgage changes
+ggplot(d10_clean, aes(x = delta_mort, y = delta_nonshel)) +
+  geom_point(alpha = 0.3, color = "darkgreen") +
+  geom_smooth(method = "lm", color = "orange", se = FALSE) +
+  labs(title = "Δ Non-Shelter Consumption vs Δ Mortgage",
+       x = "Change in Mortgage (real)",
+       y = "Change in Non-Shelter Consumption (real)") +
+  theme_minimal()
+
+library(data.table)
+library(ggplot2)
+setDT(d10_clean)
+
+# Calculate annual changes (Δ) for each household
+d10_clean <- d10_clean[order(pid, year), 
+][, `:=`(
+  # Calculate changes from previous year
+  delta_nondur = real_nondurcons - shift(real_nondurcons),
+  delta_nonshel = real_nonshelcons - shift(real_nonshelcons),
+  delta_mort = real_mort - shift(real_mort)
+), by = pid]
+# Non-durable consumption vs mortgage changes
+ggplot(d10_clean, aes(x = delta_mort, y = delta_nondur)) +
+  geom_point(alpha = 0.3, color = "steelblue") +
+  geom_smooth(method = "lm", color = "red", se = FALSE) +
+  labs(title = "Δ Non-Durable Consumption vs Δ Mortgage",
+       x = "Change in Mortgage (real)",
+       y = "Change in Non-Durable Consumption (real)") +
+  theme_minimal()
+
+# Non-shelter consumption vs mortgage changes
+ggplot(d10_clean, aes(x = delta_mort, y = delta_nonshel)) +
+  geom_point(alpha = 0.3, color = "darkgreen") +
+  geom_smooth(method = "lm", color = "orange", se = FALSE) +
+  labs(title = "Δ Non-Shelter Consumption vs Δ Mortgage",
+       x = "Change in Mortgage (real)",
+       y = "Change in Non-Shelter Consumption (real)") +
+  theme_minimal()
+
+
+library(data.table)
+setDT(d10_clean)
+
+# Define analysis periods (year vs baseline)
+periods <- list(
+  "2001" = list(year = 2001, base = 1999),
+  "2009" = list(year = 2009, base = 2007), 
+  "2021" = list(year = 2021, base = 2019)
+)
+
+# Calculate deltas for each period
+period_changes <- rbindlist(lapply(periods, function(p) {
+  d10_clean[year %in% c(p$base, p$year),
+            .(delta_nondur = diff(real_nondurcons),
+              delta_nonshel = diff(real_nonshelcons),
+              delta_mort = diff(real_mort),
+              period = paste(p$base, p$year, sep="-")),
+            by = pid]
+}, idcol = "period_label")
+
+# Set up 2x3 plot grid
+par(mfrow = c(2, 3), mar = c(4, 4, 2, 1))
+
+# Plot non-durable consumption changes
+for (per in unique(period_changes$period)) {
+  dat <- period_changes[period == per]
+  plot(dat$delta_mort, dat$delta_nondur,
+       main = paste("Non-Dur:", per),
+       xlab = "Δ Mortgage", ylab = "Δ Consumption")
+  abline(lm(delta_nondur ~ delta_mort, data = dat), col = "red")
+}
+
+# Plot non-shelter consumption changes  
+for (per in unique(period_changes$period)) {
+  dat <- period_changes[period == per]
+  plot(dat$delta_mort, dat$delta_nonshel,
+       main = paste("Non-Shel:", per),
+       xlab = "Δ Mortgage", ylab = "Δ Consumption")
+  abline(lm(delta_nonshel ~ delta_mort, data = dat), col = "blue")
+}
+
+# Reset plot settings
+par(mfrow = c(1, 1))
+
+# Function to extract key stats
+get_model_stats <- function(formula, data) {
+  model <- lm(formula, data)
+  c(slope = coef(model)[2], 
+    p_value = summary(model)$coefficients[2,4],
+    r_squared = summary(model)$r.squared)
+}
+
+# Calculate for all periods
+results <- period_changes[, {
+  list(
+    nondur_stats = get_model_stats(delta_nondur ~ delta_mort, .SD),
+    nonshel_stats = get_model_stats(delta_nonshel ~ delta_mort, .SD)
+  )
+}, by = period]
+
+# View results
+print(results)
+
+library(data.table)
+setDT(d10_clean)
+
+# Create a unified dataset with period labels
+period_data <- d10_clean[, period := fcase(
+  year %in% 1999:2001, "1999-2001",
+  year %in% 2007:2009, "2007-2009",
+  year %in% 2019:2021, "2019-2021"
+)][!is.na(period)]
+
+# Calculate within-household changes (Δ)
+period_changes <- period_data[order(pid, year),
+][, .(
+  delta_nondur = diff(real_nondurcons),
+  delta_nonshel = diff(real_nonshelcons),
+  delta_mort = diff(real_mort)
+), by = .(pid, period)]
+
+# Fit a model with period-mortgage interaction
+model_nondur <- lm(delta_nondur ~ delta_mort * period, data = period_changes)
+
+# Test if slopes differ significantly
+anova_results_nondur <- anova(
+  lm(delta_nondur ~ delta_mort, data = period_changes), # Reduced model
+  model_nondur # Full model with interactions
+)
+
+# View results
+print(anova_results_nondur)
+
+model_nonshel <- lm(delta_nonshel ~ delta_mort * period, data = period_changes)
+anova_results_nonshel <- anova(
+  lm(delta_nonshel ~ delta_mort, data = period_changes),
+  model_nonshel
+)
+print(anova_results_nonshel)
+
+library(emmeans)
+
+# Non-durable pairwise comparisons
+emmeans_nondur <- emtrends(model_nondur, pairwise ~ period, var = "delta_mort")
+summary(emmeans_nondur$contrasts, adjust = "tukey")
+
+# Non-shelter pairwise comparisons
+emmeans_nonshel <- emtrends(model_nonshel, pairwise ~ period, var = "delta_mort")
+summary(emmeans_nonshel$contrasts, adjust = "tukey")
+
+library(data.table)
+setDT(d10_clean)
+
+# Define all periods of interest (baseline → target year)
+periods <- list(
+  "2001" = list(year = 2001, base = 1999),
+  "2009" = list(year = 2009, base = 2007),
+  "2011" = list(year = 2011, base = 2009), 
+  "2013" = list(year = 2013, base = 2011),
+  "2015" = list(year = 2015, base = 2013),
+  "2021" = list(year = 2021, base = 2019)
+)
+
+# Calculate changes for all periods
+period_changes <- rbindlist(lapply(periods, function(p) {
+  d10_clean[year %in% c(p$base, p$year),
+            .(delta_nondur = diff(real_nondurcons),
+              delta_nonshel = diff(real_nonshelcons),
+              delta_mort = diff(real_mort),
+              period = paste(p$base, p$year, sep = "-")),
+            by = pid]
+}), idcol = "period_label")
+
+library(ggplot2)
+library(patchwork) # For arranging plots
+
+# Non-durable consumption trends
+p_nondur <- ggplot(period_changes, aes(delta_mort, delta_nondur, color = period)) +
+  geom_point(alpha = 0.05) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(title = "Non-Durable Consumption Trends",
+       x = "Δ Mortgage", y = "Δ Consumption") +
+  theme_minimal() +
+  scale_color_brewer(palette = "Set1")
+
+# Non-shelter consumption trends
+p_nonshel <- ggplot(period_changes, aes(delta_mort, delta_nonshel, color = period)) +
+  geom_point(alpha = 0.05) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(title = "Non-Shelter Consumption Trends",
+       x = "Δ Mortgage", y = "Δ Consumption") +
+  theme_minimal() +
+  scale_color_brewer(palette = "Set1")
+
+# Combine plots
+p_nondur / p_nonshel + 
+  plot_layout(guides = "collect") &
+  theme(legend.position = "bottom")
+
+# Post-Great Recession recovery (2011-2015)
+post_recession <- period_changes[period %in% c("2009-2011", "2011-2013", "2013-2015")]
+
+ggplot(post_recession, aes(delta_mort, delta_nondur, color = period)) +
+  geom_smooth(method = "lm") +
+  labs(title = "Post-2009 Recovery Trends",
+       subtitle = "Non-durable consumption response to mortgage changes",
+       x = "Δ Mortgage", y = "Δ Consumption")
+
+slope_table <- period_changes[, {
+  nd_model <- lm(delta_nondur ~ delta_mort)
+  ns_model <- lm(delta_nonshel ~ delta_mort)
+  list(
+    nondur_slope = coef(nd_model)[2],
+    nondur_p = summary(nd_model)$coefficients[2,4],
+    nonshel_slope = coef(ns_model)[2],
+    nonshel_p = summary(ns_model)$coefficients[2,4]
+  )
+}, by = period]
+
+# Sort chronologically
+slope_table[order(match(period, c("1999-2001", "2007-2009", "2009-2011", 
+                                  "2011-2013", "2013-2015", "2019-2021")))]
+library(ggplot2)
+ggplot(slope_table, aes(x = factor(period, levels = unique(period)), 
+                        group = 1)) +
+  geom_line(aes(y = nondur_slope, color = "Non-Durable"), linewidth = 1) +
+  geom_line(aes(y = nonshel_slope, color = "Non-Shelter"), linewidth = 1) +
+  geom_point(aes(y = nondur_slope, shape = "Non-Durable"), size = 3) +
+  geom_point(aes(y = nonshel_slope, shape = "Non-Shelter"), size = 3) +
+  labs(title = "Slope Coefficients Over Time",
+       subtitle = "Impact of $1 Mortgage Change on Consumption",
+       x = "Period", y = "Slope Coefficient") +
+  scale_color_manual(values = c("Non-Durable" = "blue", "Non-Shelter" = "red")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+library(ggplot2)
+ggplot(slope_table, aes(period, nonshel_slope - nondur_slope)) +
+  geom_col(aes(fill = nonshel_slope > nondur_slope)) +
+  labs(title = "Non-Shelter vs Non-Durable Responsiveness", 
+       subtitle = "Positive values = Non-shelter more responsive",
+       x = "Period", y = "Slope Difference") +
+  scale_fill_manual(values = c("TRUE" = "steelblue", "FALSE" = "salmon")) +
+  theme_minimal()
+
+
+
+
+
+
+library(data.table)
+library(ggplot2)
+setDT(d10_clean)
+
+# Define all periods (baseline → target year)
+periods <- list(
+  "1999-2001" = c(1999, 2001),
+  "2007-2009" = c(2007, 2009),
+  "2009-2011" = c(2009, 2011),
+  "2011-2013" = c(2011, 2013),
+  "2013-2015" = c(2013, 2015),
+  "2019-2021" = c(2019, 2021)
+)
+
+# Calculate ΔConsumption and ΔMortgage for each period
+change_data <- rbindlist(lapply(names(periods), function(p) {
+  years <- periods[[p]]
+  d10_clean[year %in% years, 
+            .(delta_nondur = diff(real_nondurcons),
+              delta_nonshel = diff(real_nonshelcons),
+              delta_mort = diff(real_mort),
+              period = p),
+            by = pid]
+}))
+
+ggplot(change_data, aes(x = delta_mort)) +
+  # Non-durable consumption changes
+  geom_point(aes(y = delta_nondur, color = "Non-Durable"), alpha = 0.3) +
+  geom_smooth(aes(y = delta_nondur, color = "Non-Durable"), 
+              method = "lm", se = FALSE) +
+  # Non-shelter consumption changes
+  geom_point(aes(y = delta_nonshel, color = "Non-Shelter"), alpha = 0.3) +
+  geom_smooth(aes(y = delta_nonshel, color = "Non-Shelter"), 
+              method = "lm", se = FALSE) +
+  # Facet by period
+  facet_wrap(~period, scales = "free", ncol = 3) +
+  # Formatting
+  scale_color_manual(values = c("Non-Durable" = "blue", "Non-Shelter" = "red")) +
+  labs(title = "ΔConsumption vs ΔMortgage by Period",
+       x = "Change in Mortgage (real)",
+       y = "Change in Consumption (real)",
+       color = "Consumption Type") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+
+# Calculate percentiles for each variable
+nondurcons_p1 <- quantile(d10_clean$real_nondurcons, probs = 0.01, na.rm = TRUE)
+nondurcons_p99 <- quantile(d10_clean$real_nondurcons, probs = 0.99, na.rm = TRUE)
+
+nonshelcons_p1 <- quantile(d10_clean$real_nonshelcons, probs = 0.01, na.rm = TRUE)
+nonshelcons_p99 <- quantile(d10_clean$real_nonshelcons, probs = 0.99, na.rm = TRUE)
+
+d10_clean <- d10_clean %>%
+  filter(
+    real_nondurcons >= nondurcons_p1 & real_nondurcons <= nondurcons_p99,
+    real_nonshelcons >= nonshelcons_p1 & real_nonshelcons <= nonshelcons_p99
+  )
+
+
+
+# 1. First, ensure your data is properly formatted
+setDT(d10_clean) # Convert to data.table if not already
+d10_clean[, year := as.integer(year)] # Ensure year is integer/numeric
+
+# 2. Alternative approach if error persists
+change_data <- rbindlist(lapply(names(periods), function(p) {
+  years <- periods[[p]]
+  subset_data <- d10_clean[year %in% years]
+  subset_data[order(pid, year), 
+              .(delta_nondur = diff(real_nondurcons),
+                delta_nonshel = diff(real_nonshelcons),
+                delta_mort = diff(real_mort),
+                period = p),
+              by = pid]
+}))
+library(ggplot2)
+
+# Create the plot with error handling
+plot_consumption_changes <- function(consumption_var) {
+  ggplot(change_data, aes(x = delta_mort, y = get(consumption_var))) +
+    geom_point(alpha = 0.3, color = ifelse(consumption_var == "delta_nondur", "blue", "red")) +
+    geom_smooth(method = "lm", color = ifelse(consumption_var == "delta_nondur", "darkblue", "darkred"), 
+                se = FALSE) +
+    facet_wrap(~period, scales = "free", ncol = 3) +
+    labs(title = ifelse(consumption_var == "delta_nondur",
+                        "ΔNon-Durable Consumption vs ΔMortgage",
+                        "ΔNon-Shelter Consumption vs ΔMortgage"),
+         x = "Change in Mortgage",
+         y = ifelse(consumption_var == "delta_nondur",
+                    "Change in Non-Durable Consumption",
+                    "Change in Non-Shelter Consumption")) +
+    theme_minimal()
+}
+
+# Generate both plots
+plot_nondur <- plot_consumption_changes("delta_nondur")
+plot_nonshel <- plot_consumption_changes("delta_nonshel")
+
+# Display plots
+plot_nondur
+plot_nonshel
+
+d10_clean[, .(year, pid, real_nonshelcons, real_nondurcons, delta_nonshel, delta_nondur)] %>% View()
+
+lmtest::bptest(lm(delta_nondur ~ delta_mort, data = change_data))
+library(sandwich)
+library(lmtest)
+
+# Original model
+model <- lm(delta_nondur ~ delta_mort, data = change_data)
+
+# Huber-White robust SEs
+coeftest(model, vcov = vcovHC(model, type = "HC1"))  # HC1 for small samples
+
+
+library(data.table)
+setDT(d10_clean)
+
+# Calculate ΔHouseValue and ΔConsumption for each household-year
+d10_clean <- d10_clean[order(pid, year), 
+                       `:=`(
+                         delta_house = real_house_value - shift(real_house_value),
+                         delta_nondur = real_nondurcons - shift(real_nondurcons),
+                         delta_nonshel = real_nonshelcons - shift(real_nonshelcons)
+                       ), by = pid]
+
+# Remove NA rows (first year per household)
+d10_clean <- d10_clean[!is.na(delta_house)]
+model_nondur <- lm(delta_nondur ~ delta_house, data = d10_clean)
+summary(model_nondur)
+
+# Robust SEs (recommended given earlier heteroskedasticity)
+library(sandwich)
+lmtest::coeftest(model_nondur, vcov = vcovHC(model_nondur, type = "HC1"))
+model_nonshel <- lm(delta_nonshel ~ delta_house, data = d10_clean)
+summary(model_nonshel)
+
+# Robust SEs
+lmtest::coeftest(model_nonshel, vcov = vcovHC(model_nonshel, type = "HC1"))
+library(ggplot2)
+library(patchwork)
+
+# Plot for non-durable
+p1 <- ggplot(d10_clean, aes(delta_house, delta_nondur)) +
+  geom_point(alpha = 0.1) +
+  geom_smooth(method = "lm", color = "blue") +
+  labs(title = "ΔNon-Durable vs ΔHomeValue",
+       x = "Change in Home Value", y = "ΔConsumption")
+
+# Plot for non-shelter
+p2 <- ggplot(d10_clean, aes(delta_house, delta_nonshel)) +
+  geom_point(alpha = 0.1) +
+  geom_smooth(method = "lm", color = "red") +
+  labs(title = "ΔNon-Shelter vs ΔHomeValue",
+       x = "Change in Home Value", y = "ΔConsumption")
+
+# Combine plots
+p1 + p2 + plot_layout(ncol = 2)
+#################################
+
+# Enhanced borrower analysis
+borrower_analysis <- d8tr[pid == 		
+                            338173, 
+                          .(year,
+                            age_ref,
+                            educ,
+                            restru
+                            r_house_value,
+                            r_mort1_instal,
+                            r_mort_expen,
+                            mort1_year_obtained,
+                            int1prc,
+                            mort_rate1fv,
+                            yr_mort1_left,
+                            refinanced = ifelse(`refin1_y/n` == 2, "YES", ""),
+                            mort1_balance = r_mort1)][order(year)]
+
+print(borrower_analysis)
+
+borrower_analysis <- d8tr[pid == 	1945021, 
+                          .(year,
+                            mort1_year_obtained,
+                            int1prc,
+                            mort_rate1fv,
+                            yr_mort1_left,
+                            refinanced = ifelse(`refin1_y/n` == 1, "NO", ""),
+                            mort1_balance = r_mort1)][order(year)]
+
+print(borrower_analysis)
+
+
+
+library(tidyverse)
+library(lubridate)
+# First, recreate the shock aggregation using PROPER alignment
+shocks_biennial <- shocks %>%
+  mutate(
+    # Create the same odd-year grouping as your panel data
+    # (1999 for 1999-2000, 2001 for 2001-2002, etc.)
+    panel_year = floor((year(date)+1)/2)*2 - 1
+  ) %>%
+  group_by(panel_year) %>%
+  summarize(
+    shock_mean = mean(u1, na.rm = TRUE),
+    shock_cumulative = sum(u1, na.rm = TRUE),
+    n_shocks = n()
+  ) %>%
+  rename(year = panel_year)  # Match your panel data's column name
+
+# Now merge correctly
+d8tr <- d8tr %>%
+  left_join(shocks_biennial, by = "year")
+
+# Verify the merge
+d8tr %>%
+  select(year, shock_mean) %>%
+  distinct() %>%
+  arrange(year)
+
+
+# Remove ALL aggregated shock columns while preserving original u1-u4
+d8tr_clean <- d8tr %>%
+  select(-matches("_mean|_cumul|_count|n_shocks|shock_")
+        
+d1<-copy(d8tr_clean)
+library(tidyverse)
+library(tidyverse)
+
+# 1. First ensure we have the properly formatted shock data
+#    (Assuming your loaded data has 'Time' column and u1-u4 variables)
+shocks_clean <- shocks %>%
+  mutate(
+    date = as.Date(Time),  # Convert to date if not already
+    # Create proper biennium years (1999, 2001, 2003 etc.)
+    year = floor((year(date)+1)/2)*2 - 1
+  ) %>%
+  select(year, u1, u2, u3, u4)  # Keep only essential columns
+
+
+# 3. Merge with cleaned shocks
+d1 <- d1 %>%
+  left_join(shocks_clean, by = "year")
+
+# Verify results
+glimpse(d1)
+
+# See all individual shocks with their exact dates
+shocks %>%
+  select(Time, date, u1, u2, u3, u4) %>%
+  arrange(date) %>%
+  print(n = 20)  # Show first 20 shocks
+
+d2<-copy(d8tr_clean)
+
+
+
+
+
+
+
+
+
+
+library(tidyverse)
+
+# First create the panel year mapping (1999, 2001, 2003...)
+shocks_with_panel_years <- shocks %>%
+  mutate(panel_year = floor((year(date) + 1)/2)*2 - 1)
+
+# Function to aggregate each shock type
+aggregate_shock <- function(shock_var) {
+  shocks_with_panel_years %>%
+    group_by(panel_year) %>%
+    summarize(
+      "{{shock_var}}_mean" := mean(.data[[shock_var]], na.rm = TRUE),
+      "{{shock_var}}_sum" := sum(.data[[shock_var]], na.rm = TRUE),
+      "{{shock_var}}_count" := n()
+    ) %>%
+    rename(year = panel_year)
+}
+
+# Apply to all shock types
+shock_aggregates <- reduce(
+  map(c("u1", "u2", "u3", "u4"), aggregate_shock),
+  full_join, 
+  by = "year"
+)
+
+
+d2 <- d2 %>%
+  # Remove any existing shock columns
+  select(-matches("^u[1-4]|_mean|_sum|_count")) %>%
+  # Merge with aggregates
+  left_join(shock_aggregates, by = "year")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+library(data.table)
+
+setorder(d33, pid, year)
+
+d33[, growth_r_mort1 := r_mort1 - shift(r_mort1), by = pid]
+
+total_growth_obs <- d33[growth_r_mort1 > 0, .N]  # Rows with growth
+
+total_valid_obs <- d33[!is.na(growth_r_mort1), .N]
+
+percent_growth <- (total_growth_obs / total_valid_obs) * 100
+
+cat(sprintf("Percentage of observations where r_mort1 grew YoY: %.2f%%", percent_growth))
+
+library(data.table)
+
+refinanced_data <- d33[`refin1_y/n` == 2]  # only refinancers
+setorder(refinanced_data, pid, year)        
+
+refinanced_data[, growth_r_mort1 := r_mort1 - shift(r_mort1), by = pid]
+
+total_growth_obs <- refinanced_data[growth_r_mort1 > 0, .N] 
+
+total_valid_obs <- refinanced_data[!is.na(growth_r_mort1), .N]
+
+percent_growth_refinanced <- (total_growth_obs / total_valid_obs) * 100
+
+cat(
+  sprintf(
+    "Percentage of refinancers (refin1_y/n==2) with r_mort1 growth YoY: %.2f%%", 
+    percent_growth_refinanced
+  )
+)
+
+
+
+library(data.table)
+library(ggplot2)
+
+# Copy data to avoid modifying original
+plot_data2 <- copy(d33)
+
+# Filter out rows with no mortgage (`refin1_y/n == 0`) and calculate growth
+plot_data <- plot_data[`refin1_y/n` %in% c(1, 2)][
+  , `:=`(
+    growth_r_mort1 = r_mort1 - shift(r_mort1),  # YoY growth
+    refinanced_binary = ifelse(`refin1_y/n` == 2, 1, 0)  # 1=Yes, 0=No
+  ), 
+  by = pid
+][!is.na(growth_r_mort1)]  # Remove NA growth rows (first year per pid)
+
+
+ggplot(plot_data, aes(x = factor(refinanced_binary), y = growth_r_mort1)) +
+  geom_jitter(
+    width = 0.15,
+    alpha = 0.5,
+    aes(color = factor(refinanced_binary))
+  ) +
+  geom_boxplot(
+    width = 0.25,
+    outlier.shape = NA,
+    fill = NA,
+    color = "black"
+  ) +
+  scale_x_discrete(labels = c("No Refi", "Refi")) +
+  scale_color_manual(values = c("blue", "red"), guide = "none") +
+  labs(
+    title = "Mortgage Balance Growth vs. Refinancing",
+    subtitle = "Positive growth = balance increased (e.g., cash-out refi)",
+    x = "Refinanced in This Year",
+    y = "Year-over-Year Growth in r_mort1"
+  ) +
+  theme_minimal()
+
+
+ geom_hline(yintercept = 0, linetype = "dashed", color = "gray50")
+ plot_data[, .(median_growth = median(growth_r_mort1),
+               sd_growth = sd(growth_r_mort1)),
+           by = refinanced_binary]
+ 
+ 
+ 
+ packageVersion("ggplot2")  # Should be >= 3.4.0
+ 
+ ggplot(plot_data, aes(x = factor(refinanced_binary), y = growth_r_mort1)) +
+   geom_violin(scale = "width", trim = FALSE, alpha = 0.2) +
+   geom_jitter(width = 0.15, alpha = 0.3) +
+   geom_boxplot(width = 0.1, outlier.shape = NA)
+
+ plot_data[, .(
+   density_peak = density(growth_r_mort1)$x[which.max(density(growth_r_mort1)$y)]
+ ), by = refinanced_binary]
+ 
+ 
+ 
+ plot_data[, years_since_last_refi := year - shift(year), by = pid]
+ ggplot(plot_data[refinanced_binary == 1], aes(x = years_since_last_refi)) + 
+   geom_histogram(binwidth =1)
+ 
+ 
+ 
+ ggplot(plot_data, aes(x = growth_r_mort1, fill = factor(refinanced_binary))) +
+   geom_density(alpha = 0.5) +
+   geom_vline(xintercept = c(-9356.672, -11559.516), linetype = "dashed") +
+   labs(x = "Annual Balance Change", y = "Density")
+
+ 
+ 
+ library(data.table)
+ 
+ # 1. First, let's check your column names to be safe
+ names(d33)
+ 
+ # 2. Create the analysis (assuming your columns are named as previously mentioned)
+ mortgage_analysis <- d33[, .(
+   year = year,
+   pid = pid,
+   r_mort1 = r_mort1,
+   refinance_status = ifelse(`refin1_y/n` == 2, "Refinanced", "Not Refinanced"),
+   growth = r_mort1 - shift(r_mort1)
+ ), by = pid]
+ 
+ # 3. Remove the first year (NA growth values)
+ mortgage_analysis <- mortgage_analysis[!is.na(growth)]
+ 
+ # 4. Analyze only balance increases
+ balance_increases <- mortgage_analysis[growth > 0]
+ 
+ # 5. Get the summary statistics
+ result <- balance_increases[, .(
+   number_of_cases = .N,
+   average_increase = mean(growth),
+   median_increase = median(growth)
+ ), by = refinance_status]
+ 
+ # Show the results
+ print(result)
+ 
+ # Optional visualization
+ library(ggplot2)
+ ggplot(balance_increases, aes(x = refinance_status, y = growth)) +
+   geom_boxplot() +
+   labs(title = "Mortgage Balance Increases by Refinance Status",
+        x = "Refinance Status",
+        y = "Balance Increase Amount") +
+   theme_minimal()
+ 
+ d34<-copy(d33)
+ library(data.table)
+ 
+ # Create mortgage type indicator (using mort_rate1fv)
+ d33[, mortgage_type := fcase(
+   mort_rate1fv == 1, "Fixed",
+   mort_rate1fv == 2, "ARM",
+   mort_rate1fv == 0, "No Loan",
+   default = "Unknown"
+ )]
+ 
+ # Verify distribution
+ d33[, .N, by = mortgage_type] 
+
+ 
+ non_refi_increases <- d33[
+   `refin1_y/n` != 2 &                # Not refinanced
+     mortgage_type == "ARM" &           # Only ARMs
+     (r_mort1 - shift(r_mort1)) > 0 &   # Balance increased
+     !is.na(pid),                      # Valid loans
+   .(pid, year, 
+     increase_amount = r_mort1 - shift(r_mort1),
+     current_rate = int1prc,
+     rate_change = int1prc - shift(int1prc)),
+   by = pid] 
+
+ library(data.table)
+ 
+ # 1. First classify mortgage types
+ d33[, mortgage_type := fcase(
+   mort_rate1fv == 1, "Fixed",
+   mort_rate1fv == 2, "ARM", 
+   mort_rate1fv == 0, "No Loan",
+   default = "Unknown"
+ )]
+ 
+ # 2. Calculate yearly changes
+ d33[, `:=`(
+   balance_change = r_mort1 - shift(r_mort1),
+   rate_change = int1prc - shift(int1prc)
+ ), by = pid]
+ 
+ # 3. Analyze non-refinanced ARM increases
+ arm_increases <- d33[
+   `refin1_y/n` != 2 & 
+     mortgage_type == "ARM" & 
+     balance_change > 0 & 
+     !is.na(balance_change),
+   .(pid, year, 
+     increase_amount = balance_change,
+     current_rate = int1prc,
+     rate_change,
+     loan_age = year - mort1_year_obtained)
+ ]
+ 
+ # 4. Compare ARM vs Fixed rates
+ increase_comparison <- d33[
+   `refin1_y/n` != 2 & balance_change > 0,
+   .(avg_increase = mean(balance_change)),
+   by = mortgage_type]
+ 
+ # View results
+ arm_increases[]
+ increase_comparison[]
+ 
+ ggplot(arm_increases, aes(x = loan_age, y = increase_amount)) +
+   geom_point(aes(color = current_rate)) +
+   geom_smooth(method = "lm") +
+   labs(title = "ARM Balance Increases by Loan Age",
+        x = "Years Since Loan Origination",
+        y = "Balance Increase Amount")
+
+ 
+ 
+ library(data.table)
+ library(ggplot2)
+ 
+ # 1. Classify loans and calculate growth
+ d33[, `:=`(
+   mortgage_type = ifelse(mort_rate1fv == 2, "ARM", "Fixed"),
+   growth = r_mort1 - shift(r_mort1)
+ ), by = pid]
+ 
+ # 2. Calculate probability of balance growth
+ growth_prob <- d33[!is.na(growth), 
+                    .(prob_positive = mean(growth > 0)), 
+                    by = mortgage_type]
+ 
+ # 3. Compare distributions
+ ggplot(d33[!is.na(growth) & growth != 0], 
+        aes(x = growth, fill = mortgage_type)) +
+   geom_density(alpha = 0.5) +
+   geom_vline(xintercept = 0, linetype = "dashed") +
+   labs(title = "Mortgage Balance Growth by Loan Type",
+        x = "Annual Balance Change",
+        y = "Density") +
+   scale_fill_manual(values = c("ARM" = "red", "Fixed" = "blue")) 
+
+ t.test(growth ~ mortgage_type, data = d33[growth > 0]) 
+ 
+ d33[growth > 0, 
+     .(common_triggers = names(sort(table(yr_mort1_left), decreasing = TRUE)[1:2])),
+     by = mortgage_type]
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ library(data.table)
+ library(ggplot2)
+ 
+ # Calculate yearly growth and refinance status
+ d33[, `:=`(
+   yearly_growth = r_mort1 - shift(r_mort1),
+   refinanced = ifelse(`refin1_y/n` == 2, "Yes", "No")
+ ), by = pid]
+ 
+ # Yearly positive growth stats
+ yearly_positive <- d33[yearly_growth > 0, .(
+   num_cases = .N,
+   avg_growth = mean(yearly_growth),
+   median_growth = median(yearly_growth),
+   sd_growth = sd(yearly_growth)),
+   by = .(refinanced, year)][order(year, refinanced)]
+ 
+ # Visualize yearly patterns
+ ggplot(yearly_positive, aes(x = year, y = avg_growth, color = refinanced)) +
+   geom_line() +
+   geom_point() +
+   labs(title = "Average Positive Balance Growth by Year",
+        x = "Year", 
+        y = "Average Growth Amount",
+        color = "Refinanced?")
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ plot_data[, .(
+   p10 = quantile(growth_r_mort1, 0.1),
+   p25 = quantile(growth_r_mort1, 0.25),
+   p75 = quantile(growth_r_mort1, 0.75), 
+   p90 = quantile(growth_r_mort1, 0.9)
+ ), by = refinanced_binary]
+
+ 
+ plot_data[growth_r_mort1 > 0, .N, by = refinanced_binary]  # Count of balance increases
+ plot_data[growth_r_mort1 > 10000, .N, by = refinanced_binary]  # Large increases 
+ 
+ 
+ ggplot(plot_data, aes(x = factor(refinanced_binary), y = growth_r_mort1)) +
+   geom_jitter() +
+   geom_boxplot() +
+   facet_wrap(~ ifelse(growth_r_mort1 > 0, "Balance Increased", "Balance Decreased"))
+ 
+ 
+ 
+ 
+ d33[, .(
+   total_increase_cases = sum(growth_r_mort1 > 0, na.rm = TRUE),
+   avg_increase = mean(growth_r_mort1[growth_r_mort1 > 0], na.rm = TRUE),
+   by = .(refinanced = ifelse(`refin1_y/n` == 2, "Refinanced", "Not Refinanced"))
+ ]
+
+ # Calculate lifetime growth per loan
+ lifetime_growth <- d33[, .(
+   first_balance = first(r_mort1),
+   last_balance = last(r_mort1),
+   refinanced = first(ifelse(any(`refin1_y/n` == 2), "Yes", "No"))),
+   by = pid][, lifetime_growth := last_balance - first_balance]
+ 
+ # Lifetime positive growth stats
+ lifetime_positive <- lifetime_growth[lifetime_growth > 0, .(
+   num_loans = .N,
+   avg_lifetime_growth = mean(lifetime_growth),
+   median_lifetime_growth = median(lifetime_growth)),
+   by = refinanced]
+ 
+ # Visualize lifetime distributions
+ ggplot(lifetime_growth[lifetime_growth > 0], 
+        aes(x = lifetime_growth, fill = refinanced)) +
+   geom_density(alpha = 0.5) +
+   scale_x_continuous(labels = scales::dollar) +
+   labs(title = "Distribution of Lifetime Balance Increases",
+        x = "Total Balance Growth Over Loan Life",
+        y = "Density") 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ d_yearly <- d33[, .(
+   year,
+   yearly_growth = r_mort1 - shift(r_mort1),
+   is_refinancer = ifelse(`refin1_y/n` == 2, "Refinanced", "Not Refinanced")
+ ), by = pid][!is.na(yearly_growth)]
+
+ 
+ # Count total cases per group
+ denoms <- d_yearly[, .N, by = is_refinancer]
+ setnames(denoms, "N", "total_in_group")
+ 
+ # Count increasing balance cases
+ noms <- d_yearly[yearly_growth > 0, .N, by = is_refinancer]
+ setnames(noms, "N", "num_with_positive_growth")
+ 
+ # Merge and compute percentage
+ perc_stats <- merge(noms, denoms, by = "is_refinancer")
+ perc_stats[, percent_positive := 100 * num_with_positive_growth / total_in_group]
+ 
+ print(perc_stats)
+
+ 
+ # Calculate mean and median of yearly mortgage balance change for all cases
+ balance_change_stats <- d_yearly[, .(
+   number_of_cases = .N,
+   mean_change = mean(yearly_growth, na.rm = TRUE),
+   median_change = median(yearly_growth, na.rm = TRUE)
+ ), by = is_refinancer]
+ 
+ print(balance_change_stats)
+
+ 
+ positive_stats <- d_yearly[yearly_growth > 0, .(
+   number_of_positive_cases = .N,
+   average_increase = mean(yearly_growth),
+   median_increase = median(yearly_growth)
+ ), by = is_refinancer]
+ 
+ print(positive_stats)
+ 
+ 
+ hist(d_yearly[is_refinancer == "Not Refinanced"]$yearly_growth,
+      breaks = 100,
+      main = "Yearly Mortgage Balance Change: Not Refinanced",
+      xlab = "Yearly Change in Mortgage Balance")
+ 
+ hist(d_yearly[is_refinancer == "Refinanced"]$yearly_growth,
+      breaks = 100,
+      main = "Yearly Mortgage Balance Change: Refinanced",
+      xlab = "Yearly Change in Mortgage Balance")
+ 
+
+ 
+ d_yearly[is_refinancer == "Not Refinanced", 
+          mean(yearly_growth == 0, na.rm = TRUE)]
+ 
+ 
+ d_yearly[is_refinancer == "Not Refinanced", .(
+   share_zero = mean(yearly_growth == 0, na.rm = TRUE),
+   share_positive = mean(yearly_growth > 0, na.rm = TRUE),
+   share_negative = mean(yearly_growth < 0, na.rm = TRUE)
+ )]
+ 
+ d_yearly[is_refinancer == "Refinanced", .(
+   share_zero = mean(yearly_growth == 0, na.rm = TRUE),
+   share_positive = mean(yearly_growth > 0, na.rm = TRUE),
+   share_negative = mean(yearly_growth < 0, na.rm = TRUE)
+ )]
+ 
+ uh
+ 
+ 
+ # Assuming your data frame is named d33
+ 
+ # Create variable for mort1_year_obtained change
+ d33$mort1_year_change <- ifelse(d33$`refin1_y/n` == 2, 
+                                 ifelse(d33$mort1_year_obtained > d33$original_year_obtained, 1,
+                                        ifelse(d33$mort1_year_obtained < d33$original_year_obtained, -1, 0)),
+                                 NA)  # NA for those who didn't refinance
+ 
+ # Create variable for yr_mort1_left change (reversed coding)
+ d33$yr_mort1_left_change <- ifelse(d33$`refin1_y/n` == 2,
+                                    ifelse(d33$yr_mort1_left > d33$original_yr_left, -1,
+                                           ifelse(d33$yr_mort1_left < d33$original_yr_left, 1, 0)),
+                                    NA)  # NA for those who didn't refinance
+ 
+ # Count how many people refinanced
+ refinanced_count <- sum(d33$`refin1_y/n` == 2, na.rm = TRUE)
+ cat("Number of people who refinanced:", refinanced_count, "\n")
+
+ 
+ library(dplyr)
+ 
+ # 1. Count refinanced cases
+ refinanced_count <- sum(d33$`refin1_y/n` == 2, na.rm = TRUE)
+ cat("Number of people who refinanced:", refinanced_count, "\n")
+ 
+ # 2. Create change variables (assuming refinancing resets mortgage terms)
+ d33 <- d33 %>%
+   mutate(
+     # Change in mortgage year (1 = newer, -1 = older, 0 = same)
+     mort_year_change = case_when(
+       `refin1_y/n` != 2 ~ NA_real_,  # Not refinanced → NA
+       mort1_year_obtained > lag(mort1_year_obtained) ~ 1,   # Newer year (e.g., 2015 → 2020)
+       mort1_year_obtained < lag(mort1_year_obtained) ~ -1,  # Older year (e.g., 2015 → 2010)
+       mort1_year_obtained == lag(mort1_year_obtained) ~ 0,  # Same year
+       TRUE ~ NA_real_  # Fallback
+     ),
+     
+     # Change in years left (1 = fewer years, -1 = more years, 0 = same)
+     yr_left_change = case_when(
+       `refin1_y/n` != 2 ~ NA_real_,  # Not refinanced → NA
+       yr_mort1_left < lag(yr_mort1_left) ~ -1,  #Fewer years left (e.g., 30 → 25)
+       yr_mort1_left > lag(yr_mort1_left) ~ 1,   # More years left (e.g., 10 → 15)
+       yr_mort1_left == lag(yr_mort1_left) ~ 0,   # Same
+       TRUE ~ NA_real_  # Fallback 
+     )
+   )
+ 
+ # 3. Check results
+ table(d33$mort_year_change, useNA = "always")  # Should show -1, 0, 1, NA
+ table(d33$yr_left_change, useNA = "always")    # Should show -1, 0, 1, NA
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ library(dplyr)
+ 
+ # Step 1: Ensure data is sorted by pid and year (to identify original terms)
+ d33 <- d33 %>% 
+   arrange(pid, mort1_year_obtained)
+ 
+ # Step 2: For each person, flag their original mortgage terms
+ d33 <- d33 %>%
+   group_by(pid) %>%
+   mutate(
+     # Original terms (earliest mortgage year and years left)
+     original_year = first(mort1_year_obtained),
+     original_yrs_left = first(yr_mort1_left),
+     
+     # Change variables (only for refinancers)
+     mort_year_change = case_when(
+       `refin1_y/n` != 2 ~ NA_real_,  # Not refinanced → NA
+       mort1_year_obtained > original_year ~ 1,   # Newer year (e.g., original=2010 → refinanced=2015)
+       mort1_year_obtained < original_year ~ -1,  # Older year (rare, but possible)
+       mort1_year_obtained == original_year ~ 0,  # Same year
+       TRUE ~ NA_real_
+     ),
+     yrs_left_change = case_when(
+       `refin1_y/n` != 2 ~ NA_real_,  # Not refinanced → NA
+       yr_mort1_left > original_yrs_left ~ 1,    # More years left (e.g., original=10 → refinanced=15)
+       yr_mort1_left < original_yrs_left ~ -1,   # Fewer years left (e.g., original=15 → refinanced=10)
+       yr_mort1_left == original_yrs_left ~ 0,   # Same
+       TRUE ~ NA_real_
+     )
+   ) %>%
+   ungroup()
+ 
+ # Step 3: Check results
+ table(d33$mort_year_change, useNA = "always")  # Should show -1, 0, 1, NA
+ table(d33$yrs_left_change, useNA = "always")   # Should show -1, 0, 1, NA
+
+ library(dplyr)
+ 
+ # Group by pid and check refinancing pattern over time
+ refin_persistence <- d33 %>%
+   arrange(pid, year) %>%  # Ensure data is sorted by person and year
+   group_by(pid) %>%
+   mutate(
+     ever_refinanced = any(`refin1_y/n` == 2),  # Flag people who ever refinanced
+     refinanced_once = sum(`refin1_y/n` == 2) == 1  # Flag people who refinanced exactly once
+   ) %>%
+   filter(ever_refinanced) %>%  # Keep only refinancers
+   summarise(
+     first_refinance_year = min(year[`refin1_y/n` == 2]),  # Year they first refinanced
+     last_refinance_year = max(year[`refin1_y/n` == 2]),   # Year they last refinanced
+     total_refinance_years = sum(`refin1_y/n` == 2),       # Total years marked as refinanced
+     years_after_refinance = max(year) - first_refinance_year,  # Total years after first refinance
+     persists_forever = all(`refin1_y/n`[year >= first_refinance_year] == 2)  # Always 2 after first refinance?
+   )
+ 
+ # View results
+ head(refin_persistence)
+
+ 
+ # How often does refinancing persist indefinitely?
+ table(refin_persistence$persists_forever)
+ 
+ # For those who don't persist, how many years are marked as refinanced?
+ hist(refin_persistence$total_refinance_years) 
+ 
+ 
+ 
+ 
+ 
+ 
+ library(dplyr)
+ library(ggplot2)
+ 
+ # First, recreate the persistence analysis with year comparison
+ refin_analysis <- d33 %>%
+   arrange(pid, year) %>%
+   group_by(pid) %>%
+   mutate(
+     ever_refinanced = any(`refin1_y/n` == 2),
+     first_refinance_year = min(year[`refin1_y/n` == 2], na.rm = TRUE),
+     original_loan_year = first(mort1_year_obtained[year < first_refinance_year | is.infinite(first_refinance_year)]),
+     refinanced_loan_year = first(mort1_year_obtained[`refin1_y/n` == 2 & year == first_refinance_year]),
+     year_change = refinanced_loan_year - original_loan_year,
+     persists_forever = all(`refin1_y/n`[year >= first_refinance_year] == 2)
+   ) %>%
+   filter(ever_refinanced) %>%
+   distinct(pid, .keep_all = TRUE)
+ 
+ # Summary statistics by persistence group
+ year_change_summary <- refin_analysis %>%
+   group_by(persists_forever) %>%
+   summarise(
+     count = n(),
+     mean_year_change = mean(year_change, na.rm = TRUE),
+     median_year_change = median(year_change, na.rm = TRUE),
+     prop_increased = mean(year_change > 0, na.rm = TRUE),
+     prop_decreased = mean(year_change < 0, na.rm = TRUE),
+     prop_same = mean(year_change == 0, na.rm = TRUE)
+   )
+ 
+ # View the summary
+ print(year_change_summary)
+ 
+ # Visualize the distributions
+ ggplot(refin_analysis, aes(x = year_change, fill = persists_forever)) +
+   geom_histogram(position = "dodge", bins = 30) +
+   facet_wrap(~persists_forever, ncol = 1) +
+   labs(title = "Change in Loan Year by Refinancing Persistence",
+        x = "Year Change (Refinanced - Original)",
+        y = "Count") +
+   theme_minimal()
+ 
+ # Test for statistical difference
+ t_test_result <- t.test(year_change ~ persists_forever, data = refin_analysis)
+ print(t_test_result)
+ 
+ 
+ 
+ 
+ 
+ library(dplyr)
+ library(ggplot2)
+ 
+ # Step 1: Prepare the analysis dataset
+ refin_analysis <- d33 %>%
+   # Sort by person and year
+   arrange(pid, year) %>%
+   group_by(pid) %>%
+   # Identify refinancing events
+   mutate(
+     refinance_event = (`refin1_y/n` == 2),
+     any_refinance = any(refinance_event, na.rm = TRUE)
+   ) %>%
+   # Keep only refinancers
+   filter(any_refinance) %>%
+   # Calculate key metrics
+   mutate(
+     first_refinance_year = min(year[refinance_event], na.rm = TRUE),
+     
+     # Original loan year (most recent pre-refinance year)
+     original_loan_year = ifelse(
+       any(year < first_refinance_year),
+       last(mort1_year_obtained[year < first_refinance_year]),
+       first(mort1_year_obtained)
+     ),
+     
+     # Refinanced loan year
+     refinanced_loan_year = mort1_year_obtained[which(refinance_event)[1]],
+     
+     # Year change calculation
+     year_change = refinanced_loan_year - original_loan_year,
+     
+     # Persistence flag
+     persists_forever = all(`refin1_y/n`[year >= first_refinance_year] == 2, na.rm = TRUE)
+   ) %>%
+   # Keep one row per person with summary info
+   distinct(pid, .keep_all = TRUE) %>%
+   # Remove cases with missing data
+   filter(!is.na(year_change))
+ 
+ # Step 2: Summary statistics
+ year_change_summary <- refin_analysis %>%
+   group_by(persists_forever) %>%
+   summarise(
+     n = n(),
+     mean_change = mean(year_change),
+     median_change = median(year_change),
+     prop_newer = mean(year_change > 0)),
+ prop_older = mean(year_change < 0)),
+ prop_same = mean(year_change == 0))
+
+
+library(dplyr)
+library(ggplot2)
+
+# 1. Clean the year_diff variable (remove extremes)
+refin_analysis_clean <- refin_analysis %>%
+  filter(between(year_diff, -10, 100) | is.na(year_diff))
+
+# 2. Compare groups with proper syntax
+persistence_comparison <- refin_analysis_clean %>%
+  group_by(persists) %>%
+  summarise(
+    n = n(),
+    mean_diff = mean(year_diff, na.rm = TRUE),
+    median_diff = median(year_diff, na.rm = TRUE),
+    prop_positive = mean(year_diff > 0, na.rm = TRUE),
+    prop_negative = mean(year_diff < 0, na.rm = TRUE),
+    prop_no_change = mean(year_diff == 0, na.rm = TRUE)
+  )
+
+# Print the comparison
+print(persistence_comparison)
+
+# 3. Enhanced visualization
+ggplot(refin_analysis_clean, aes(x = year_diff, fill = persists)) +
+  geom_density(alpha = 0.6) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+  facet_wrap(~persists, ncol = 1, 
+             labeller = as_labeller(c(`TRUE` = "Permanent Refinancers", 
+                                      `FALSE` = "Temporary Refinancers"))) +
+  labs(title = "Loan Year Changes After Refinancing",
+       subtitle = "Comparison between permanent and temporary refinancers",
+       x = "Years Difference (Refinanced Year - Original Year)",
+       y = "Density") +
+  scale_fill_manual(values = c("#E69F00", "#56B4E9"),
+                    labels = c("Temporary", "Permanent")) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  coord_cartesian(xlim = c(-5, 15))  # Focus on most relevant range
+
+# 4. Statistical test
+t_test_result <- t.test(year_diff ~ persists, 
+                        data = refin_analysis_clean %>% filter(!is.na(year_diff)))
+print(t_test_result)
+
+
+library(dplyr)
+library(ggplot2)
+
+# 1. First identify permanent refinancers
+permanent_refinancers <- d33 %>%
+  group_by(pid) %>%
+  mutate(
+    is_refinanced = (`refin1_y/n` == 2),
+    first_refinance = min(year[is_refinanced], na.rm = TRUE),
+    persists = all(`refin1_y/n`[year >= first_refinance] == 2, na.rm = TRUE)
+  ) %>%
+  filter(persists) %>%
+  select(pid, year, mort1_year_obtained, `refin1_y/n`)
+
+# 2. Check year changes for permanent refinancers
+year_changes <- permanent_refinancers %>%
+  group_by(pid) %>%
+  mutate(
+    year_obtained_changed = (mort1_year_obtained != lag(mort1_year_obtained)),
+    change_count = sum(year_obtained_changed, na.rm = TRUE)
+  ) %>%
+  arrange(pid, year)
+
+# 3. Summarize the patterns
+change_summary <- year_changes %>%
+  group_by(pid) %>%
+  summarise(
+    total_years = n(),
+    change_count = first(change_count),
+    change_frequency = ifelse(total_years > 1, 
+                              change_count/(total_years-1), 
+                              NA)
+  )
+
+# 4. Analyze results
+table(change_summary$change_count)  # How many times did loan years change?
+summary(change_summary$change_frequency)  # Frequency of changes
+
+# 5. Visualize a sample of borrowers
+set.seed(123)
+sample_pids <- sample(unique(permanent_refinancers$pid), 9)
+
+ggplot(permanent_refinancers %>% 
+         filter(pid %in% sample_pids),
+       aes(x = year, y = mort1_year_obtained, group = pid)) +
+  geom_line() +
+  geom_point() +
+  facet_wrap(~pid, scales = "free") +
+  labs(title = "Loan Year Patterns for Permanent Refinancers",
+       subtitle = "Sample of 9 borrowers",
+       y = "Mortgage Year Obtained") +
+  theme_minimal()
+
+library(dplyr)
+
+# 1. First identify ALL refinancers (complete in one pipe)
+refinance_results <- d33 %>%
+  # Group by borrower
+  group_by(pid) %>%
+  # Filter to only those who refinanced at least once
+  filter(any(`refin1_y/n` == 2, na.rm = TRUE)) %>%
+  # Calculate key metrics
+  mutate(
+    first_refinance_year = min(year[`refin1_y/n` == 2], na.rm = TRUE),
+    is_permanent = all(`refin1_y/n`[year >= first_refinance_year] == 2, na.rm = TRUE)
+  ) %>%
+  # For permanent refinancers, check year changes
+  mutate(
+    year_changed = ifelse(is_permanent,
+                          first(mort1_year_obtained) != last(mort1_year_obtained),
+                          NA)
+  ) %>%
+  # Get one row per borrower
+  slice(1) %>%
+  ungroup()
+
+# 2. Get final counts
+refinancer_types <- refinance_results %>%
+  count(is_permanent)
+
+permanent_stats <- refinance_results %>%
+  filter(is_permanent) %>%
+  count(year_changed)
+
+# 3. Print results
+cat("Refinancer Types:\n")
+print(refinancer_types)
+
+cat("\nPermanent Refinancers' Year Changes:\n")
+print(permanent_stats)

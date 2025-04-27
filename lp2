@@ -1,0 +1,269 @@
+library(dplyr)
+library(lubridate)
+library(tidyr)
+# 1. Freddie Mac Data (weekly)
+freddie_data <- freddiemac_cleaned %>%
+  select(date = week, FRM30 = `30_yr_FRM`) %>%  # Rename columns
+  mutate(date = as.Date(date))  # Ensure date format
+
+# 2. DFF Data (daily → weekly)
+#dff_data <- DFF %>%
+ # mutate(date = floor_date(as.Date(observation_date), "week")) %>%  # Convert to weekly
+ # group_by(date) %>%
+ # summarize(DFF = mean(DFF, na.rm = TRUE)) %>%  # Weekly average
+ # ungroup() something is off
+
+#dff_data <- DFF %>%
+ # mutate(date = as.Date(observation_date)) %>%   # <--- not 'date', it's 'observation_date'
+ # group_by(week = floor_date(date, "week")) %>%   # Collapse to week
+ # summarize(DFF = mean(DFF, na.rm = TRUE)) %>%    # Take weekly average
+ # rename(date = week) %>%
+ # ungroup() doesnt work
+
+dff_data <- DFF %>%
+  mutate(date = as.Date(observation_date)) %>%
+  group_by(week = floor_date(date, "week", week_start = 4)) %>%  # Week starts on Thursday
+  summarize(DFF = mean(DFF, na.rm = TRUE)) %>%
+  rename(date = week) %>%
+  ungroup() # works cause it was properly aligned to day of the week this time 
+
+
+
+str(DFF)
+
+
+# 3. U1bp Data (sporadic shocks with timestamp → date only)
+u1bp_data <- U1bp %>%
+  mutate(date = as.Date(Time)) %>%  # Drops hours/minutes
+  select(date, u1)
+
+# 4. Merge all datasets (left join to preserve all weeks)
+final_data <- freddie_data %>%
+  left_join(dff_data, by = "date") %>%  # Weekly Fed funds
+  left_join(u1bp_data, by = "date") %>% # Sporadic shocks
+  # Fill forward shocks (NA → 0 between shock dates)
+  mutate(u1 = replace_na(u1, 0)) %>%
+  # Filter to desired timeframe
+  filter(year(date) >= 1999 & year(date) <= 2021)
+
+# 5. Check merge quality
+summary(final_data)
+
+# Check shock alignment
+final_data %>% 
+  filter(u1 != 0) %>% 
+  select(date, u1, FRM30, DFF) %>% 
+  head(10)
+
+# Plot weekly mortgage rates with shocks
+library(ggplot2)
+ggplot(final_data, aes(x = date)) +
+  geom_line(aes(y = FRM30, color = "30Yr FRM")) +
+  geom_point(aes(y = u1*10, color = "Shocks (scaled)"), size = 2) +
+  labs(title = "Weekly Mortgage Rates with Policy Shocks")
+
+final_data %>%
+  filter(u1 != 0) %>%
+  select(date, u1, FRM30, DFF) %>%
+  head(10)
+
+
+#####sth wrong fix?###
+library(dplyr)
+library(lubridate)
+library(tidyr)
+
+# 1. Freddie Mac Data (weekly)
+freddie_data <- freddiemac_cleaned %>%
+  select(date = week, FRM30 = `30_yr_FRM`) %>%  
+  mutate(date = as.Date(date))
+
+# 2. DFF Data - Proper weekly conversion (matching Freddie Mac weeks)
+dff_data <- DFF %>%
+  mutate(date = as.Date(observation_date),
+         week = floor_date(date, "week", week_start = 1)) %>% # Match Freddie Mac's week start
+  group_by(week) %>%
+  summarize(DFF = last(DFF)) %>% # Take last observation in week (or use mean)
+  rename(date = week)
+
+# 3. U1bp Data
+u1bp_data <- U1bp %>%
+  mutate(date = as.Date(Time)) %>%  
+  select(date, u1)
+
+# 4. Merge - ensure all dates align
+final_data <- freddie_data %>%
+  left_join(dff_data, by = "date") %>%  
+  left_join(u1bp_data, by = "date") %>% 
+  mutate(u1 = replace_na(u1, 0)) %>%
+  filter(year(date) >= 1999 & year(date) <= 2021)
+# Check for NA DFF values
+final_data %>% 
+  filter(is.na(DFF)) %>% 
+  count() # Should be 0 or minimal
+
+# Check shock dates with DFF values
+final_data %>% 
+  filter(u1 != 0) %>% 
+  select(date, u1, FRM30, DFF) %>% 
+  head(10) # Now should show DFF values
+# lp
+
+library(lpirfs)
+library(dplyr)
+library(lpirfs)
+
+library(lpirfs)
+
+# 1. Prepare data frames for shock, instrument, and outcome
+shock_df <- data.frame(DFF = model_data$DFF)     # Policy variable (shock)
+instrum_df <- data.frame(u1 = model_data$u1)     # Instrument
+endog_df <- data.frame(FRM30 = model_data$FRM30) # Outcome must also be a data.frame!
+
+# 2. Run LP-IV correctly
+lp_results <- lp_lin_iv(
+  endog_data = endog_df,      # Correct: this is a data.frame
+  shock = shock_df,
+  instrum = instrum_df,
+  exog_data = NULL,           # No controls
+  lags_endog_lin = 4,         # Lags of dependent variable
+  lags_exog = 4,              # Lags of policy variable
+  hor = 12,                   # Horizon: 0 to 12
+  confint = 1.96,              # 95% confidence intervals
+  trend = 0
+)
+
+# 3. Extract results
+irf_table <- data.frame(
+  Horizon = 0:12,
+  Effect = lp_results$irf,
+  SE = lp_results$se,
+  Lower_CI = lp_results$irf - 1.96 * lp_results$se,
+  Upper_CI = lp_results$irf + 1.96 * lp_results$se
+)
+
+# 4. Optional: Plot the impulse response
+library(ggplot2)
+ggplot(irf_table, aes(x = Horizon, y = Effect)) +
+  geom_line(color = "blue", size = 1.2) +
+  geom_ribbon(aes(ymin = Lower_CI, ymax = Upper_CI), alpha = 0.2) +
+  labs(
+    title = "Local Projection IV: Mortgage Rate Response",
+    x = "Horizon (months)",
+    y = "Effect on FRM30"
+  ) +
+  theme_minimal()
+######
+library(dplyr)
+library(lpirfs)
+
+# 1. Prepare clean data
+#model_data_clean <- model_data %>%
+#  select(FRM30, DFF, u1) %>%
+#  na.omit()   # Drop rows with any NA
+
+model_data_clean <- model_data %>%
+  filter(!is.na(FRM30) & !is.na(DFF) & !is.na(u1))
+
+
+# 2. Make data frames
+shock_df <- data.frame(DFF = model_data_clean$DFF)     
+instrum_df <- data.frame(u1 = model_data_clean$u1)     
+endog_df <- data.frame(FRM30 = model_data_clean$FRM30)
+
+# 3. Run LP-IV properly
+lp_results <- lp_lin_iv(
+  endog_data = endog_df,
+  shock = shock_df,
+  instrum = instrum_df,
+  exog_data = NULL,
+  lags_endog_lin = 4,
+  lags_exog = 4,
+  hor = 24,
+  confint = 1.96,
+  trend = 1
+)
+
+
+# 4. Build IRF table using the proper components
+irf_table <- data.frame(
+  Horizon = 1:24,  # horizons are 1 to 12 (as per your model)
+  Effect = lp_results$irf_lin_mean[1, ],  # Mean effects
+  Lower_CI = lp_results$irf_lin_low[1, ],  # Lower bound of confidence intervals
+  Upper_CI = lp_results$irf_lin_up[1, ]   # Upper bound of confidence intervals
+)
+
+# Now check the IRF table
+print(irf_table)
+
+# 5. Plot the IRF
+library(ggplot2)
+ggplot(irf_table, aes(x = Horizon, y = Effect)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray") +  # Optional 0-line
+  geom_line(color = "blue", size = 1.2) +
+  geom_ribbon(aes(ymin = Lower_CI, ymax = Upper_CI), alpha = 0.2) +
+  labs(
+    title = "Local Projection IV: Mortgage Rate Response",
+    x = "Horizon (months)",
+    y = "Effect on FRM30"
+  ) +
+  theme_minimal()
+
+# 4. Build IRF table
+irf_table <- data.frame(
+  Horizon = 0:12,
+  Effect = lp_results$irf,
+  SE = lp_results$se,
+  Lower_CI = lp_results$irf - 1.96 * lp_results$se,
+  Upper_CI = lp_results$irf + 1.96 * lp_results$se
+)
+
+# 5. Plot
+library(ggplot2)
+ggplot(irf_table, aes(x = Horizon, y = Effect)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray") +  # optional 0-line
+  geom_line(color = "blue", size = 1.2) +
+  geom_ribbon(aes(ymin = Lower_CI, ymax = Upper_CI), alpha = 0.2) +
+  labs(
+    title = "Local Projection IV: Mortgage Rate Response",
+    x = "Horizon (months)",
+    y = "Effect on FRM30"
+  ) +
+  theme_minimal()
+#sth still off: diagnosis
+colSums(is.na(model_data_clean))
+# Check the lengths of the data inputs
+length(model_data_clean$FRM30)
+length(model_data_clean$DFF)
+length(model_data_clean$u1)
+#they match and have lenght 912
+# Check if data frames are correctly structured
+str(data.frame(FRM30 = model_data_clean$FRM30))
+str(data.frame(DFF = model_data_clean$DFF))
+str(data.frame(u1 = model_data_clean$u1))
+
+lp_results <- lp_lin_iv(
+  endog_data = data.frame(FRM30 = model_data_clean$FRM30),
+  shock = data.frame(DFF = model_data_clean$DFF),
+  instrum = data.frame(u1 = model_data_clean$u1),
+  exog_data = NULL,
+  lags_endog_lin = 4,
+  lags_exog = 4,
+  hor = 12,
+  confint = 1.96,
+  trend = 0
+)
+
+# Check what is inside lp_results
+str(lp_results)
+
+# Plotting the data
+plot(model_data_clean$date, model_data_clean$FRM30, type = "l", main = "FRM30 Over Time", xlab = "Date", ylab = "FRM30")
+
+# Check if there is a clear upward or downward trend
+# Fit a linear model to detect any trend
+lm_trend <- lm(FRM30 ~ date, data = model_data_clean)
+summary(lm_trend)
+
+
+

@@ -1,0 +1,1863 @@
+#recreating Ramey
+library(quantmod)
+library(tidyverse)
+library(quantmod)
+library(readr)
+new_lib <- "C:/Users/2022/Rlibs"
+dir.create(new_lib, showWarnings = FALSE)
+install.packages("lpirfs", lib = new_lib)
+library(lpirfs, lib.loc = new_lib)
+
+library(lpirfs)
+library(ggplot2)
+library(dplyr)
+# Download from FRED
+getSymbols(c("INDPRO", "UNRATE", "CPIAUCSL", "FEDFUNDS", "GS1","BAMLH0A0HYM2EY","PPIACO"), 
+           src = "FRED", 
+           from = "1993-01-01", to = "2022-01-01")
+#credit spreads—the difference in yields between various private debt instruments and government securities of comparable maturity
+#i used ICE BofA US High Yield Index Effective Yield cause Gilchrist and Z only had until...2011? or something
+#BAM needs to be monthly not daily
+# Convert to monthly (last observation per month)
+BAMLH0A0HYM2EY <- to.monthly(BAMLH0A0HYM2EY, indexAt = "lastof")
+
+# Extract data
+BAMLH0A0HYM2EY <- data.frame(
+  date = index(BAMLH0A0HYM2EY),
+  spread = coredata(BAMLH0A0HYM2EY$BAMLH0A0HYM2EY.Close)
+)
+head(BAMLH0A0HYM2EY)
+#remember theres multiple values i think i should use "close date"
+#nvm lets download again
+library(quantmod)
+library(dplyr)
+
+getSymbols("BAMLH0A0HYM2EY", src = "FRED")
+
+# Convert to monthly and keep ONLY the Close column
+hy_monthly <- to.monthly(BAMLH0A0HYM2EY)[, "BAMLH0A0HYM2EY.Close"]
+
+## Convert to data frame and rename columns
+#hy_spread <- fortify.zoo(hy_monthly) %>% 
+#  rename(date = Index, hy_spread = BAMLH0A0HYM2EY.Close)
+#Ramey used logs of INDPRO and CPI 
+#transform and merge
+library(quantmod)
+library(dplyr)
+
+# Convert daily series to monthly (last observation)
+
+HY_monthly <- to.monthly(BAMLH0A0HYM2EY, drop.time=TRUE)[, "BAMLH0A0HYM2EY.Close"]
+
+data <- merge(INDPRO, UNRATE, CPIAUCSL, 
+              FEDFUNDS, GS1, HY_monthly) %>%
+  fortify.zoo() %>%
+  rename(
+    date = Index,  # THIS IS THE CRUCIAL FIX
+    ffr = FEDFUNDS, gs1 = GS1, ebp = BAMLH0A0HYM2EY.Close) %>%
+  mutate(
+    lip = log(INDPRO),
+    lcpi = log(CPIAUCSL)
+  ) %>%
+  select(date, lip, unemp = UNRATE, lcpi, ffr, gs1, ebp)
+
+#converting Jarocinski to monthly
+library(dplyr)
+library(lubridate)
+
+# Step 1: Clean and rename columns
+u1_data <- U1bp %>%
+  # Convert Time column to proper date (handling weird format)
+  mutate(date = as.Date(Time, format = "%Y-%m-%d %H:%M:%S")) %>%
+  # Keep only U1 and rename
+  select(date, shock = u1) %>%
+  # Remove rows with NA shocks
+  filter(!is.na(shock))
+
+# Step 2: Wieland-style monthly aggregation
+u1_monthly <- u1_data %>%
+  mutate(month = floor_date(date, "month")) %>%
+  group_by(month) %>%
+  summarize(
+    N = n(),  # Number of days in month
+    shock_sum = sum(shock),
+    shock_wieland = shock_sum / sqrt(N)  # Volatility-adjusted
+  ) %>%
+  rename(date = month) %>%
+  select(date, shock_wieland)
+
+# Result (first 6 months)
+head(u1_monthly)
+ff4_tc<-copy(u1_monthly)
+library(dplyr)
+library(lubridate)
+
+# Filter the dataset to 1997-2021
+data_filtered <- data %>%
+  filter(date >= as.Date("1996-12-01") & 
+           date <= as.Date("2022-01-01"))
+corn<-copy(data)
+data<-copy(data_filtered)
+data <- na.omit(data)
+# Verify the date range
+range(data_filtered$date)  # Should return: "1997-01-01" "2021-12-31"
+#lp proper
+library(lpirfs)
+library(data.table)
+library(lpirfs)
+
+# Ensure your shock and instrument are one-column data frames
+shock_df <- data.frame(ffr = data$ffr)
+instrum_df <- data.frame(ff4_tc = data$ff4_tc)
+
+
+
+shock_df <- data.frame(ffr = data$ffr)
+instrum_df <- data.frame(ff4_tc = data$ff4_tc)
+
+# Run the lp_lin_iv function
+
+results <- lp_lin_iv(
+  endog_data = data[, c("ffr", "lip", "unemp", "lcpi")],
+  shock = shock_df,
+  instrum = instrum_df,
+  use_twosls = TRUE,
+  lags_endog_lin = 2,
+  hor = 24,
+  confint = 1.68,
+  trend = 1
+)
+
+
+plot(results)
+
+# To plot specific variables:
+plot_var(results, variables = "lip")  # Just industrial production
+plot_var(results, variables = c("lip", "unemp"))  # Multiple variables
+
+# Extract IRFs and confidence bands
+irfs <- results$irf_lin
+lower <- results$conf_int_lin[[1]]
+upper <- results$conf_int_lin[[2]]
+
+# Example: Plot IRF for 'lip'
+plot(irfs$lip, type = "l", col = "blue", ylim = range(c(lower$lip, upper$lip)),
+     ylab = "Response", xlab = "Horizon", main = "IRF: lip")
+lines(lower$lip, col = "red", lty = 2)
+lines(upper$lip, col = "red", lty = 2)
+abline(h = 0, lty = 3)
+
+# Example: IRF for 'unemp'
+plot(irfs$unemp, type = "l", col = "blue", ylim = range(c(lower$unemp, upper$unemp)),
+     ylab = "Response", xlab = "Horizon", main = "IRF: unemp")
+lines(lower$unemp, col = "red", lty = 2)
+lines(upper$unemp, col = "red", lty = 2)
+abline(h = 0, lty = 3)
+
+str(results)
+
+#i get rhombuses :(
+
+install.packages("AER")  # For ivreg()
+install.packages("ivreg")  # Alternative package
+
+
+library(AER)  # Load the package
+
+# Correct first-stage specification
+first_stage <- ivreg(ffr ~ lip + unemp + lcpi + ff4_tc | 
+                       lip + unemp + lcpi + instrum_df$ff4_tc,
+                     data = data)
+
+# Get detailed summary including F-stat
+summary(first_stage, diagnostics = TRUE)
+
+# Check the structure of ff4_tc
+str(instrum_df$ff4_tc)
+
+# Convert from list to numeric if needed
+instrum_df$ff4_tc <- unlist(instrum_df$ff4_tc)
+
+
+# Check dimensions
+nrow(data)  # Should match nrow(shock_df) and nrow(instrum_df)
+nrow(shock_df)
+nrow(instrum_df)
+
+# Check if instrument exists in main data
+"ff4_tc" %in% colnames(data)
+
+# Check if you have the instrument variable anywhere
+ls()  # List all objects in your environment
+
+# Verify ff4_tc has correct length
+length(ff4_tc) == nrow(data)  # Should be TRUE
+
+# Add to main dataframe
+data$ff4_tc <- ff4_tc
+
+#my problem cause shocks are nt happening every month 
+# Convert ff4_tc to dataframe if it isn't
+if(!is.data.frame(ff4_tc)) {
+  ff4_tc_df <- data.frame(date = names(ff4_tc), value = unlist(ff4_tc))
+} else {
+  ff4_tc_df <- ff4_tc
+}
+
+# Merge with main data
+data <- merge(data, ff4_tc_df, by = "date", all.x = TRUE)
+
+plot(ff4_tc_df$date, ff4_tc_df$shock_wieland, main = "Instrument Coverage")
+abline(v = range(data$date), col = "red")
+
+
+
+
+# After proper merging:
+results <- lp_lin_iv(
+  endog_data = data[, c("ffr", "lip", "unemp", "lcpi")],
+  shock = data$ffr,
+  instrum = data$ff4_tc,  # Now properly merged
+  use_twosls = TRUE,
+  lags_endog_lin = 3,
+  hor = 24,
+  confint = 1.68,
+  trend = 1
+)
+
+# Check if ff4_tc exists as a separate object
+exists("ff4_tc")  # Should return TRUE
+length(ff4_tc)    # Confirm it has values (should be > 0)
+
+
+# Compare lengths
+nrow(data)    # Your main data (302 rows)
+length(ff4_tc) # Your instrument (195 rows)
+
+# Check if dates are in different formats
+head(data$date)
+head(names(ff4_tc))  # If it's a named vector
+colnames(data)
+data2<-copy(data)
+
+library(dplyr)
+
+# 1. Ensure all dates are proper Date objects
+data$date <- as.Date(data$date)
+ff4_tc$date <- as.Date(ff4_tc$date)
+
+# 2. Create the instrument dataframe (now using the merged 'shock_wieland')
+instrum_df <- data.frame(ff4_tc = data$shock_wieland)
+
+# 3. Verify instrument alignment
+cat("Instrument coverage:", sum(!is.na(data$shock_wieland)), "of", nrow(data), "observations\n")
+
+# 4. Run the analysis with proper error handling
+results <- tryCatch({
+  lp_lin_iv(
+    endog_data = data[, c("ffr", "lip", "unemp", "lcpi")],
+    shock = data.frame(ffr_shock = data$ffr),  # Explicit shock df
+    instrum = instrum_df,
+    use_twosls = TRUE,
+    lags_endog_lin = 3,
+    hor = 24,
+    confint = 1.68,
+    trend = 1
+  )
+}, error = function(e) {
+  message("Error in lp_lin_iv(): ", e$message)
+  return(NULL)
+})
+
+
+
+
+# Check correlation between instrument and endogenous variables
+cor_matrix <- cor(data[, c("shock_wieland", "ffr", "lip", "unemp", "lcpi")], 
+                  use = "complete.obs")
+print(cor_matrix)
+
+# If |correlation| > 0.95 between shock_wieland and any other variable, you have collinearity
+# no collinearity 
+shock_wieland        ffr         lip       unemp       lcpi
+shock_wieland    1.00000000 -0.1180422  0.08707073  0.06707925  0.1067400
+ffr             -0.11804223  1.0000000 -0.22812907 -0.59345974 -0.6847713
+lip              0.08707073 -0.2281291  1.00000000 -0.30769873  0.7169416
+unemp            0.06707925 -0.5934597 -0.30769873  1.00000000  0.2045798
+lcpi             0.10674002 -0.6847713  0.71694162  0.20457978  1.0000000
+
+# Check if shock_wieland has zero variation in any month
+zero_var_periods <- sapply(split(data$shock_wieland, format(data$date, "%Y-%m")), sd) == 0
+sum(zero_var_periods)  # Count of months with constant shocks
+#zero mths with constant shocs 
+
+
+# Add microscopic noise (preserves economic meaning while fixing numerical instability)
+set.seed(123)
+data$shock_wieland <- data$shock_wieland + rnorm(nrow(data), sd = sd(data$shock_wieland)/1e6)
+#Warning message:
+#In rnorm(nrow(data), sd = sd(data$shock_wieland)/1e+06) : NAs produced
+
+
+
+
+
+results <- lp_lin_iv(
+  endog_data = data[, c("lip", "unemp", "lcpi")],  # Exclude ffr from endog
+  shock = data$ffr,
+  instrum = data.frame(instr = data$shock_wieland),
+  use_twosls = FALSE,  # Try LIML instead of 2SLS
+  lags_endog_lin = 2,  # Reduced lags
+  hor = 24,
+  confint = 1.68,
+  trend = 0  # Try without trend
+)#nothing not data>frame
+
+# Check numerical rank of your design matrix
+X <- cbind(1, data$shock_wieland, data$lip, data$unemp, data$lcpi) # Add constant
+matrix_rank <- qr(X)$rank
+required_rank <- ncol(X)
+cat("Matrix rank:", matrix_rank, "/", required_rank, "\n")
+
+data<-copy(data2)
+#ok sth wron still
+# Check NA patterns without 'mice'
+na_summary <- sapply(data[, c("ffr", "lip", "unemp", "lcpi", "shock_wieland")], 
+                     function(x) sum(is.na(x)))
+print("NA Counts:")
+print(na_summary)
+
+# Check zero-variance columns
+zero_var <- sapply(data[, c("ffr", "lip", "unemp", "lcpi", "shock_wieland")],
+                   function(x) length(unique(x)) == 1)
+print("Constant Columns:")
+print(zero_var)
+
+#the nas are the problem in wieland shocks 
+# Check NA distribution
+na_dates <- data$date[is.na(data$shock_wieland)]
+cat("NAs occur in:", format(range(na_dates), "%Y-%m"), "\n")
+
+# Visualize missingness
+plot(data$date, is.na(data$shock_wieland), 
+     type = "h", ylab = "Is NA", 
+     main = "NA Values in shock_wieland")
+
+
+# Filter to only rows with shocks
+shock_data <- data[!is.na(data$shock_wieland), ]
+
+# Verify shock distribution
+cat("Shock count:", nrow(shock_data), "/", nrow(data), 
+    "(", round(100*nrow(shock_data)/nrow(data),1), "%)\n")
+
+# Plot shock timing
+plot(shock_data$date, shock_data$shock_wieland,
+     type="h", lwd=2, col="red",
+     main="Sporadic Shock Events",
+     ylab="Shock Magnitude", xlab="Date")
+
+install.packages("lfe")
+library(lfe)
+
+# Create leads/lags around shocks
+shock_data <- shock_data %>%
+  mutate(event_time = 0) %>%  # Shock date = t=0
+  complete(event_time = -12:12)  # Create window around shocks
+
+# Estimate dynamic effects
+event_study <- felm(lip ~ shock_wieland | ffr + unemp + lcpi, 
+                    data = shock_data)
+summary(event_study)
+Call:
+  felm(formula = lip ~ shock_wieland | ffr + unemp + lcpi, data = shock_data) 
+
+Residuals:
+  Min         1Q     Median         3Q        Max 
+-6.432e-10  0.000e+00  0.000e+00  0.000e+00  6.432e-10 
+
+Coefficients:
+  Estimate Std. Error t value Pr(>|t|)
+shock_wieland  -0.2029        NaN     NaN      NaN
+
+Residual standard error: NaN on -152 degrees of freedom
+(24 observations deleted due to missingness)
+Multiple R-squared(full model):     1   Adjusted R-squared:     1 
+Multiple R-squared(proj model): 0.174   Adjusted R-squared: 2.054 
+F-statistic(full model):-3.178e+17 on 346 and -152 DF, p-value: NA 
+F-statistic(proj model): -32.03 on 1 and -152 DF, p-value: NA 
+*** Standard errors may be too high due to more than 2 groups and exactDOF=FALSE
+# maybe collinear maybe sth bad
+
+# Check shock distribution
+shock_stats <- data %>%
+  filter(!is.na(shock_wieland)) %>%
+  summarise(
+    N = n(),
+    Mean = mean(shock_wieland),
+    SD = sd(shock_wieland),
+    Unique = n_distinct(shock_wieland)
+  )
+print(shock_stats)
+
+# Expected: SD > 0 and Unique > 1
+
+# Keep only valid shock periods
+shock_data <- data %>% 
+  filter(!is.na(shock_wieland)) %>%
+  mutate(time = dense_rank(date))  # Create time index
+
+# Verify
+nrow(shock_data)  # Should match shock_stats$N (195)
+library(ivreg)
+iv_model <- ivreg(
+  lip ~ ffr + unemp + lcpi | 
+    shock_wieland + unemp + lcpi,
+  data = shock_data
+)
+
+# Check diagnostics
+summary(iv_model, diagnostics = TRUE)
+
+
+
+
+library(ggplot2)
+ggplot(shock_data, aes(x = date)) +
+  geom_line(aes(y = scale(ffr)), color = "black", linewidth = 1) +
+  geom_col(aes(y = scale(shock_wieland)), fill = "red", alpha = 0.5, width = 5, na.rm = TRUE) +
+  labs(
+    title = "FFR vs. Monetary Policy Shocks",
+    subtitle = "Red bars show the shock magnitudes",
+    y = "Standardized values",
+    x = "Date"
+  ) +
+  theme_minimal()
+
+
+# First, create a new column for FFR changes
+shock_data <- shock_data %>%
+  mutate(ffr_change = c(NA, diff(ffr)))
+
+# Now, plot the scatter plot with shock_wieland vs. ffr_change (using one color)
+ggplot(shock_data, aes(x = shock_wieland, y = ffr_change)) +
+  geom_point(color = "blue", size = 2) +  # Use one color (blue)
+  labs(
+    title = "FFR Changes vs. Monetary Policy Shocks",
+    x = "Shock Magnitude",
+    y = "FFR Change"
+  ) +
+  theme_minimal()
+
+
+
+ggplot(data, aes(x = shock_wieland, y = ffr_change)) +
+  geom_point(aes(color = ifelse(shock_wieland > 0, "red", "blue"))) + # Set color based on shock_wieland
+  geom_smooth(method = "lm", se = FALSE, color = "black", na.rm = TRUE) +
+  labs(
+    title = "FFR Changes vs. Monetary Policy Shocks",
+    x = "Shock Magnitude",
+    y = "FFR Change",
+    color = "Shock Size"
+  ) +
+  theme_minimal()
+
+
+
+library(sandwich)
+library(lmtest)
+
+# Set horizon (e.g., 24 months)
+horizon <- 24
+lp_results <- list()
+
+for (h in 0:horizon) {
+  # Create leaded dependent variable
+  shock_data[[paste0("lip_lead", h)]] <- dplyr::lead(shock_data$lip, h)
+  
+  # Estimate LP equation
+  lp_results[[h+1]] <- lm(as.formula(paste0("lip_lead", h, " ~ shock_wieland")),
+                          data = shock_data)
+  
+  # Add robust standard errors
+  lp_results[[h+1]]$vcov <- vcovHAC(lp_results[[h+1]])
+}
+
+# Extract coefficients
+irf <- sapply(lp_results, function(x) coef(x)["shock_wieland"])
+
+
+# Create results dataframe
+irf_df <- data.frame(
+  horizon = 0:horizon,
+  effect = sapply(lp_results, function(x) coef(x)["shock_wieland"]),
+  se = sapply(lp_results, function(x) sqrt(diag(vcovHAC(x)))["shock_wieland"])
+)
+
+# Plot
+ggplot(irf_df, aes(x = horizon, y = effect)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_ribbon(aes(ymin = effect - 1.96*se, ymax = effect + 1.96*se), 
+              alpha = 0.2) +
+  geom_line(color = "blue", linewidth = 1) +
+  geom_point(color = "red") +
+  labs(
+    title = "Dynamic Effects of Monetary Policy Shocks",
+    subtitle = "Local projection using shock periods only",
+    x = "Months After Shock",
+    y = "Effect on Industrial Production"
+  )
+
+
+
+
+
+# Keep only shock periods and create lags
+shock_data <- data %>%
+  filter(!is.na(shock_wieland)) %>%
+  mutate(across(c(lip, unemp, lcpi, ffr), 
+                list(lag1 = ~lag(.x, 1), lag2 = ~lag(.x, 2)), 
+                .names = "{.col}_{.fn}")) %>%
+  na.omit()  # Drop rows with missing lags
+
+# Verify
+cat("Using", nrow(shock_data), "shock periods with complete data\n")
+library(sandwich)
+library(lmtest)
+
+horizon <- 24  # Response horizon in months
+lp_results <- list()
+
+for (h in 0:horizon) {
+  # Create leaded dependent variable
+  shock_data[[paste0("lip_lead", h)]] <- dplyr::lead(shock_data$lip, h)
+  
+  # Estimate LP equation
+  lp_formula <- paste0(
+    "lip_lead", h, " ~ shock_wieland + ",
+    "ffr + unemp + lcpi + ",  # Contemporary controls
+    "ffr_lag1 + unemp_lag1 + lcpi_lag1 + ",  # Lagged controls
+    "ffr_lag2 + unemp_lag2 + lcpi_lag2"  # Additional lags
+  )
+  
+  lp_results[[h+1]] <- lm(as.formula(lp_formula), data = shock_data)
+  
+  # Store robust standard errors
+  lp_results[[h+1]]$vcov <- vcovHAC(lp_results[[h+1]])
+}
+# Extract shock coefficients and SEs
+irf_df <- data.frame(
+  horizon = 0:horizon,
+  effect = sapply(lp_results, function(x) coef(x)["shock_wieland"]),
+  se = sapply(lp_results, function(x) sqrt(x$vcov["shock_wieland", "shock_wieland"]))
+)
+
+# Plot
+library(ggplot2)
+ggplot(irf_df, aes(x = horizon, y = effect)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_ribbon(aes(ymin = effect - 1.96*se, ymax = effect + 1.96*se), alpha = 0.2) +
+  geom_line(color = "blue", linewidth = 1) +
+  geom_point(color = "red") +
+  labs(
+    title = "Dynamic Effects of Monetary Policy Shocks",
+    subtitle = "Controlling for FFR, Unemployment, and CPI",
+    x = "Months After Shock",
+    y = "Effect on Industrial Production"
+  )
+
+
+library(lpirfs)
+
+# Ensure shock_data contains your instrument (e.g., ff4_tc or ebp)
+shock_data <- data %>% 
+  filter(!is.na(shock_wieland))  # Keep only shock periods
+results <- lp_lin_iv(
+  endog_data = data[, c("ffr", "lip", "unemp", "lcpi")],
+  shock = shock_df,
+  instrum = instrum_df,
+  use_twosls = TRUE,
+  lags_endog_lin = 2,
+  hor = 24,
+  confint = 1.68,
+  trend = 1
+)
+
+
+plot(results)
+
+# Run the lp_lin_iv function
+shock_data <- data %>% 
+  filter(!is.na(shock_wieland))
+
+results <- lp_lin_iv(
+  endog_data = data[, c("ffr", "lip", "unemp", "lcpi")],
+  shock = shock_df,
+  instrum = instrum_df,
+  use_twosls = TRUE,
+  lags_endog_lin = 2,
+  hor = 24,
+  confint = 1.68,
+  trend = 1
+)
+
+plot(results)
+# To plot specific variables:
+plot_var(results, variables = "lip")  # Just industrial production
+plot_var(results, variables = c("lip", "unemp"))  # Multiple variables
+
+# Extract IRFs and confidence bands
+irfs <- results$irf_lin
+lower <- results$conf_int_lin[[1]]
+upper <- results$conf_int_lin[[2]]
+
+# Example: Plot IRF for 'lip'
+plot(irfs$lip, type = "l", col = "blue", ylim = range(c(lower$lip, upper$lip)),
+     ylab = "Response", xlab = "Horizon", main = "IRF: lip")
+lines(lower$lip, col = "red", lty = 2)
+lines(upper$lip, col = "red", lty = 2)
+abline(h = 0, lty = 3)
+
+# Example: IRF for 'unemp'
+plot(irfs$unemp, type = "l", col = "blue", ylim = range(c(lower$unemp, upper$unemp)),
+     ylab = "Response", xlab = "Horizon", main = "IRF: unemp")
+lines(lower$unemp, col = "red", lty = 2)
+lines(upper$unemp, col = "red", lty = 2)
+abline(h = 0, lty = 3)
+
+str(results)
+
+library(dplyr)
+library(sandwich)
+library(lmtest)
+library(dplyr)
+library(sandwich)
+library(lmtest)
+
+# Keep shock periods and create lags for controls
+shock_data <- data %>%
+  filter(!is.na(shock_wieland)) %>%
+  mutate(
+    across(c(ffr, lip, unemp, lcpi), 
+           list(lag1 = ~lag(.x, 1), lag2 = ~lag(.x, 2)), 
+           .names = "{.col}_{.fn}")
+  ) %>%
+  na.omit()  # Drop rows with missing lags
+
+horizon <- 24  # Response horizon (months)
+lp_results <- list()
+
+for (h in 0:horizon) {
+  # Create leaded FFR (dependent variable)
+  shock_data[[paste0("ffr_lead", h)]] <- dplyr::lead(shock_data$ffr, h)
+  
+  # LP formula: FFR response to shock, controlling for macro variables
+  lp_formula <- paste0(
+    "ffr_lead", h, " ~ shock_wieland + ",  # Shock of interest
+    "lip + unemp + lcpi + ",               # Contemporary controls
+    "lip_lag1 + unemp_lag1 + lcpi_lag1 + ", # 1-period lags
+    "lip_lag2 + unemp_lag2 + lcpi_lag2"     # 2-period lags
+  )
+  
+  # Estimate model
+  lp_results[[h+1]] <- lm(as.formula(lp_formula), data = shock_data)
+  
+  # Add robust standard errors
+  lp_results[[h+1]]$vcov <- vcovHAC(lp_results[[h+1]])
+}
+
+# Extract coefficients and SEs
+irf_df <- data.frame(
+  horizon = 0:horizon,
+  effect = sapply(lp_results, function(x) coef(x)["shock_wieland"]),
+  se = sapply(lp_results, function(x) sqrt(x$vcov["shock_wieland", "shock_wieland"]))
+)
+
+# Plot
+library(ggplot2)
+ggplot(irf_df, aes(x = horizon, y = effect)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_ribbon(aes(ymin = effect - 1.96*se, ymax = effect + 1.96*se), 
+              alpha = 0.2, fill = "blue") +
+  geom_line(color = "darkblue", linewidth = 1) +
+  geom_point(color = "red") +
+  labs(
+    title = "Dynamic Effects of Shocks on the Federal Funds Rate",
+    subtitle = "Controlling for Industrial Production, Unemployment, and CPI",
+    x = "Months After Shock",
+    y = "Effect on FFR (Percentage Points)"
+  ) +
+  theme_minimal()
+
+
+
+
+library(dplyr)
+library(sandwich)
+library(lmtest)
+
+# Keep only shock periods and create lags
+shock_data <- data %>%
+  filter(!is.na(shock_wieland)) %>%
+  mutate(
+    across(c(lcpi, unemp, ffr, lip), 
+           list(lag1 = ~lag(.x, 1), lag2 = ~lag(.x, 2)),
+           .names = "{.col}_{.fn}"
+    ) %>%
+      na.omit()
+    
+    cat("Using", nrow(shock_data), "shock periods with complete data\n")
+    
+    unemp_results <- list()
+    
+    for (h in 0:horizon) {
+      shock_data[[paste0("unemp_lead", h)]] <- dplyr::lead(shock_data$unemp, h)
+      
+      formula <- paste0(
+        "unemp_lead", h, " ~ shock_wieland + ",
+        "ffr + lcpi + lip + ",           # Contemporary controls
+        "ffr_lag1 + lcpi_lag1 + lip_lag1 + ",  # 1-period lags
+        "ffr_lag2 + lcpi_lag2 + lip_lag2"      # 2-period lags
+      )
+      
+      unemp_results[[h+1]] <- lm(as.formula(formula), data = shock_data)
+      unemp_results[[h+1]]$vcov <- vcovHAC(unemp_results[[h+1]])
+    }
+    
+    lcpi_irf <- data.frame(
+      horizon = 0:horizon,
+      effect = sapply(lcpi_results, function(x) coef(x)["shock_wieland"]),
+      se = sapply(lcpi_results, function(x) sqrt(x$vcov["shock_wieland", "shock_wieland"]))
+    )
+    
+    ggplot(lcpi_irf, aes(x = horizon, y = effect)) +
+      geom_hline(yintercept = 0, linetype = "dashed") +
+      geom_ribbon(aes(ymin = effect - 1.96*se, ymax = effect + 1.96*se), alpha = 0.2) +
+      geom_line(color = "red") +
+      labs(title = "CPI Response to Monetary Policy Shocks", x = "Horizon (months)", y = "Effect on CPI")
+    
+    
+    unemp_irf <- data.frame(
+      horizon = 0:horizon,
+      effect = sapply(unemp_results, function(x) coef(x)["shock_wieland"]),
+      se = sapply(unemp_results, function(x) sqrt(x$vcov["shock_wieland", "shock_wieland"]))
+    )
+    
+    ggplot(unemp_irf, aes(x = horizon, y = effect)) +
+      geom_hline(yintercept = 0, linetype = "dashed") +
+      geom_ribbon(aes(ymin = effect - 1.96*se, ymax = effect + 1.96*se), alpha = 0.2) +
+      geom_line(color = "blue") +
+      labs(title = "Unemployment Response to Monetary Policy Shocks", x = "Horizon (months)", y = "Effect on Unemployment Rate")
+    
+    #better
+    library(dplyr)
+    library(sandwich)
+    library(lmtest)
+    
+    # Keep only shock periods and create lags
+    shock_data <- data %>%
+      filter(!is.na(shock_wieland)) %>%
+      mutate(
+        across(c(lcpi, unemp, ffr, lip), 
+               list(lag1 = ~lag(.x, 1), lag2 = ~lag(.x, 2)), 
+               .names = "{.col}_{.fn}")
+      ) %>%
+      na.omit()
+    
+    cat("Using", nrow(shock_data), "shock periods with complete data\n")
+    
+    horizon <- 24  # Response horizon (months)
+    lcpi_results <- list()
+    
+    for (h in 0:horizon) {
+      # Create leaded CPI
+      shock_data[[paste0("lcpi_lead", h)]] <- dplyr::lead(shock_data$lcpi, h)
+      
+      # LP formula: CPI ~ shock + controls (contemporary + 2 lags)
+      formula <- paste0(
+        "lcpi_lead", h, " ~ shock_wieland + ",
+        "ffr + unemp + lip + ",           # Contemporary controls
+        "ffr_lag1 + unemp_lag1 + lip_lag1 + ",  # 1-period lags
+        "ffr_lag2 + unemp_lag2 + lip_lag2"      # 2-period lags
+      )
+      
+      # Estimate model with HAC SEs
+      lcpi_results[[h+1]] <- lm(as.formula(formula), data = shock_data)
+      lcpi_results[[h+1]]$vcov <- vcovHAC(lcpi_results[[h+1]])
+    }
+    
+    unemp_results <- list()
+    
+    for (h in 0:horizon) {
+      # Create leaded unemployment
+      shock_data[[paste0("unemp_lead", h)]] <- dplyr::lead(shock_data$unemp, h)
+      
+      # LP formula: Unemployment ~ shock + controls
+      formula <- paste0(
+        "unemp_lead", h, " ~ shock_wieland + ",
+        "ffr + lcpi + lip + ",           # Contemporary controls
+        "ffr_lag1 + lcpi_lag1 + lip_lag1 + ",  # 1-period lags
+        "ffr_lag2 + lcpi_lag2 + lip_lag2"      # 2-period lags
+      )
+      
+      # Estimate model with HAC SEs
+      unemp_results[[h+1]] <- lm(as.formula(formula), data = shock_data)
+      unemp_results[[h+1]]$vcov <- vcovHAC(unemp_results[[h+1]])
+    }
+    
+    library(ggplot2)
+    
+    # Extract CPI results
+    lcpi_irf <- data.frame(
+      horizon = 0:horizon,
+      effect = sapply(lcpi_results, function(x) coef(x)["shock_wieland"]),
+      se = sapply(lcpi_results, function(x) sqrt(x$vcov["shock_wieland", "shock_wieland"]))
+    )
+    
+    # Plot
+    ggplot(lcpi_irf, aes(x = horizon, y = effect)) +
+      geom_hline(yintercept = 0, linetype = "dashed") +
+      geom_ribbon(aes(ymin = effect - 1.96*se, ymax = effect + 1.96*se), 
+                  alpha = 0.2, fill = "red") +
+      geom_line(color = "darkred", linewidth = 1) +
+      labs(
+        title = "CPI Response to Monetary Policy Shocks",
+        subtitle = "Controlling for FFR, Unemployment, and Industrial Production",
+        x = "Horizon (months)",
+        y = "Effect on CPI"
+      ) +
+      theme_minimal()
+    
+    
+    # Extract Unemployment results
+    unemp_irf <- data.frame(
+      horizon = 0:horizon,
+      effect = sapply(unemp_results, function(x) coef(x)["shock_wieland"]),
+      se = sapply(unemp_results, function(x) sqrt(x$vcov["shock_wieland", "shock_wieland"]))
+    )
+    
+    # Plot
+    ggplot(unemp_irf, aes(x = horizon, y = effect)) +
+      geom_hline(yintercept = 0, linetype = "dashed") +
+      geom_ribbon(aes(ymin = effect - 1.96*se, ymax = effect + 1.96*se), 
+                  alpha = 0.2, fill = "blue") +
+      geom_line(color = "darkblue", linewidth = 1) +
+      labs(
+        title = "Unemployment Response to Monetary Policy Shocks",
+        subtitle = "Controlling for FFR, CPI, and Industrial Production",
+        x = "Horizon (months)",
+        y = "Effect on Unemployment Rate"
+      ) +
+      theme_minimal()
+    colnames(data)
+    
+    
+    data3 <- merge(INDPRO, UNRATE, CPIAUCSL, 
+                   FEDFUNDS, GS1, HY_monthly) %>%
+      fortify.zoo() %>%
+      rename(
+        date = Index,  # Crucial fix to rename 'Index' as 'date'
+        ffr = FEDFUNDS, gs1 = GS1, ebp = BAMLH0A0HYM2EY.Close
+      ) %>%
+      mutate(
+        lip = log(INDPRO),             # Log of industrial production
+        lcpi = log(CPIAUCSL),          # Log of CPI
+        lpcom = log(PPIACO)      # Log of commodity price index (scaled)
+      ) %>%
+      select(date, lip, unemp = UNRATE, lcpi, ffr, gs1, ebp, lpcom)
+    
+    
+    # Convert each xts object to a data frame with 'date' as a column
+    INDPRO_df <- data.frame(date = index(INDPRO), INDPRO)
+    CPIAUCSL_df <- data.frame(date = index(CPIAUCSL), CPIAUCSL)
+    PPIACO_df <- data.frame(date = index(PPIACO), PPIACO)
+    UNRATE_df <- data.frame(date = index(UNRATE), UNRATE)
+    FEDFUNDS_df <- data.frame(date = index(FEDFUNDS), FEDFUNDS)
+    GS1_df <- data.frame(date = index(GS1), GS1)
+    BAMLH0A0HYM2EY_df <- data.frame(date = index(BAMLH0A0HYM2EY_monthly), BAMLH0A0HYM2EY_monthly)
+
+    
+    # Start with the first two data frames and merge them
+    data_merged <- merge(INDPRO_df, CPIAUCSL_df, by = "date", all = TRUE)
+    
+    # Continue merging the rest of the data frames
+    data_merged <- merge(data_merged, PPIACO_df, by = "date", all = TRUE)
+    data_merged <- merge(data_merged, UNRATE_df, by = "date", all = TRUE)
+    data_merged <- merge(data_merged, FEDFUNDS_df, by = "date", all = TRUE)
+    data_merged <- merge(data_merged, GS1_df, by = "date", all = TRUE)
+    data_merged <- merge(data_merged, BAMLH0A0HYM2EY_df, by = "date", all = TRUE)
+    
+    
+    
+    
+    
+    data_merged2 <- data_merged %>%
+      mutate(
+        # Create new variables
+        ffr = FEDFUNDS,  # Create ffr as FEDFUNDS
+        gs1 = GS1,       # Create gs1 as GS1
+        ebp = BAMLH0A0HYM2EY,  # Create ebp from the BAMLH0A0HYM2EY Close price
+        
+        # Compute log transformations
+        lip = log(INDPRO),           # log of INDPRO
+        lcpi = log(CPIAUCSL),        # log of CPIAUCSL
+        lpcom = 100 * log(PPIACO)    # 100 * log of PPIACO (commodity index)
+      ) %>%
+      select(date, lip, lcpi, lpcom, unemp = UNRATE, ffr, gs1, ebp)
+    
+    # Load required package for time series manipulation
+    library(xts)
+    BAMLH0A0HYM2EY_df<-copy(BAMLH0A0HYM2EY_monthly)
+    # Convert BAMLH0A0HYM2EY to monthly frequency (using the first day of the month for aggregation)
+    BAMLH0A0HYM2EY_monthly <- to.monthly(BAMLH0A0HYM2EY, indexAt = "firstofmonth", OHLC = FALSE)
+    index(BAMLH0A0HYM2EY_monthly) <- as.Date(format(index(BAMLH0A0HYM2EY_monthly), "%Y-%m-01"))
+    # Extract the 'Close' column as a separate time series for further use
+    BAMLH0A0HYM2EY_monthly <- BAMLH0A0HYM2EY_monthly[, "BAMLH0A0HYM2EY.Close"]
+    
+    # Now mutate to create the new variables (lip, lcpi, lpcom)
+    data_clean_monthly <- data_merged_monthly %>%
+      mutate(
+        # Create new variables
+        ffr = FEDFUNDS,  # Create ffr as FEDFUNDS
+        gs1 = GS1,       # Create gs1 as GS1
+        ebp = BAMLH0A0HYM2EY.Close,  # Create ebp from the BAMLH0A0HYM2EY Close price
+        
+        # Compute log transformations
+        lip = log(INDPRO),           # log of INDPRO
+        lcpi = log(CPIAUCSL),        # log of CPIAUCSL
+        lpcom = 100 * log(PPIACO)    # 100 * log of PPIACO (commodity index)
+      ) %>%
+      select(date, lip, lcpi, lpcom, unemp = UNRATE, ffr, gs1, ebp)
+    
+    # Check the structure of the resulting data frame
+    str(data_clean_monthly)
+    colnames(data_merged2)
+    
+    library(dplyr)
+    library(tidyr)
+    library(broom)
+    library(ggplot2)
+    library(sandwich)
+    library(lmtest)
+    library(purrr)
+    
+    # Merge shocks into your data
+    data_full <- data_merged2 %>%
+      left_join(ff4_tc, by = "date")  # assuming they both have "date" variable
+    shock_var <- "shock_wieland_lag1"
+    
+    # Parameters
+    horizons <- 0:48  # 0 to 48 months ahead
+    p <- 2  # number of lags for control variables
+    q <- 1  # minimum number of lags for controls (used in Stata to control for endogeneity)
+    shock_var <- "shock"  # name of your monetary shock variable
+    controls <- c("lip", "unemp", "lcpi", "lpcom", "ffr")  # your control variables
+    dependent_vars <- c("ffr", "lip", "lcpi", "unemp")  # variables you want IRFs for
+
+    # Function to create lag variables
+    create_lags <- function(data, var, lags) {
+      for (i in 1:lags) {
+        data[[paste0(var, "_lag", i)]] <- dplyr::lag(data[[var]], i)
+      }
+      data
+    }
+    
+    # Prepare lags
+    for (var in controls) {
+      data_full <- create_lags(data_full, var, p)
+    }
+   # data_full <- create_lags(data_full, shock_var, p)  # lag of shock (optional)
+    # Create the lagged variable
+    data_full <- data_full %>%
+      mutate(shock_wieland_lag1 = lag(shock_wieland, 1))
+    # Initialize storage
+    lp_results <- list()
+    
+    for (var_dep in dependent_vars) {
+      result_list <- list()
+      
+      for (h in horizons) {
+        
+        # Lead dependent variable by h
+        data_full <- data_full %>%
+          mutate(dep_lead = lead(.data[[var_dep]], h))
+        
+        # Regression formula
+        regressors <- paste(
+          c(
+            "shock_wieland_lag1",
+            paste0(controls, "_lag1"),
+            paste0(controls, "_lag2")
+          ),
+          collapse = " + "
+        )
+        formula_lp <- as.formula(paste("dep_lead ~", regressors))
+        
+        # Estimate
+        fit <- lm(formula_lp, data = data_full)
+        
+        # Get robust (Newey-West) standard errors with lag=h+1
+        nw_se <- sqrt(diag(NeweyWest(fit, lag = h + 1, prewhite = FALSE)))
+        
+        coef_shock <- coef(fit)[["shock_wieland_lag1"]]
+        se_shock <- nw_se[["shock_wieland_lag1"]]
+        
+        
+        result_list[[as.character(h)]] <- tibble(
+          horizon = h,
+          coef = coef_shock,
+          se = se_shock,
+          lower = coef_shock - 1.68 * se_shock,
+          upper = coef_shock + 1.68 * se_shock
+        )
+      }
+      
+      lp_results[[var_dep]] <- bind_rows(result_list)
+    }
+    
+    # Plot function
+    plot_irf <- function(irf_df, varname) {
+      ggplot(irf_df, aes(x = horizon, y = coef)) +
+        geom_ribbon(aes(ymin = lower, ymax = upper), fill = "grey80", alpha = 0.5) +
+        geom_line(color = "black") +
+        geom_point(color = "black") +
+        labs(title = paste("Impulse Response of", varname),
+             x = "Horizon (months)",
+             y = "Response") +
+        theme_minimal()
+    }
+    
+    # Generate and show plots
+    for (var in dependent_vars) {
+      print(plot_irf(lp_results[[var]], var))
+    }
+   
+    
+    
+    # Step 1: Replace missing original shocks with 0
+    data_full <- data_full %>%
+      mutate(shock_wieland = ifelse(is.na(shock_wieland), 0, shock_wieland))
+    colnames(data_full)
+
+    # Regression formula
+    regressors <- paste(
+      c(
+        "shock_wieland_lag1",   # <-- quotes here!
+        paste0(controls, "_lag1"),
+        paste0(controls, "_lag2")
+      ),
+      collapse = " + "
+    )
+    formula_lp <- as.formula(paste("dep_lead ~", regressors))
+    
+    # Estimate
+    fit <- lm(formula_lp, data = data_full)
+    
+    # Newey-West standard errors
+    nw_se <- sqrt(diag(NeweyWest(fit, lag = h + 1, prewhite = FALSE)))
+    
+    # Get coefficients
+    coef_shock <- coef(fit)[["shock_wieland_lag1"]]
+    se_shock <- nw_se[["shock_wieland_lag1"]]
+    
+    library(gridExtra)
+    plot_list <- lapply(dependent_vars, function(var) plot_irf(lp_results[[var]], var))
+    
+    # Arrange in 2 rows x 2 columns
+    grid.arrange(grobs = plot_list, ncol = 2)
+   
+    
+    
+     
+    ###bauer shocks########################
+    
+    head(FOMC_Bauer_Swanson$Date)
+   
+    bauer <- FOMC_Bauer_Swanson %>%
+      mutate(
+        MPS_ORTH = as.numeric(MPS_ORTH),  # shock converted to numeric
+        date = as.Date(format(as.Date(Date), "%Y-%m-01"))  # 1st of month start
+      ) %>%
+      group_by(date) %>%
+      summarise(
+        shock_bauer = sum(MPS_ORTH, na.rm = TRUE)  # sum for multiples
+      ) %>%
+      ungroup()
+    
+    
+        bauer <- FOMC_Bauer_Swanson %>%
+      mutate(
+        date = as.Date(format(as.Date(Date), "%Y-%m-01"))  # take 'Date', force to Date, snap to 1st
+      ) %>%
+      group_by(date) %>%
+      summarise(
+        shock_bauer = sum(MPS_ORTH, na.rm = TRUE)  # sum shocks if multiple same month
+      ) %>%
+      ungroup()
+        
+        # Merge into your main data (data_full)
+        data_full <- data_full %>%
+          left_join(bauer, by = "date")
+
+        # Fill missing shock values with 0
+        data_full <- data_full %>%
+          mutate(shock_bauer = ifelse(is.na(shock_bauer), 0, shock_bauer))
+
+        #data_full <- data_full %>%
+         # mutate(shock_bs_lag1 = lag(shock_bauer, 1))
+        
+        data_full <- data_full %>%
+          mutate(
+            shock_bauer_lag1 = lag(shock_bauer, 1),
+            shock_bauer_lag2 = lag(shock_bauer, 2)
+          )
+        
+
+        library(sandwich)
+        library(lmtest)
+        library(tidyverse)
+        library(gridExtra)
+        
+        # Set variables
+        shock_var <- "shock_bs_lag1"  # <-- NEW shock
+        controls <- c("lip", "unemp", "lcpi", "lpcom", "ffr")
+        dependent_vars <- c("lip", "lcpi", "ebp", "gs1")  # as you said you want these now
+        horizons <- 0:48
+        p <- 2
+        
+        # Initialize storage
+        lp_results <- list()
+        
+        for (var_dep in dependent_vars) {
+          result_list <- list()
+          
+          for (h in horizons) {
+            data_full <- data_full %>%
+              mutate(dep_lead = lead(.data[[var_dep]], h))
+            
+           # regressors <- paste(
+           #   c(
+           #     shock_var,
+           #     paste0(controls, "_lag1"),
+           #     paste0(controls, "_lag2")
+           #   ),
+           #   collapse = " + "
+           # )
+            
+            regressors <- paste(
+              c(
+                "shock_bauer_lag1",
+                "shock_bauer_lag2",
+                paste0(controls, "_lag1"),
+                paste0(controls, "_lag2")
+              ),
+              collapse = " + "
+            )
+            
+            formula_lp <- as.formula(paste("dep_lead ~", regressors))
+            
+            fit <- lm(formula_lp, data = data_full)
+            
+            nw_se <- sqrt(diag(NeweyWest(fit, lag = h + 1, prewhite = FALSE)))
+            
+            coef_shock <- coef(fit)[[shock_var]]
+            se_shock <- nw_se[[shock_var]]
+            
+            result_list[[as.character(h)]] <- tibble(
+              horizon = h,
+              coef = coef_shock,
+              se = se_shock,
+              lower = coef_shock - 1.68 * se_shock,
+              upper = coef_shock + 1.68 * se_shock
+            )
+          }
+          
+          lp_results[[var_dep]] <- bind_rows(result_list)
+        }
+
+        # Plot function
+        plot_irf <- function(irf_df, varname) {
+          ggplot(irf_df, aes(x = horizon, y = coef)) +
+            geom_ribbon(aes(ymin = lower, ymax = upper), fill = "grey80", alpha = 0.5) +
+            geom_line(color = "black") +
+            geom_point(color = "black") +
+            labs(title = paste("Impulse Response of", varname),
+                 x = "Horizon (months)",
+                 y = "Response") +
+            theme_minimal()
+        }
+        
+        # Create and arrange plots
+        plot_list <- lapply(dependent_vars, function(var) plot_irf(lp_results[[var]], var))
+        grid.arrange(grobs = plot_list, ncol = 2)
+        BAMLH0A0HYM2EY_df
+    
+        
+        # Correct the shock variable name
+        shock_var <- "shock_bauer_lag1"  # <-- corrected here!
+        
+        controls <- c("lip", "unemp", "lcpi", "lpcom", "ffr")
+        dependent_vars <- c("lip", "lcpi", "unemp", "ffr")  # (or your choice)
+        horizons <- 0:48
+        p <- 2
+        
+        lp_results <- list()
+        
+        for (var_dep in dependent_vars) {
+          result_list <- list()
+          
+          for (h in horizons) {
+            data_full <- data_full %>%
+              mutate(dep_lead = lead(.data[[var_dep]], h))
+            
+            regressors <- paste(
+              c(
+                "shock_bauer_lag1",
+                "shock_bauer_lag2",
+                paste0(controls, "_lag1"),
+                paste0(controls, "_lag2")
+              ),
+              collapse = " + "
+            )
+            
+            formula_lp <- as.formula(paste("dep_lead ~", regressors))
+            
+            fit <- lm(formula_lp, data = data_full)
+            
+            nw_se <- sqrt(diag(NeweyWest(fit, lag = h + 1, prewhite = FALSE)))
+            
+            coef_shock <- coef(fit)[[shock_var]]
+            se_shock <- nw_se[[shock_var]]
+            
+            result_list[[as.character(h)]] <- tibble(
+              horizon = h,
+              coef = coef_shock,
+              se = se_shock,
+              lower = coef_shock - 1.68 * se_shock,
+              upper = coef_shock + 1.68 * se_shock
+            )
+          }
+          
+          lp_results[[var_dep]] <- bind_rows(result_list)
+        }
+        
+        # Plot function
+        plot_irf <- function(irf_df, varname) {
+          ggplot(irf_df, aes(x = horizon, y = coef)) +
+            geom_ribbon(aes(ymin = lower, ymax = upper), fill = "grey80", alpha = 0.5) +
+            geom_line(color = "black") +
+            geom_point(color = "black") +
+            labs(title = paste("Impulse Response of", varname),
+                 x = "Horizon (months)",
+                 y = "Response") +
+            theme_minimal()
+        }
+        
+        # Create and arrange plots
+        plot_list <- lapply(dependent_vars, function(var) plot_irf(lp_results[[var]], var))
+        gridExtra::grid.arrange(grobs = plot_list, ncol = 2)
+
+        
+        
+        
+        # Correct the shock variable name
+        shock_var <- "shock_bauer_lag1"  # <-- corrected here!
+        
+        controls <- c("lip", "unemp", "lcpi", "lpcom", "ffr")
+        dependent_vars <- c("lip", "lcpi", "unemp", "ffr")  # (or your choice)
+        horizons <- 0:48
+        p <- 2
+        
+        lp_results <- list()
+        
+        for (var_dep in dependent_vars) {
+          result_list <- list()
+          
+          for (h in horizons) {
+            data_full <- data_full %>%
+              mutate(dep_lead = lead(.data[[var_dep]], h))
+            
+            regressors <- paste(
+              c(
+                "shock_bauer_lag1",
+                "shock_bauer_lag2",
+                paste0(controls, "_lag1"),
+                paste0(controls, "_lag2")
+              ),
+              collapse = " + "
+            )
+            
+            formula_lp <- as.formula(paste("dep_lead ~", regressors))
+            
+            fit <- lm(formula_lp, data = data_full)
+            
+            nw_se <- sqrt(diag(NeweyWest(fit, lag = h + 1, prewhite = FALSE)))
+            
+            coef_shock <- coef(fit)[[shock_var]]
+            se_shock <- nw_se[[shock_var]]
+            
+            result_list[[as.character(h)]] <- tibble(
+              horizon = h,
+              coef = coef_shock,
+              se = se_shock,
+              lower = coef_shock - 1.68 * se_shock,
+              upper = coef_shock + 1.68 * se_shock
+            )
+          }
+          
+          lp_results[[var_dep]] <- bind_rows(result_list)
+        }
+        
+        # Plot function
+        plot_irf <- function(irf_df, varname) {
+          ggplot(irf_df, aes(x = horizon, y = coef)) +
+            geom_ribbon(aes(ymin = lower, ymax = upper), fill = "grey80", alpha = 0.5) +
+            geom_line(color = "black") +
+            geom_point(color = "black") +
+            labs(title = paste("Impulse Response of", varname),
+                 x = "Horizon (months)",
+                 y = "Response") +
+            theme_minimal()
+        }
+        
+        # Create and arrange plots
+        plot_list <- lapply(dependent_vars, function(var) plot_irf(lp_results[[var]], var))
+        gridExtra::grid.arrange(grobs = plot_list, ncol = 2)
+
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        # Shock variable
+        shock_var <- "shock_bauer_lag1" #shock_var is a value
+        
+        # Control variables (with their lags later)
+        controls <- c("lip", "unemp", "lcpi", "lpcom", "ffr")
+        
+        # dependent variables for IRFs 
+        dependent_vars <- c("ebp", "lcpi", "gs1", "lip") #junk bond spread,log of cpi, 1yr t bond, log of ind prod
+        
+        # horizons
+        horizons <- 0:48
+        p <- 2  # 2 lags
+        
+        #  result storage
+        lp_results <- list()
+        
+        for (var_dep in dependent_vars) {
+          result_list <- list()
+          
+          for (h in horizons) {
+            data_full <- data_full %>%
+              mutate(dep_lead = lead(.data[[var_dep]], h))  # lead your dependent var
+            
+            # regressors: lag 1 and lag 2 of shock and controls
+            regressors <- paste(
+              c(
+                "shock_bauer_lag1",
+                "shock_bauer_lag2",
+                paste0(controls, "_lag1"),
+                paste0(controls, "_lag2")
+              ),
+              collapse = " + "
+            )
+            
+            formula_lp <- as.formula(paste("dep_lead ~", regressors))
+            
+            fit <- lm(formula_lp, data = data_full)
+            
+            nw_se <- sqrt(diag(NeweyWest(fit, lag = h + 1, prewhite = FALSE)))
+            
+            coef_shock <- coef(fit)[[shock_var]]
+            se_shock <- nw_se[[shock_var]]
+            
+            result_list[[as.character(h)]] <- tibble(
+              horizon = h,
+              coef = coef_shock,
+              se = se_shock,
+              lower = coef_shock - 1.68 * se_shock,
+              upper = coef_shock + 1.68 * se_shock
+            )
+          }
+          
+          lp_results[[var_dep]] <- bind_rows(result_list)
+        }
+        
+        # Plotting function
+        plot_irf <- function(irf_df, varname) {
+          ggplot(irf_df, aes(x = horizon, y = coef)) +
+            geom_hline(yintercept = 0, linetype = "dashed", color = "red") +   # Add zero line
+            geom_ribbon(aes(ymin = lower, ymax = upper), fill = "grey80", alpha = 0.5) +
+            geom_line(color = "black") +
+            geom_point(color = "black", size = 1) +
+            labs(title = paste("Impulse Response of", varname),
+                 x = "Horizon (months)",
+                 y = "Response") +
+            theme_minimal()
+        }
+        
+        # Create and arrange plots
+        plot_list <- lapply(dependent_vars, function(var) plot_irf(lp_results[[var]], var))
+        gridExtra::grid.arrange(grobs = plot_list, ncol = 2)
+        
+    
+        
+        
+        # Ensure the 'date' column is in Date format
+        data_full$date <- as.Date(data_full$date)
+        
+        # Split the data into pre-2010 and post-2010 based on the 'date' column
+        data_pre_2010 <- data_full %>% 
+          filter(year(date) < 2010)
+        
+        data_post_2010 <- data_full %>% 
+          filter(year(date) >= 2010)
+        
+        # Define function to run regressions for each study (pre and post)
+        run_irf_study <- function(data_subset) {
+          # Initialize result storage
+          lp_results <- list()
+          
+          for (var_dep in dependent_vars) {
+            result_list <- list()
+            
+            for (h in horizons) {
+              data_subset <- data_subset %>% 
+                mutate(dep_lead = lead(.data[[var_dep]], h))  # lead your dependent var
+              
+              # Regressors: lag 1 and lag 2 of shock and controls
+              regressors <- paste(
+                c(
+                  "shock_bauer_lag1",
+                  "shock_bauer_lag2",
+                  paste0(controls, "_lag1"),
+                  paste0(controls, "_lag2")
+                ),
+                collapse = " + "
+              )
+              
+              formula_lp <- as.formula(paste("dep_lead ~", regressors))
+              
+              fit <- lm(formula_lp, data = data_subset)
+              
+              nw_se <- sqrt(diag(NeweyWest(fit, lag = h + 1, prewhite = FALSE)))
+              
+              coef_shock <- coef(fit)[[shock_var]]
+              se_shock <- nw_se[[shock_var]]
+              
+              result_list[[as.character(h)]] <- tibble(
+                horizon = h,
+                coef = coef_shock,
+                se = se_shock,
+                lower = coef_shock - 1.68 * se_shock,
+                upper = coef_shock + 1.68 * se_shock
+              )
+            }
+            
+            lp_results[[var_dep]] <- bind_rows(result_list)
+          }
+          
+          return(lp_results)
+        }
+        
+        # running IRF 
+        lp_results_pre_2010 <- run_irf_study(data_pre_2010)
+        lp_results_post_2010 <- run_irf_study(data_post_2010)
+        
+        #########################################################
+        #PLOTS FOR PRE AND POST 2010
+        #########################################################
+        plot_irf <- function(irf_df, varname) {
+          ggplot(irf_df, aes(x = horizon, y = coef)) +
+            geom_hline(yintercept = 0, linetype = "dashed", color = "red") +   # Add zero line
+            geom_ribbon(aes(ymin = lower, ymax = upper), fill = "grey80", alpha = 0.5) +
+            geom_line(color = "black") +
+            geom_point(color = "black", size = 1) +
+            labs(title = paste("Impulse Response of", varname),
+                 x = "Horizon (months)",
+                 y = "Response") +
+            theme_minimal()
+        }
+        
+        ########################################################
+        #ARRANGING THEM 
+        #######################################################$
+        #PRE 2010
+        plot_list_pre_2010 <- lapply(dependent_vars, function(var) plot_irf(lp_results_pre_2010[[var]], var))
+        gridExtra::grid.arrange(grobs = plot_list_pre_2010, ncol = 2)
+        
+        #POST 2010
+        plot_list_post_2010 <- lapply(dependent_vars, function(var) plot_irf(lp_results_post_2010[[var]], var))
+        gridExtra::grid.arrange(grobs = plot_list_post_2010, ncol = 2)
+
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        # Function to plot IRFs for each study with period label
+        plot_irf <- function(irf_df, varname, period) {
+          ggplot(irf_df, aes(x = horizon, y = coef)) +
+            geom_hline(yintercept = 0, linetype = "dashed", color = "red") +   # Add zero line
+            geom_ribbon(aes(ymin = lower, ymax = upper), fill = "grey80", alpha = 0.5) +
+            geom_line(color = "black") +
+            geom_point(color = "black", size = 1) +
+            labs(title = paste("Impulse Response of", varname, "(", period, ")"),
+                 x = "Horizon (months)",
+                 y = "Response") +
+            theme_minimal()
+        }
+        
+        # Create and arrange plots for pre-2010 study with labels
+        plot_list_pre_2010 <- lapply(dependent_vars, function(var) plot_irf(lp_results_pre_2010[[var]], var, "Pre-2010"))
+        gridExtra::grid.arrange(grobs = plot_list_pre_2010, ncol = 2)
+        
+        # Create and arrange plots for post-2010 study with labels
+        plot_list_post_2010 <- lapply(dependent_vars, function(var) plot_irf(lp_results_post_2010[[var]], var, "Post-2010"))
+        gridExtra::grid.arrange(grobs = plot_list_post_2010, ncol = 2)
+        
+    ----------------------------------------------------------------------------------------
+          # pre and post 2010 graphs with more shocks
+    ----------------------------------------------------------------------------------------
+        install.packages("dplyr")
+        install.packages("ggplot2")
+        install.packages("sandwich")
+        install.packages("broom")
+        install.packages("tibble")
+        
+        library(dplyr)
+        library(lmtest)
+        library(sandwich)
+        library(tibble)
+  ------------------------------------------------------------------------------
+          #I NEED MORE LAGS OR THESE 
+  ------------------------------------------------------------------------------
+          # control variables to lag 
+          controls <- c("lip", "unemp", "lcpi", "lpcom", "ffr")
+        
+        # 6 lags for each control variable
+        for (var in controls) {
+          for (lag_num in 1:6) {
+            lagged_var_name <- paste0(var, "_lag", lag_num)
+            data_full[[lagged_var_name]] <- dplyr::lag(data_full[[var]], lag_num)
+          }
+        }
+        save(data_full, data_full2, file = "data_fulls.RData")
+        getwd()
+        save(data_full, data_full2, file = "C:/Users/2022/Documents/data_fulls.RData")
+        
+  -----------------------------------------------------------------------------
+          #pre and post with lags
+ 
+           # number of lags
+        n_lags <- 6  
+        
+        # Shock variable (lag 1)
+        shock_var <- "shock_bauer_lag1"
+        
+        # Controls
+        controls <- c("lip", "unemp", "lcpi", "lpcom", "ffr")
+        
+        # Dependent variables
+        dependent_vars <- c("ebp", "lcpi", "gs1", "lip")
+        
+        # Horizons
+        horizons <- 0:48
+        
+        # Initialize storage
+        lp_results_pre2010 <- list()
+        lp_results_post2010 <- list()
+        
+        # Split data
+        data_pre2010 <- data_full %>% filter(date < as.Date("2010-01-01"))
+        data_post2010 <- data_full %>% filter(date >= as.Date("2010-01-01"))
+        
+        # Function to run LP regressions
+        run_lp <- function(data_subset) {
+          result_all_vars <- list()
+          
+          for (var_dep in dependent_vars) {
+            result_list <- list()
+            
+            for (h in horizons) {
+              data_subset <- data_subset %>%
+                mutate(dep_lead = lead(.data[[var_dep]], h))  # create h-step ahead lead
+              
+              # Build regressors: shocks and controls lags
+              regressors <- paste(
+                c(
+                  paste0("shock_bauer_lag", 1:n_lags),
+                  unlist(lapply(controls, function(x) paste0(x, "_lag", 1:n_lags)))
+                ),
+                collapse = " + "
+              )
+              
+              # Define formula
+              formula_lp <- as.formula(paste("dep_lead ~", regressors))
+              
+              # Run OLS
+              fit <- lm(formula_lp, data = data_subset)
+              
+              # Newey-West SE
+              nw_se <- sqrt(diag(NeweyWest(fit, lag = h + 1, prewhite = FALSE)))
+              
+              # Extract coefficient and SE for shock_var
+              coef_shock <- coef(fit)[[shock_var]]
+              se_shock <- nw_se[[shock_var]]
+              
+              # Store
+              result_list[[as.character(h)]] <- tibble(
+                horizon = h,
+                coef = coef_shock,
+                se = se_shock,
+                lower = coef_shock - 1.68 * se_shock,
+                upper = coef_shock + 1.68 * se_shock
+              )
+            }
+            
+            # Store results for one dependent variable
+            result_all_vars[[var_dep]] <- bind_rows(result_list)
+          }
+          
+          return(result_all_vars)
+        }
+        
+        # Run for pre-2010
+        lp_results_pre2010 <- run_lp(data_pre2010)
+        
+        # Run for post-2010
+        lp_results_post2010 <- run_lp(data_post2010)
+        
+        
+        ----------------------
+          #and plot these
+        ----------------------
+          library(dplyr)
+        library(ggplot2)
+        library(sandwich)  # for NeweyWest
+        library(broom)     # for tidy()
+        library(tibble)
+        
+        # 1. Create 6 lags of all control variables
+        controls <- c("lip", "unemp", "lcpi", "lpcom", "ffr")
+        n_lags <- 6
+        
+        for (var in controls) {
+          for (lag_num in 1:n_lags) {
+            lagged_var_name <- paste0(var, "_lag", lag_num)
+            data_full[[lagged_var_name]] <- dplyr::lag(data_full[[var]], lag_num)
+          }
+        }
+        
+        # 2. Create dependent variables: leads of lip
+        lead_horizons <- 0:20
+        for (h in lead_horizons) {
+          lead_name <- paste0("lip_lead", h)
+          data_full[[lead_name]] <- dplyr::lead(data_full[["lip"]], n = h)
+        }
+        
+        # 3. Split data pre/post 2010
+        data_pre2010 <- data_full %>% filter(year < 2010)
+        data_post2010 <- data_full %>% filter(year >= 2010)
+        
+        # 4. Define the LP function
+        run_lp <- function(data_subset) {
+          horizon_max <- 20
+          result_all_vars <- list()
+          
+          for (h in 0:horizon_max) {
+            dep_lead <- paste0("lip_lead", h)
+            
+            # Build regressors: shock and 6 lags of controls
+            regressors <- paste(
+              c(
+                "shock_bauer",
+                unlist(lapply(controls, function(x) paste0(x, "_lag", 1:n_lags)))
+              ),
+              collapse = " + "
+            )
+            
+            # Formula
+            formula_lp <- as.formula(paste(dep_lead, "~", regressors))
+            
+            # Run OLS
+            fit <- lm(formula_lp, data = data_subset)
+            
+            # Newey-West robust SEs
+            nw_se <- sqrt(diag(NeweyWest(fit, lag = h + 1, prewhite = FALSE)))
+            
+            # Extract shock_bauer coefficient and SE
+            coef_shock <- coef(fit)[["shock_bauer"]]
+            se_shock <- nw_se[["shock_bauer"]]
+            
+            # Store results
+            result_all_vars[[as.character(h)]] <- tibble(
+              horizon = h,
+              coef = coef_shock,
+              se = se_shock,
+              lower = coef_shock - 1.68 * se_shock,
+              upper = coef_shock + 1.68 * se_shock
+            )
+          }
+          
+          return(bind_rows(result_all_vars))
+        }
+        
+        # 5. Run LPs
+        lp_results_pre2010 <- run_lp(data_pre2010) %>% mutate(period = "Pre-2010")
+        lp_results_post2010 <- run_lp(data_post2010) %>% mutate(period = "Post-2010")
+        
+        # 6. Combine results
+        lp_results_all <- bind_rows(lp_results_pre2010, lp_results_post2010)
+        
+        # 7. Plot
+        ggplot(lp_results_all, aes(x = horizon, y = coef, color = period, fill = period)) +
+          geom_line(size = 1) +
+          geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.2, color = NA) +
+          geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+          labs(
+            title = "Impulse Response of lip to shock_bauer",
+            x = "Horizon (Quarters)",
+            y = "Response",
+            color = "Period",
+            fill = "Period"
+          ) +
+          theme_minimal(base_size = 14)
+        
+        
+        
+        
+        
+        
+        
+        
+        
+       ####adding more lags to bs shock##### 
+        library(data.table)
+        library(dplyr)
+       
+        data_full2<-copy(data_full) 
+        
+        data_full <- data_full %>%
+          arrange(date) %>%
+          mutate(
+            ebp = ifelse(is.na(ebp), 0, ebp),
+            shock_wieland = ifelse(is.na(shock_wieland), 0, shock_wieland), # fill NAs with zeros
+            shock_bauer = ifelse(is.na(shock_bauer), 0, shock_bauer)
+          )
+        
+        #  lags for shock_bauer and shock_wieland
+        max_lag <- 8  
+        
+        for (lag_i in 1:max_lag) {
+          data_full <- data_full %>%
+            mutate(
+              !!paste0("shock_bauer_lag", lag_i) := lag(shock_bauer, lag_i),
+              !!paste0("shock_wieland_lag", lag_i) := lag(shock_wieland, lag_i)
+            )
+        }
+        
+        #  NAs of lags also populated with 0
+        data_full <- data_full %>%
+          mutate(across(starts_with("shock_bauer_lag"), ~ ifelse(is.na(.), 0, .))) %>%
+          mutate(across(starts_with("shock_wieland_lag"), ~ ifelse(is.na(.), 0, .)))
+        
+        #  no reason i have available data for this time 
+        data_1993_2019 <- data_full %>%
+          filter(year(date) >= 1993, year(date) <= 2019)
+
+     
+        controls <- c("lip", "unemp", "lcpi", "lpcom", "ffr")
+        dependent_vars <- c("ebp", "lcpi", "gs1", "lip")
+        horizons <- 0:48
+        
+        # formula string with all shock lags
+        shock_lags <- paste0("shock_bauer_lag", 1:max_lag)
+        
+        # fn for IRFs
+        run_irf_study <- function(data_subset) {
+          lp_results <- list()
+          
+          for (var_dep in dependent_vars) {
+            result_list <- list()
+            
+            for (h in horizons) {
+              data_subset <- data_subset %>%
+                mutate(dep_lead = lead(.data[[var_dep]], h))
+              
+              regressors <- paste(
+                c(
+                  shock_lags,
+                  paste0(controls, "_lag1"),
+                  paste0(controls, "_lag2")
+                ),
+                collapse = " + "
+              )
+              
+              formula_lp <- as.formula(paste("dep_lead ~", regressors))
+              
+              fit <- lm(formula_lp, data = data_subset)
+              
+              nw_se <- sqrt(diag(NeweyWest(fit, lag = h + 1, prewhite = FALSE)))
+              
+              # Main coefficient = first lag of shock_bauer
+              coef_shock <- coef(fit)[["shock_bauer_lag1"]]
+              se_shock <- nw_se[["shock_bauer_lag1"]]
+              
+              result_list[[as.character(h)]] <- tibble(
+                horizon = h,
+                coef = coef_shock,
+                se = se_shock,
+                lower = coef_shock - 1.68 * se_shock,
+                upper = coef_shock + 1.68 * se_shock
+              )
+            }
+            
+            lp_results[[var_dep]] <- bind_rows(result_list)
+          }
+          
+          return(lp_results)
+        }
+        
+        
+        # running IRF
+        lp_results_1993_2019 <- run_irf_study(data_1993_2019)
+     #########################################################
+        #BS plot
+     #########################################################
+   
+        plot_irf <- function(irf_df, varname, period) {
+          ggplot(irf_df, aes(x = horizon, y = coef)) +
+            geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+            geom_ribbon(aes(ymin = lower, ymax = upper), fill = "grey80", alpha = 0.5) +
+            geom_line(color = "black") +
+            geom_point(color = "black", size = 1) +
+            labs(title = paste("Impulse Response of", varname, "(", period, ")"),
+                 x = "Horizon (months)",
+                 y = "Response") +
+            theme_minimal()
+        }
+        
+        plot_list_1993_2019 <- lapply(dependent_vars, function(var) plot_irf(lp_results_1993_2019[[var]], var, "1993-2019"))
+        gridExtra::grid.arrange(grobs = plot_list_1993_2019, ncol = 2)
+        
+        write.csv(data_full, "C:/Users/2022/Documents/data_full.csv", row.names = FALSE)
+        
+        install.packages("arrow")  # For feather format
+        library(arrow)
+        
+        write_feather(data_full, "C:/Users/2022/Desktop/data_backup.feather")
+        
+        # Or Excel:
+        writexl::write_xlsx(data_full, "backup.xlsx")
+        writeLines(capture.output(data_full), "temp_data.txt")  

@@ -1,0 +1,203 @@
+setwd("C:/Users/2022/Desktop/dfiles")
+# For .RData or .rda (loads into workspace)
+load("d7.RData")
+library(ggplot2)
+library(dplyr)
+# Correct way to handle column names with special characters
+d7 %>% 
+  filter(`refin1_y/n` == 1) %>%  # Use backticks for special column names
+  ggplot(aes(x = yr_mort1_left)) +
+  geom_histogram(binwidth = 1) +
+  labs(title = "Years Left on Original Loans")  # Removed facet_wrap temporarily
+
+library(dplyr)
+library(ggplot2)
+
+d7 %>%
+  # Group by family (pid)
+  group_by(pid) %>%
+  # Take the first observation per family
+  slice(1) %>%  # Or: filter(row_number() == 1)
+  # Uncomment if you also want only original loans:
+   filter(`refin1_y/n` == 1) %>%
+  # Plot histogram
+  ggplot(aes(x = yr_mort1_left)) +
+  geom_histogram(binwidth = 1, fill = "skyblue", color = "black") +
+  labs(
+    title = "Distribution of Initial Years Left on Mortgage", #FOR ALL PEOPLE HAS 0S AND NO REFINANCING EVER 
+    subtitle = "First observation per family",
+    x = "Years Remaining",
+    y = "Count"
+  ) +
+  theme_minimal()
+
+d7 %>%
+  group_by(pid) %>%        # Group by family ID
+  slice(1) %>%            # Take the FIRST observation per family
+  ggplot(aes(x = yr_mort1_left)) +
+  geom_histogram(binwidth = 1) +
+  labs(title = "Distribution of Initial Years Left (First Obs. per Family)") #JUST RAW 1ST OBS THEY COULD HAVE PAID SOME OFF BY 1999
+
+
+
+
+
+
+
+
+d7 %>%
+  group_by(pid) %>%                    # Group by family ID
+  slice(1) %>%                        # Take first observation per family
+  filter(`refin1_y/n` == 1,           # Keep only original loans (if needed)
+         yr_mort1_left > 0) %>%       # EXCLUDE 0 years left
+  ggplot(aes(x = yr_mort1_left)) +
+  geom_histogram(binwidth = 1,        # Adjust binwidth as needed
+                 fill = "purple",
+                 alpha = 0.7,
+                 color = "black") +
+  labs(
+    title = "Initial Years Left on Mortgage (Excluding 0)",
+    subtitle = "First observation per family | Original loans only",
+    x = "Years Remaining at First Obs.",
+    y = "Number of Families"
+  ) +
+  theme_minimal()
+
+
+library(dplyr)
+library(ggplot2)
+
+d7_clean <- d7 %>%
+  # first observation per family
+  group_by(pid) %>%
+  arrange(year) %>%  # chronological order
+  slice(1) %>%
+  # Filter for original loans
+  filter(`refin1_y/n` == 1) %>%
+  #  paid-off mortgages (0 years left) excluded
+  filter(yr_mort1_left > 0) %>%
+  # Calculate approximate initial term
+  mutate(
+    initial_term = yr_mort1_left + (year - mort1_year_obtained)
+  ) %>%
+  #  only loans taken 1-2 years before observation are kept
+  filter((year - mort1_year_obtained) %in% c(1, 2))
+
+ggplot(d7_clean, aes(x = initial_term)) +
+  geom_histogram(
+    binwidth = 1,
+    fill = "olivedrab4",
+    color = "black",
+    alpha = 0.8
+  ) +
+  labs(
+    title = "Initial Mortgage Terms for Recent Loans (1-2 Years After Origination)",
+    subtitle = "Excludes paid-off mortgages | Original loans only",
+    x = "Initial Mortgage Term (Years)",
+    y = "Number of Families"
+  ) +
+  scale_x_continuous(breaks = seq(0, 50, by = 5)) +  # Adjust breaks as needed
+  theme_minimal()
+
+
+d7_clean <- d7 %>%
+  # first observation per family
+  group_by(pid) %>%
+  arrange(year) %>%  # chronological order
+  slice(1) %>%
+  # Filter for original loans
+  #filter(`refin1_y/n` == 1) %>% #we allow for refinancing
+  #  paid-off mortgages (0 years left) excluded
+  filter(yr_mort1_left > 0) %>%
+  # Calculate approximate initial term
+  mutate(
+    initial_term = yr_mort1_left + (year - mort1_year_obtained)
+  ) %>%
+  #  only loans taken 1-2 years before observation are kept
+  filter((year - mort1_year_obtained) %in% c(1, 2))
+
+ggplot(d7_clean, aes(x = initial_term)) +
+  geom_histogram(
+    binwidth = 1,
+    fill = "chartreuse2",
+    color = "black",
+    alpha = 0.8
+  ) +
+  labs(
+    title = "Initial Mortgage Terms for Recent Loans (1-2 Years After Origination)",
+    subtitle = "Excludes paid-off mortgages | Includes refinancers and original loans",
+    x = "Initial Mortgage Term (Years)",
+    y = "Number of Families"
+  ) +
+  scale_x_continuous(breaks = seq(0, 50, by = 5)) +  # Adjust breaks as needed
+  theme_minimal()
+
+
+d7_clean <- d7 %>%
+  # first observation per family
+  group_by(pid) %>%
+  arrange(year) %>%  # chronological order
+  slice(1) %>%
+  # Filter for refinanced loans
+  filter(`refin1_y/n` == 2) %>% #we allow for refinancing
+  #  paid-off mortgages (0 years left) excluded
+  filter(yr_mort1_left > 0) %>%
+  # Calculate approximate initial term
+  mutate(
+    initial_term = yr_mort1_left + (year - mort1_year_obtained) # flag those for whom mort_year_change gets positive as yeas go by 
+  ) %>%
+  #  only loans taken 1-2 years before observation are kept
+  filter((year - mort1_year_obtained) %in% c(1, 2))
+
+ggplot(d7_clean, aes(x = initial_term)) +
+  geom_histogram(
+    binwidth = 1,
+    fill = "aquamarine4", #mhm shows that they get a shorter term when refinnac ing paying of faster 
+    color = "black",
+    alpha = 0.8
+  ) +
+  labs(
+    title = "Initial Mortgage Terms for Recent Loans (1-2 Years After Origination)",
+    subtitle = "Excludes paid-off mortgages | Refinancers",
+    x = "Initial Mortgage Term (Years)",
+    y = "Number of Families"
+  ) +
+  scale_x_continuous(breaks = seq(0, 50, by = 5)) +  # Adjust breaks as needed
+  theme_minimal()
+
+library(dplyr)
+library(ggplot2)
+
+d7 %>%
+  # Keep first observation per family (to avoid duplicates)
+  group_by(pid) %>%
+  arrange(year) %>%  # Ensure chronological order
+  slice(1) %>%
+  # Filter for original loans (if needed)
+  filter(`refin1_y/n` == 1) %>%
+  # Exclude paid-off mortgages (0 years left)
+  filter(yr_mort1_left > 0) %>%
+  # Plot remaining years
+  ggplot(aes(x = yr_mort1_left)) +
+  geom_histogram(
+    binwidth = 1,                # Adjust for granularity
+    fill = "cornflowerblue",
+    color = "white",
+    alpha = 1.8
+  ) +
+  labs(
+    title = "Distribution of Remaining Mortgage Years",
+    subtitle = "Original loans only |at First Observation",
+    x = "Years Remaining on Mortgage",
+    y = "Number of Families"
+  ) +
+  scale_x_continuous(breaks = seq(0, 45, by = 5)) +  # Custom x-axis
+  theme_minimal()
+
+d7 %>%
+  group_by(pid) %>%
+  slice(1) %>%
+  filter(`refin1_y/n` == 1, yr_mort1_left > 0) %>%
+  ggplot(aes(x = yr_mort1_left)) +
+  geom_density(fill = "tomato", alpha = 0.5, bw = 2) +  # bw = bandwidth
+  labs(x = "Years Remaining", title = "Density of Mortgage Years Taken")

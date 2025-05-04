@@ -1,0 +1,936 @@
+ # 1. First verify which variables exist in your dataset
+> available_vars <- names(d7_merged)
+> print(available_vars)  # Check what's actually available
+  [1] "year"                        "int_no_ind"                  "X1968id"                    
+  [4] "age_ref"                     "car_mainten_expen"           "child_expen_prevy"          
+  [7] "educ_expen_prevy"            "educ_ref"                    "fam_income_prevy"           
+ [10] "famcomp_change"              "food_expen"                  "gas_expen"                  
+ [13] "health_expen"                "house_expen"                 "house_value"                
+ [16] "int1prc"                     "int2prc"                     "is2refin"                   
+ [19] "mort1"                       "mort1_instal_month"          "mort2"                      
+ [22] "mort2_instal_month"          "mort_expen"                  "mort_y.n"                   
+ [25] "no_fu"                       "park_expen_month"            "proptax_expen"              
+ [28] "pub_trans_expen_month"       "race_ref"                    "refin1_y.n"                 
+ [31] "rel_no"                      "rent_expen"                  "sex_ref"                    
+ [34] "split_indic"                 "taxi_expen_month"            "tot_expen"                  
+ [37] "trans_incom_prevy"           "util_expen"                  "weight"                     
+ [40] "yr_mort1_left"               "yr_mort2_left"               "interview"                  
+ [43] "behin_mort1"                 "behin_mort2"                 "card_debt"                  
+ [46] "cloth_expen_prevy"           "covid_behin"                 "family_debt"                
+ [49] "legal_debt"                  "med_debt"                    "mort1_restruct"             
+ [52] "mort2_restruct"              "mort_rate1fv"                "mort_rate2fv"               
+ [55] "mths_behin_mort1"            "mths_behin_mort2"            "other_debt"                 
+ [58] "otr_recre_expen_prevy"       "phone_expen"                 "prob_behin_mort1"           
+ [61] "prob_behin_mort2"            "restr_mort1"                 "restr_mort2"                
+ [64] "stocks_y.n"                  "stu_debt"                    "trips_expen_prevy"          
+ [67] "value_business"              "valuehouse_ifrent"           "wlth_no_equity"             
+ [70] "wlth_w_equity"               "ID1968"                      "pernum"                     
+ [73] "sequence"                    "relation.head"               "relation_ref"               
+ [76] "seq_no"                      "pid"                         "mort1_year_obtained"        
+ [79] "mort2_year_obtained"         "mort1_instal"                "mort2_instal"               
+ [82] "park_expen"                  "pub_trans_expen"             "taxi_expen"                 
+ [85] "cpi_rebased"                 "cpi_rebased_prev"            "r_med_debt"                 
+ [88] "r_proptax_expen"             "r_rent_expen"                "r_tot_expen"                
+ [91] "r_util_expen"                "r_car_mainten_expen"         "r_food_expen"               
+ [94] "r_gas_expen"                 "r_health_expen"              "r_house_expen"              
+ [97] "r_house_value"               "r_mort1"                     "r_mort2"                    
+[100] "r_mort_expen"                "r_other_debt"                "r_card_debt"                
+[103] "r_family_debt"               "r_legal_debt"                "r_phone_expen"              
+[106] "r_stu_debt"                  "r_value_business"            "r_valuehouse_ifrent"        
+[109] "r_wlth_no_equity"            "r_wlth_w_equity"             "r_mort1_instal"             
+[112] "r_mort2_instal"              "r_pub_trans_expen"           "r_park_expen"               
+[115] "r_taxi_expen"                "r_cloth_expen_prevy"         "r_trans_incom_prevy"        
+[118] "r_child_expen_prevy"         "r_educ_expen_prevy"          "r_fam_income_prevy"         
+[121] "r_trips_expen_prevy"         "r_otr_recre_expen_prevy"     "original_year"              
+[124] "original_yrs_left"           "mort_year_change"            "yrs_left_change"            
+[127] "ltv_ratio"                   "high_leverage"               "panel"                      
+[130] "educ"                        "r_nondurcons"                "r_nonshelcons"              
+[133] "real_mort"                   "shock_jarocinski_signed_max" "bauer_shock_signed_max"     
+[136] "ffr_change_signed_max"       "shock_jarocinski_avg"        "bauer_shock_avg"            
+[139] "ffr_avg"                     "shock_jarocinski_sum"        "bauer_shock_sum"            
+[142] "ffr_change"                  "shock_jarocinski_median"     "bauer_shock_median"         
+[145] "ffr_median"                  "ffr_change_lag1"             "int1prc_decimal"            
+[148] "bauer_shock_24mo"            "ffr_change_24mo"             "unemp"                      
+[151] "lip"                         "lcpi"                       
+> # 2. Create analysis dataset with proper variable checks
+> d7_analysis <- d7_merged %>%
++   mutate(
++     mort_type = case_when(
++       mort_rate1fv == 1 ~ "Fixed",
++       mort_rate1fv == 2 ~ "Variable",
++       TRUE ~ NA_character_
++     ),
++     mort_rate = int1prc / 100  # Convert percentage to decimal
++   ) %>%
++   filter(!is.na(mort_type))
+> # 3. Check if lagged variables exist, if not create them
+> if (!"unemp_lag" %in% available_vars) {
++   d7_analysis <- d7_analysis %>%
++     group_by(pid) %>%
++     arrange(year) %>%
++     mutate(unemp_lag = lag(unemp)) %>%  # Replace 'unemp' with your actual unemployment variable name
++     ungroup()
++ }
+> # 4. Run models only with variables that exist
+> models <- list()
+> # For Fixed-rate mortgages
+> fixed_data <- d7_analysis %>% filter(mort_type == "Fixed")
+> # Model with variables we're sure exist
+> models$fixed_basic <- plm(
++   mort_rate ~ bauer_shock_signed_max + ffr_change_signed_max,
++   data = fixed_data,
++   index = c("pid", "year"),
++   model = "within"
++ )
+> # Try adding unemployment if available
+> if ("unemp_lag" %in% names(d7_analysis)) {
++   models$fixed_with_unemp <- plm(
++     mort_rate ~ bauer_shock_signed_max + ffr_change_signed_max + unemp_lag,
++     data = fixed_data,
++     index = c("pid", "year"),
++     model = "within"
++   )
++ }
+> # For Variable-rate mortgages
+> variable_data <- d7_analysis %>% filter(mort_type == "Variable")
+> models$variable_basic <- plm(
++   mort_rate ~ bauer_shock_signed_max + ffr_change_signed_max,
++   data = variable_data,
++   index = c("pid", "year"),
++   model = "within"
++ )
+> if ("unemp_lag" %in% names(d7_analysis)) {
++   models$variable_with_unemp <- plm(
++     mort_rate ~ bauer_shock_signed_max + ffr_change_signed_max + unemp_lag,
++     data = variable_data,
++     index = c("pid", "year"),
++     model = "within"
++   )
++ }
+> # 5. Generate results table only with successful models
+> successful_models <- models[sapply(models, function(x) !is.null(x))]
+> if (length(successful_models) > 0) {
++   stargazer(
++     successful_models,
++     title = "Mortgage Rate Response by Mortgage Type",
++     column.labels = c("Fixed Basic", "Fixed w/Unemp", 
++                       "Variable Basic", "Variable w/Unemp"),
++     dep.var.labels = "Mortgage Rate (Decimal)",
++     covariate.labels = c("Bauer Shock (Max)", "FFR Change (Max)",
++                          "Unemployment Lag"),
++     se = lapply(successful_models, function(x) sqrt(diag(vcovHC(x, cluster = "group")))),
++     type = "text"
++   )
++ } else {
++   message("No models could be estimated. Please check your variables.")
++ }
+
+Mortgage Rate Response by Mortgage Type
+=======================================================================================================================
+                                                           Dependent variable:                                         
+                  -----------------------------------------------------------------------------------------------------
+                                                         Mortgage Rate (Decimal)                                       
+                         Fixed Basic               Fixed w/Unemp            Variable Basic         Variable w/Unemp    
+                             (1)                        (2)                       (3)                     (4)          
+-----------------------------------------------------------------------------------------------------------------------
+Bauer Shock (Max)          0.021***                  -0.016***                  -0.009*                -0.041***       
+                           (0.001)                    (0.001)                   (0.005)                 (0.005)        
+                                                                                                                       
+FFR Change (Max)          -0.003***                   0.006***                 -0.006***                0.003*         
+                           (0.0002)                   (0.0003)                  (0.001)                 (0.002)        
+                                                                                                                       
+Unemployment Lag                                      0.005***                                         0.005***        
+                                                      (0.0001)                                         (0.0004)        
+                                                                                                                       
+-----------------------------------------------------------------------------------------------------------------------
+Observations                16,075                     16,075                    1,302                   1,302         
+R2                          0.059                      0.200                     0.033                   0.171         
+Adjusted R2                 -0.288                     -0.094                   -0.996                  -0.716         
+F Statistic       366.977*** (df = 2; 11747) 981.793*** (df = 3; 11746) 10.871*** (df = 2; 630) 43.124*** (df = 3; 629)
+=======================================================================================================================
+#####################more shocks#######################################################################################
+   # 1. Prepare dataset with all Bauer shock measures
+>   d7_analysis <- d7_merged %>% 
++     mutate(
++       mort_type = ifelse(mort_rate1fv == 1, "Fixed", "Variable"),
++       mort_rate = int1prc / 100
++     ) %>%
++     filter(!is.na(mort_type)) %>%
++     # Create lags if needed (replace 'unemp' with your actual unemployment var)
++     group_by(pid) %>% 
++     arrange(year) %>% 
++     mutate(unemp_lag = lag(unemp)) %>% 
++     ungroup()
+>   # 2. Define Bauer shock variants to test
+>   bauer_shock_variants <- c(
++     "bauer_shock_signed_max",
++     "bauer_shock_sum",
++     "bauer_shock_median",
++     "bauer_shock_avg"
++   )
+>   # 3. Run panel regressions for each shock measure
+>   models <- list()
+>   for (shock_var in bauer_shock_variants) {
++     if (shock_var %in% names(d7_analysis)) {
++       
++       # Fixed-rate mortgages
++       fixed_model <- plm(
++         as.formula(paste("mort_rate ~", shock_var, "+ unemp_lag")),
++         data = filter(d7_analysis, mort_type == "Fixed"),
++         index = c("pid", "year"),
++         model = "within"
++       )
++       models[[paste0("Fixed_", shock_var)]] <- fixed_model
++       
++       # Variable-rate mortgages
++       variable_model <- plm(
++         as.formula(paste("mort_rate ~", shock_var, "+ unemp_lag")),
++         data = filter(d7_analysis, mort_type == "Variable"),
++         index = c("pid", "year"),
++         model = "within"
++       )
++       models[[paste0("Variable_", shock_var)]] <- variable_model
++     }
++   }
+>   # 4. Generate clean results table
+>   stargazer(
++     models,
++     title = "Mortgage Rate Response to Different Bauer Shock Measures",
++     column.labels = gsub("_", " ", names(models)),
++     dep.var.labels = "Mortgage Rate (Decimal)",
++     covariate.labels = c(
++       "Bauer Shock (Max)",
++       "Bauer Shock (Sum)", 
++       "Bauer Shock (Median)",
++       "Bauer Shock (Avg)",
++       "Unemployment Lag"
++     ),
++     se = lapply(models, function(x) sqrt(diag(vcovHC(x, cluster = "group")))),
++     type = "text",
++     float = TRUE,
++     font.size = "small",
++     no.space = TRUE
++   )
+
+Mortgage Rate Response to Different Bauer Shock Measures
+========================================================================================================================================================================================================================================================
+                                                                                                                             Dependent variable:                                                                                                        
+                     -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                                                                                                                           Mortgage Rate (Decimal)                                                                                                      
+                     Fixed bauer shock signed max Variable bauer shock signed max    Fixed bauer shock sum     Variable bauer shock sum    Fixed bauer shock median   Variable bauer shock median    Fixed bauer shock avg     Variable bauer shock avg 
+                                 (1)                            (2)                           (3)                         (4)                        (5)                          (6)                         (7)                         (8)           
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Bauer Shock (Max)             -0.006***                      -0.002***                                                                                                                                                                                  
+                               (0.001)                       (0.0004)                                                                                                                                                                                   
+Bauer Shock (Sum)                                                                            0.001                     -0.00001                                                                                                                         
+                                                                                            (0.001)                    (0.0003)                                                                                                                         
+Bauer Shock (Median)                                                                                                                              -0.299***                     -0.021                                                                  
+                                                                                                                                                   (0.029)                      (0.014)                                                                 
+Bauer Shock (Avg)                                                                                                                                                                                            0.014                      -0.0003         
+                                                                                                                                                                                                            (0.016)                     (0.006)         
+Unemployment Lag               0.004***                      0.0005***                      0.003***                   0.0003***                   0.004***                    0.0004***                    0.003***                   0.0003***        
+                               (0.0001)                      (0.0001)                       (0.0001)                   (0.00004)                   (0.0001)                    (0.00004)                    (0.0001)                   (0.00004)        
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Observations                    16,075                        25,251                         16,075                     25,251                      16,075                      25,251                       16,075                     25,251          
+R2                              0.178                          0.008                         0.176                       0.007                      0.182                        0.007                       0.176                       0.007          
+Adjusted R2                     -0.125                        -0.391                         -0.128                     -0.394                      -0.119                      -0.394                       -0.128                     -0.394          
+F Statistic          1,273.564*** (df = 2; 11747)    76.702*** (df = 2; 17994)    1,251.596*** (df = 2; 11747) 60.487*** (df = 2; 17994) 1,309.727*** (df = 2; 11747)  61.756*** (df = 2; 17994)  1,251.596*** (df = 2; 11747) 60.487*** (df = 2; 17994)
+========================================================================================================================================================================================================================================================
+Note:                                                                                                                                                                                                                        *p<0.1; **p<0.05; ***p<0.01
+>   # 5. Optional: Save coefficient plots
+>   if (length(models) > 0) {
++     library(ggplot2)
++     bind_rows(lapply(names(models), function(x) {
++       tidy(models[[x]]) %>% 
++         mutate(
++           model = x,
++           mort_type = ifelse(grepl("Fixed", x), "Fixed", "Variable"),
++           shock_measure = gsub("Fixed_|Variable_", "", x)
++         )
++     })) %>%
++       filter(term != "(Intercept)") %>%
++       ggplot(aes(x = shock_measure, y = estimate, color = mort_type)) +
++       geom_pointrange(aes(ymin = estimate - 1.96*std.error,
++                           ymax = estimate + 1.96*std.error),
++                       position = position_dodge(width = 0.5)) +
++       geom_hline(yintercept = 0, linetype = "dashed") +
++       labs(title = "Bauer Shock Coefficients by Mortgage Type",
++            x = "Shock Measure", y = "Effect on Mortgage Rate") +
++       theme_minimal()
++   }
+
+####################unhinhged many variables ###########
+
+>   library(dplyr)
+>   library(plm)
+>   library(stargazer)
+>   # 1. First create valid models with error handling
+>   estimate_models <- function(data, formula) {
++     tryCatch({
++       plm(formula, data = data, index = c("pid", "year"), model = "within")
++     }, error = function(e) {
++       message("Model failed: ", conditionMessage(e))
++       NULL
++     })
++   }
+>   # 2. Create model list with only successful estimations
+>   successful_models <- list()
+>   for (measure in bauer_measures) {
++     if (measure %in% names(d7_analysis)) {
++       # Fixed-rate models
++       fixed_base <- estimate_models(
++         filter(d7_analysis, mort_type == "Fixed"),
++         as.formula(paste("mort_rate ~", measure))
++       )
++       
++       fixed_full <- estimate_models(
++         filter(d7_analysis, mort_type == "Fixed"),
++         as.formula(paste("mort_rate ~", measure, "+ ffr_change_lag + unemp_lag"))
++       )
++       
++       # Variable-rate models
++       variable_base <- estimate_models(
++         filter(d7_analysis, mort_type == "Variable"), 
++         as.formula(paste("mort_rate ~", measure))
++       )
++       
++       variable_full <- estimate_models(
++         filter(d7_analysis, mort_type == "Variable"),
++         as.formula(paste("mort_rate ~", measure, "+ ffr_change_lag + unemp_lag"))
++       )
++       
++       # Only keep non-null models
++       if (!is.null(fixed_base)) successful_models[[paste0("Fixed_base_", measure)]] <- fixed_base
++       if (!is.null(fixed_full)) successful_models[[paste0("Fixed_full_", measure)]] <- fixed_full
++       if (!is.null(variable_base)) successful_models[[paste0("Variable_base_", measure)]] <- variable_base
++       if (!is.null(variable_full)) successful_models[[paste0("Variable_full_", measure)]] <- variable_full
++     }
++   }
+>   # 3. Generate table only if we have successful models
+>   if (length(successful_models) > 0) {
++     stargazer(
++       successful_models,
++       title = "Robust Results: Mortgage Rate Response to Bauer Shocks",
++       column.labels = gsub("_", " ", names(successful_models)),
++       dep.var.labels = "Mortgage Rate (Decimal)",
++       covariate.labels = c(
++         "Bauer Shock (Max)", "Bauer Shock (Sum)",
++         "Bauer Shock (Median)", "Bauer Shock (Avg)",
++         "FFR Change (Lagged)", "Unemployment (Lagged)"
++       ),
++       se = lapply(successful_models, function(x) sqrt(diag(vcovHC(x, cluster = "group")))),
++       type = "text",
++       font.size = "small",
++       no.space = TRUE
++     )
++   } else {
++     message("No models could be successfully estimated. Please check:")
++     message("1. Variable names in your data")
++     message("2. Sufficient observations per group")
++     message("3. Missing value patterns")
++   }
+
+Robust Results: Mortgage Rate Response to Bauer Shocks
+=====================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+                                                                                                                                                                                                                                                                    Dependent variable:                                                                                                                                                                                                                                              
+                      ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                                                                                                                                                                                                                                                                  Mortgage Rate (Decimal)                                                                                                                                                                                                                                            
+                      Fixed base bauer shock signed max Fixed full bauer shock signed max Variable base bauer shock signed max Variable full bauer shock signed max Fixed base bauer shock sum Fixed full bauer shock sum Variable base bauer shock sum Variable full bauer shock sum Fixed base bauer shock median Fixed full bauer shock median Variable base bauer shock median Variable full bauer shock median Fixed base bauer shock avg Fixed full bauer shock avg Variable base bauer shock avg Variable full bauer shock avg
+                                     (1)                               (2)                                (3)                                  (4)                             (5)                        (6)                          (7)                           (8)                           (9)                          (10)                            (11)                             (12)                          (13)                       (14)                        (15)                          (16)             
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Bauer Shock (Max)                 0.020***                          -0.008***                           0.001***                            -0.003***                                                                                                                                                                                                                                                                                                                                                                                
+                                   (0.001)                           (0.001)                            (0.0003)                             (0.0004)                                                                                                                                                                                                                                                                                                                                                                                
+Bauer Shock (Sum)                                                   0.001***                                                                0.0001***                                                   0.001***                                                  0.0001**                                                    0.001***                                                        0.0001***                                                 0.001***                                                  0.0001**           
+                                                                    (0.0001)                                                                (0.00004)                                                   (0.0001)                                                  (0.00004)                                                   (0.0001)                                                        (0.00004)                                                 (0.0001)                                                  (0.00004)          
+Bauer Shock (Median)                                                0.004***                                                                 0.001***                                                   0.004***                                                  0.0004***                                                   0.004***                                                        0.0004***                                                 0.004***                                                  0.0004***          
+                                                                    (0.0001)                                                                 (0.0001)                                                   (0.0001)                                                  (0.00005)                                                   (0.0001)                                                        (0.00005)                                                 (0.0001)                                                  (0.00005)          
+Bauer Shock (Avg)                                                                                                                                                            0.015***                  -0.002***                    0.001***                       -0.0003                                                                                                                                                                                                                                                           
+                                                                                                                                                                             (0.001)                    (0.001)                     (0.0002)                      (0.0003)                                                                                                                                                                                                                                                           
+FFR Change (Lagged)                                                                                                                                                                                                                                                                             0.103***                      -0.373***                        0.019                           -0.028*                                                                                                                               
+                                                                                                                                                                                                                                                                                                 (0.028)                       (0.029)                        (0.012)                          (0.014)                                                                                                                               
+Unemployment (Lagged)                                                                                                                                                                                                                                                                                                                                                                                                        0.353***                  -0.054***                    0.033***                       -0.007            
+                                                                                                                                                                                                                                                                                                                                                                                                                             (0.014)                    (0.016)                      (0.006)                       (0.007)           
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Observations                       16,075                            16,075                              25,251                               25,251                          16,075                     16,075                      25,251                        25,251                        16,075                        16,075                          25,251                           25,251                        16,075                     16,075                      25,251                        25,251            
+R2                                  0.050                             0.189                              0.0004                               0.009                           0.036                      0.185                        0.001                         0.007                         0.001                         0.195                          0.0001                           0.007                         0.036                      0.185                        0.001                         0.007            
+Adjusted R2                        -0.300                            -0.110                              -0.403                               -0.391                          -0.319                     -0.115                      -0.401                        -0.394                        -0.367                        -0.102                          -0.403                           -0.393                        -0.319                     -0.115                      -0.401                        -0.394            
+F Statistic              614.798*** (df = 1; 11748)        913.070*** (df = 3; 11746)           6.476** (df = 1; 17995)             55.085*** (df = 3; 17993)       442.928*** (df = 1; 11748) 890.885*** (df = 3; 11746)   23.793*** (df = 1; 17995)     42.187*** (df = 3; 17993)     10.040*** (df = 1; 11748)    947.564*** (df = 3; 11746)        2.036 (df = 1; 17995)          43.312*** (df = 3; 17993)     442.928*** (df = 1; 11748) 890.885*** (df = 3; 11746)   23.793*** (df = 1; 17995)     42.187*** (df = 3; 17993)  
+=====================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+Note:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     *p<0.1; **p<0.05; ***p<0.01
+>   # 4. Diagnostic check of model terms
+>   if (length(successful_models) > 0) {
++     cat("\n=== Model Term Check ===\n")
++     for (model_name in names(successful_models)) {
++       cat("\nModel:", model_name, "\n")
++       print(attr(terms(successful_models[[model_name]]), "term.labels"))
++     }
++   }
+
+=== Model Term Check ===
+
+Model: Fixed_base_bauer_shock_signed_max 
+[1] "bauer_shock_signed_max"
+
+Model: Fixed_full_bauer_shock_signed_max 
+[1] "bauer_shock_signed_max" "ffr_change_lag"         "unemp_lag"             
+
+Model: Variable_base_bauer_shock_signed_max 
+[1] "bauer_shock_signed_max"
+
+Model: Variable_full_bauer_shock_signed_max 
+[1] "bauer_shock_signed_max" "ffr_change_lag"         "unemp_lag"             
+
+Model: Fixed_base_bauer_shock_sum 
+[1] "bauer_shock_sum"
+
+Model: Fixed_full_bauer_shock_sum 
+[1] "bauer_shock_sum" "ffr_change_lag"  "unemp_lag"      
+
+Model: Variable_base_bauer_shock_sum 
+[1] "bauer_shock_sum"
+
+Model: Variable_full_bauer_shock_sum 
+[1] "bauer_shock_sum" "ffr_change_lag"  "unemp_lag"      
+
+Model: Fixed_base_bauer_shock_median 
+[1] "bauer_shock_median"
+
+Model: Fixed_full_bauer_shock_median 
+[1] "bauer_shock_median" "ffr_change_lag"     "unemp_lag"         
+
+Model: Variable_base_bauer_shock_median 
+[1] "bauer_shock_median"
+
+Model: Variable_full_bauer_shock_median 
+[1] "bauer_shock_median" "ffr_change_lag"     "unemp_lag"         
+
+Model: Fixed_base_bauer_shock_avg 
+[1] "bauer_shock_avg"
+
+Model: Fixed_full_bauer_shock_avg 
+[1] "bauer_shock_avg" "ffr_change_lag"  "unemp_lag"      
+
+Model: Variable_base_bauer_shock_avg 
+[1] "bauer_shock_avg"
+
+Model: Variable_full_bauer_shock_avg 
+[1] "bauer_shock_avg" "ffr_change_lag"  "unemp_lag"      
+
+
+>   # 1. First ensure all required variables exist
+>   required_vars <- c("int1prc", "refin1_y.n", "mort1_year_obtained", "year", "pid", 
++                      "bauer_shock_avg", "ffr_change")
+>   # Check which are missing
+>   setdiff(required_vars, names(d7_merged))
+character(0)
+>   # 2. Create proper analysis dataset with lags
+>   d7_analysis <- d7_merged %>%
++     mutate(
++       # Convert interest rate to decimal
++       mort_rate = int1prc / 100,
++       
++       # Create refinancing indicators
++       refin_status = case_when(
++         refin1_y.n == 2 ~ "Refinanced",
++         refin1_y.n == 1 ~ "Original",
++         TRUE ~ "No_loan"
++       )
++     ) %>%
++     # Create necessary lags
++     group_by(pid) %>%
++     arrange(year) %>%
++     mutate(
++       ffr_change_lag = lag(ffr_change),
++       bauer_shock_lag = lag(bauer_shock_avg)
++     ) %>%
++     ungroup() %>%
++     filter(refin_status != "No_loan")  # Remove non-borrowers
+>   # 3. Build event study dataset
+>   event_study_data <- d7_analysis %>% 
++     filter(refin_status == "Refinanced") %>% 
++     mutate(
++       refin_year = mort1_year_obtained,
++       event_time = year - refin_year,
++       time_to_refin = case_when(
++         event_time %in% -3:-1 ~ "Pre_3_to_1",
++         event_time == 0 ~ "Refin_year",
++         event_time %in% 1:3 ~ "Post_1_to_3",
++         TRUE ~ "Outside_window"
++       )
++     ) %>% 
++     filter(time_to_refin != "Outside_window")
+>   # 4. Run robust event study regression
+>   event_model <- plm(
++     mort_rate ~ time_to_refin + bauer_shock_lag + ffr_change_lag,
++     data = event_study_data,
++     index = c("pid", "year"),
++     model = "within"
++   )
+>   # 5. Check results
+>   summary(event_model)
+Oneway (individual) effect Within Model
+
+Call:
+plm(formula = mort_rate ~ time_to_refin + bauer_shock_lag + ffr_change_lag, 
+    data = event_study_data, model = "within", index = c("pid", 
+        "year"))
+
+Unbalanced Panel: n = 2873, T = 1-10, N = 7257
+
+Residuals:
+      Min.    1st Qu.     Median    3rd Qu.       Max. 
+-0.0659620 -0.0051267  0.0000000  0.0054431  0.0806695 
+
+Coefficients:
+                           Estimate  Std. Error  t-value  Pr(>|t|)    
+time_to_refinRefin_year -0.00260504  0.00051557  -5.0528 4.532e-07 ***
+bauer_shock_lag          0.07855412  0.03232557   2.4301   0.01513 *  
+ffr_change_lag          -0.00112728  0.00010153 -11.1031 < 2.2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    0.85265
+Residual Sum of Squares: 0.82607
+R-Squared:      0.03117
+Adj. R-Squared: -0.60462
+F-statistic: 46.9827 on 3 and 4381 DF, p-value: < 2.22e-16
+> 
+
+
+##with ltv######
+>   # Create LTV categories and interaction terms
+>   library(dplyr)
+>   library(plm)
+>   # 1. First verify required variables exist
+>   cat("Checking variables in dataset:\n")
+Checking variables in dataset:
+>   print(c("int1prc", "refin1_y.n", "ltv_ratio", "bauer_shock_avg", "ffr_change") %in% names(d7_merged))
+[1] TRUE TRUE TRUE TRUE TRUE
+>   # 2. Create analysis dataset with proper lag structure
+>     # Convert and categorize variables
+>       mort_rate = int1prc / 100,
+Error: unexpected ',' in "      mort_rate = int1prc / 100,"
+>       ltv_group = cut(ltv_ratio,
++                       labels = c("Low (<80%)", "Medium (80-90%)", 
++                       include.lowest = TRUE),
++     ) %>%
++     # Create lags by individual
++     group_by(pid) %>%
++     mutate(
++       bauer_shock_lag = lag(bauer_shock_avg),
++     ) %>%
++     # Remove NA values created by lagging
++              filter(!is.na(bauer_shock_lag)) %>%
++            # 3. Check the created data
++            cat("\nSample of processed data:\n")
+Error: object 'ltv_ratio' not found
+>            print(head(d7_analysis[, c("pid", "year", "mort_rate", "refinanced", "ltv_group", "ltv_lag")], 3))
+# A tibble: 3 × 6
+  pid    year mort_rate refinanced ltv_group  ltv_lag
+  <fct> <dbl>     <dbl>      <dbl> <fct>        <dbl>
+1 4001   1999      0             0 NA          NA    
+2 4003   1999      0             0 NA          NA    
+3 4004   1999      0.06          0 Low (<80%)   0.624
+>            # 4. Run stratified models
+>            ltv_models <- list()
+>            for (ltv_cat in levels(d7_analysis$ltv_group)) {
++              cat("\nRunning model for LTV group:", ltv_cat, "\n")
++              
++              ltv_data <- d7_analysis %>% 
++                filter(ltv_group == ltv_cat & refinanced == 1)
++              
++              if (nrow(ltv_data) > 0) {
++                ltv_models[[ltv_cat]] <- plm(
++                  mort_rate ~ bauer_shock_lag + ffr_change_lag,
++                  data = ltv_data,
++                  index = c("pid", "year"),
++                  model = "within"
++                )
++                print(summary(ltv_models[[ltv_cat]]))
++              } else {
++                message("Insufficient data for ", ltv_cat)
++              }
++            }
+
+Running model for LTV group: Low (<80%) 
+Oneway (individual) effect Within Model
+
+Call:
+plm(formula = mort_rate ~ bauer_shock_lag + ffr_change_lag, data = ltv_data, 
+    model = "within", index = c("pid", "year"))
+
+Unbalanced Panel: n = 2819, T = 1-12, N = 9939
+
+Residuals:
+      Min.    1st Qu.     Median    3rd Qu.       Max. 
+-0.1263746 -0.0055661  0.0000000  0.0051162  0.5303192 
+
+Coefficients:
+                   Estimate  Std. Error  t-value  Pr(>|t|)    
+bauer_shock_lag -0.12078715  0.02567861  -4.7038 2.602e-06 ***
+ffr_change_lag  -0.00101328  0.00008814 -11.4963 < 2.2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    1.6502
+Residual Sum of Squares: 1.6139
+R-Squared:      0.022041
+Adj. R-Squared: -0.3654
+F-statistic: 80.2134 on 2 and 7118 DF, p-value: < 2.22e-16
+
+Running model for LTV group: Medium (80-90%) 
+Oneway (individual) effect Within Model
+
+Call:
+plm(formula = mort_rate ~ bauer_shock_lag + ffr_change_lag, data = ltv_data, 
+    model = "within", index = c("pid", "year"))
+
+Unbalanced Panel: n = 655, T = 1-7, N = 888
+
+Residuals:
+     Min.   1st Qu.    Median   3rd Qu.      Max. 
+-0.028537  0.000000  0.000000  0.000000  0.028537 
+
+Coefficients:
+                  Estimate Std. Error t-value  Pr(>|t|)    
+bauer_shock_lag -0.0568448  0.1170798 -0.4855 0.6277665    
+ffr_change_lag  -0.0014626  0.0004026 -3.6329 0.0003453 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    0.031203
+Residual Sum of Squares: 0.0295
+R-Squared:      0.054579
+Adj. R-Squared: -2.6303
+F-statistic: 6.66781 on 2 and 231 DF, p-value: 0.0015301
+
+Running model for LTV group: High (90-100%) 
+Oneway (individual) effect Within Model
+
+Call:
+plm(formula = mort_rate ~ bauer_shock_lag + ffr_change_lag, data = ltv_data, 
+    model = "within", index = c("pid", "year"))
+
+Unbalanced Panel: n = 456, T = 1-5, N = 617
+
+Residuals:
+     Min.   1st Qu.    Median   3rd Qu.      Max. 
+-0.049535  0.000000  0.000000  0.000000  0.050266 
+
+Coefficients:
+                   Estimate  Std. Error t-value Pr(>|t|)   
+bauer_shock_lag  0.02424882  0.15925863  0.1523 0.879174   
+ffr_change_lag  -0.00147868  0.00054879 -2.6944 0.007808 **
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    0.029933
+Residual Sum of Squares: 0.028562
+R-Squared:      0.045818
+Adj. R-Squared: -2.6967
+F-statistic: 3.81747 on 2 and 159 DF, p-value: 0.024025
+
+Running model for LTV group: Very High (>100%) 
+Oneway (individual) effect Within Model
+
+Call:
+plm(formula = mort_rate ~ bauer_shock_lag + ffr_change_lag, data = ltv_data, 
+    model = "within", index = c("pid", "year"))
+
+Unbalanced Panel: n = 231, T = 1-6, N = 329
+
+Residuals:
+       Min.     1st Qu.      Median     3rd Qu.        Max. 
+-0.03176245 -0.00059542  0.00000000  0.00038402  0.05527538 
+
+Coefficients:
+                   Estimate  Std. Error t-value  Pr(>|t|)    
+bauer_shock_lag -0.12983965  0.21788712 -0.5959    0.5526    
+ffr_change_lag  -0.00373717  0.00082658 -4.5212 1.756e-05 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    0.026325
+Residual Sum of Squares: 0.021538
+R-Squared:      0.18183
+Adj. R-Squared: -1.7954
+F-statistic: 10.6677 on 2 and 96 DF, p-value: 6.5528e-05
+>            # 5. Present final results
+>            if (length(ltv_models) > 0) {
++              stargazer::stargazer(
++                ltv_models,
++                title = "Mortgage Rate Response by LTV Group",
++                column.labels = names(ltv_models),
++                dep.var.labels = "Mortgage Rate (Decimal)",
++                covariate.labels = c("Bauer Shock (Lagged)", "FFR Change (Lagged)"),
++                type = "text"
++              )
++            }
+
+Mortgage Rate Response by LTV Group
+=================================================================================================================
+                                                         Dependent variable:                                     
+                     --------------------------------------------------------------------------------------------
+                                                       Mortgage Rate (Decimal)                                   
+                            Low (<80%)           Medium (80-90%)        High (90-100%)       Very High (>100%)   
+                               (1)                     (2)                    (3)                   (4)          
+-----------------------------------------------------------------------------------------------------------------
+Bauer Shock (Lagged)        -0.121***                 -0.057                 0.024                 -0.130        
+                             (0.026)                 (0.117)                (0.159)               (0.218)        
+                                                                                                                 
+FFR Change (Lagged)         -0.001***               -0.001***              -0.001***             -0.004***       
+                             (0.0001)                (0.0004)               (0.001)               (0.001)        
+                                                                                                                 
+-----------------------------------------------------------------------------------------------------------------
+Observations                  9,939                    888                    617                   329          
+R2                            0.022                   0.055                  0.046                 0.182         
+Adjusted R2                   -0.365                  -2.630                -2.697                 -1.795        
+F Statistic          80.213*** (df = 2; 7118) 6.668*** (df = 2; 231) 3.817** (df = 2; 159) 10.668*** (df = 2; 96)
+=================================================================================================================
+Note:                                                                                 *p<0.1; **p<0.05; ***p<0.01
+
+
+>            # 1. Create analysis dataset with proper lags
+>            d7_analysis <- d7_merged %>%
++              mutate(
++                mort_rate = int1prc / 100,
++                refinanced = ifelse(refin1_y.n == 2, 1, 0),
++                ltv_group = cut(ltv_ratio,
++                                breaks = c(0, 0.8, 0.9, 1.0, Inf),
++                                labels = c("Low (<80%)", "Medium (80-90%)", 
++                                           "High (90-100%)", "Very High (>100%)"))
++              ) %>%
++              group_by(pid) %>%
++              arrange(year) %>%
++              mutate(
++                bauer_sum_lag = lag(bauer_shock_sum),
++                bauer_max_lag = lag(bauer_shock_signed_max),
++                ffr_change_lag = lag(ffr_change)
++              ) %>%
++              ungroup()
+>            # 2. Run models for Bauer Shock SUM
+>            sum_models <- list()
+>            for (ltv_cat in levels(d7_analysis$ltv_group)) {
++              sum_models[[paste0("SUM_", ltv_cat)]] <- plm(
++                mort_rate ~ bauer_sum_lag + ffr_change_lag,
++                data = filter(d7_analysis, ltv_group == ltv_cat & refinanced == 1),
++                index = c("pid", "year"),
++                model = "within"
++              )
++            }
+>            # 3. Run models for Bauer Shock MAX
+>            max_models <- list()
+>            for (ltv_cat in levels(d7_analysis$ltv_group)) {
++              max_models[[paste0("MAX_", ltv_cat)]] <- plm(
++                mort_rate ~ bauer_max_lag + ffr_change_lag,
++                data = filter(d7_analysis, ltv_group == ltv_cat & refinanced == 1),
++                index = c("pid", "year"),
++                model = "within"
++              )
++            }
+>            # Bauer Shock SUM results
+>            cat("\n============= BAUER SHOCK SUM RESULTS =============\n")
+
+============= BAUER SHOCK SUM RESULTS =============
+>            stargazer(sum_models,
++                      title = "Mortgage Rate Response to Bauer Shock SUM by LTV",
++                      column.labels = gsub("SUM_", "", names(sum_models)),
++                      dep.var.labels = "Mortgage Rate",
++                      covariate.labels = c("Bauer Shock SUM (Lagged)", "FFR Change (Lagged)"),
++                      type = "text")
+
+Mortgage Rate Response to Bauer Shock SUM by LTV
+=====================================================================================================================
+                                                             Dependent variable:                                     
+                         --------------------------------------------------------------------------------------------
+                                                                Mortgage Rate                                        
+                                Low (<80%)           Medium (80-90%)        High (90-100%)       Very High (>100%)   
+                                   (1)                     (2)                    (3)                   (4)          
+---------------------------------------------------------------------------------------------------------------------
+Bauer Shock SUM (Lagged)        -0.005***                 -0.002                 0.001                 -0.005        
+                                 (0.001)                 (0.005)                (0.007)               (0.009)        
+                                                                                                                     
+FFR Change (Lagged)             -0.001***               -0.001***              -0.001***             -0.004***       
+                                 (0.0001)                (0.0004)               (0.001)               (0.001)        
+                                                                                                                     
+---------------------------------------------------------------------------------------------------------------------
+Observations                      9,939                    888                    617                   329          
+R2                                0.022                   0.055                  0.046                 0.182         
+Adjusted R2                       -0.365                  -2.630                -2.697                 -1.795        
+F Statistic              80.213*** (df = 2; 7118) 6.668*** (df = 2; 231) 3.817** (df = 2; 159) 10.668*** (df = 2; 96)
+=====================================================================================================================
+Note:                                                                                     *p<0.1; **p<0.05; ***p<0.01
+>            # Bauer Shock MAX results
+>            cat("\n============= BAUER SHOCK MAX RESULTS =============\n")
+
+============= BAUER SHOCK MAX RESULTS =============
+>            stargazer(max_models,
++                      title = "Mortgage Rate Response to Bauer Shock MAX by LTV",
++                      column.labels = gsub("MAX_", "", names(max_models)),
++                      dep.var.labels = "Mortgage Rate", 
++                      covariate.labels = c("Bauer Shock MAX (Lagged)", "FFR Change (Lagged)"),
++                      type = "text")      
+
+Mortgage Rate Response to Bauer Shock MAX by LTV
+=====================================================================================================================
+                                                             Dependent variable:                                     
+                         --------------------------------------------------------------------------------------------
+                                                                Mortgage Rate                                        
+                                Low (<80%)           Medium (80-90%)        High (90-100%)       Very High (>100%)   
+                                   (1)                     (2)                    (3)                   (4)          
+---------------------------------------------------------------------------------------------------------------------
+Bauer Shock MAX (Lagged)          -0.001                  0.007                  0.007                 -0.016        
+                                 (0.001)                 (0.006)                (0.008)               (0.017)        
+                                                                                                                     
+FFR Change (Lagged)             -0.001***               -0.001***              -0.001***             -0.004***       
+                                 (0.0001)                (0.0004)               (0.001)               (0.001)        
+                                                                                                                     
+---------------------------------------------------------------------------------------------------------------------
+Observations                      9,939                    888                    617                   329          
+R2                                0.019                   0.060                  0.049                 0.186         
+Adjusted R2                       -0.369                  -2.610                -2.683                 -1.781        
+F Statistic              69.593*** (df = 2; 7118) 7.353*** (df = 2; 231) 4.133** (df = 2; 159) 10.965*** (df = 2; 96)
+=====================================================================================================================
+Note: 
+
+
+
+>            library(dplyr)
+>            library(plm)
+>            library(stargazer)
+>            # 1. Create analysis dataset with proper lags
+>            d7_analysis <- d7_merged %>%
++              mutate(
++                mort_rate = int1prc / 100,
++                refinanced = ifelse(refin1_y.n == 2, 1, 0),
++                ltv_group = cut(ltv_ratio,
++                                breaks = c(0, 0.8, 0.9, 1.0, Inf),
++                                labels = c("Low (<80%)", "Medium (80-90%)", 
++                                           "High (90-100%)", "Very High (>100%)"))
++              ) %>%
++              group_by(pid) %>%
++              arrange(year) %>%
++              mutate(
++                bauer_sum_lag = lag(bauer_shock_sum),
++                bauer_max_lag = lag(bauer_shock_signed_max),
++                ffr_change_lag = lag(ffr_change)
++              ) %>%
++              ungroup()
+>            # 2. Run models for Bauer Shock SUM
+>            sum_models <- list()
+>            for (ltv_cat in levels(d7_analysis$ltv_group)) {
++              sum_models[[paste0("SUM_", ltv_cat)]] <- plm(
++                mort_rate ~ bauer_sum_lag + ffr_change_lag,
++                data = filter(d7_analysis, ltv_group == ltv_cat & refinanced == 1),
++                index = c("pid", "year"),
++                model = "within"
++              )
++            }
+>            # 3. Run models for Bauer Shock MAX
+>            max_models <- list()
+>            for (ltv_cat in levels(d7_analysis$ltv_group)) {
++              max_models[[paste0("MAX_", ltv_cat)]] <- plm(
++                mort_rate ~ bauer_max_lag + ffr_change_lag,
++                data = filter(d7_analysis, ltv_group == ltv_cat & refinanced == 1),
++                index = c("pid", "year"),
++                model = "within"
++              )
++            }
+>            # Bauer Shock SUM results
+>            cat("\n============= BAUER SHOCK SUM RESULTS =============\n")
+
+============= BAUER SHOCK SUM RESULTS =============
+>            stargazer(sum_models,
++                      title = "Mortgage Rate Response to Bauer Shock SUM by LTV",
++                      column.labels = gsub("SUM_", "", names(sum_models)),
++                      dep.var.labels = "Mortgage Rate",
++                      covariate.labels = c("Bauer Shock SUM (Lagged)", "FFR Change (Lagged)"),
++                      type = "text")
+
+Mortgage Rate Response to Bauer Shock SUM by LTV
+=====================================================================================================================
+                                                             Dependent variable:                                     
+                         --------------------------------------------------------------------------------------------
+                                                                Mortgage Rate                                        
+                                Low (<80%)           Medium (80-90%)        High (90-100%)       Very High (>100%)   
+                                   (1)                     (2)                    (3)                   (4)          
+---------------------------------------------------------------------------------------------------------------------
+Bauer Shock SUM (Lagged)        -0.005***                 -0.002                 0.001                 -0.005        
+                                 (0.001)                 (0.005)                (0.007)               (0.009)        
+                                                                                                                     
+FFR Change (Lagged)             -0.001***               -0.001***              -0.001***             -0.004***       
+                                 (0.0001)                (0.0004)               (0.001)               (0.001)        
+                                                                                                                     
+---------------------------------------------------------------------------------------------------------------------
+Observations                      9,939                    888                    617                   329          
+R2                                0.022                   0.055                  0.046                 0.182         
+Adjusted R2                       -0.365                  -2.630                -2.697                 -1.795        
+F Statistic              80.213*** (df = 2; 7118) 6.668*** (df = 2; 231) 3.817** (df = 2; 159) 10.668*** (df = 2; 96)
+=====================================================================================================================
+Note:                                                                                     *p<0.1; **p<0.05; ***p<0.01
+
+
+
+#annual 
+> library(dplyr)
+> library(plm)
+> library(stargazer)
+> # 1. Use EXISTING annual sums (bauer_shock_sum already contains annual shocks)
+> d7_analysis <- d7_merged %>%
++   mutate(
++     mort_rate = int1prc / 100,
++     refinanced = ifelse(refin1_y.n == 2, 1, 0),
++     ltv_group = cut(ltv_ratio,
++                     breaks = c(0, 0.8, 0.9, 1.0, Inf),
++                     labels = c("Low (<80%)", "Medium (80-90%)", 
++                                "High (90-100%)", "Very High (>100%)"))
++   ) %>%
++   group_by(pid) %>%
++   arrange(year) %>%
++   mutate(
++     bauer_sum_lag = lag(bauer_shock_sum),  # Directly use pre-built annual sums
++     ffr_change_lag = lag(ffr_change)
++   ) %>%
++   ungroup()
+> # 2. Run models (IDENTICAL to your biannual setup but with annual shocks)
+> annual_models <- list()
+> for (ltv_cat in levels(d7_analysis$ltv_group)) {
++   annual_models[[ltv_cat]] <- plm(
++     mort_rate ~ bauer_sum_lag + ffr_change_lag,
++     data = filter(d7_analysis, ltv_group == ltv_cat & refinanced == 1),
++     index = c("pid", "year"),
++     model = "within"
++   )
++ }
+> # 3. Print results in your EXACT preferred format
+> cat("\n============= ANNUAL BAUER SHOCK SUM RESULTS =============\n")
+
+============= ANNUAL BAUER SHOCK SUM RESULTS =============
+> stargazer(annual_models,
++           title = "Mortgage Rate Response to Annual Bauer Shock Sum by LTV",
++           column.labels = levels(d7_analysis$ltv_group),
++           dep.var.labels = "Mortgage Rate",
++           covariate.labels = c("Bauer Shock Annual Sum (Lagged)", "FFR Change (Lagged)"),
++           type = "text")
+
+Mortgage Rate Response to Annual Bauer Shock Sum by LTV
+============================================================================================================================
+                                                                    Dependent variable:                                     
+                                --------------------------------------------------------------------------------------------
+                                                                       Mortgage Rate                                        
+                                       Low (<80%)           Medium (80-90%)        High (90-100%)       Very High (>100%)   
+                                          (1)                     (2)                    (3)                   (4)          
+----------------------------------------------------------------------------------------------------------------------------
+Bauer Shock Annual Sum (Lagged)        -0.009***                 -0.002                 0.007                 -0.001        
+                                        (0.002)                 (0.007)                (0.009)               (0.013)        
+                                                                                                                            
+FFR Change (Lagged)                    -0.001***               -0.001***              -0.002***             -0.004***       
+                                        (0.0001)                (0.0004)               (0.001)               (0.001)        
+                                                                                                                            
+----------------------------------------------------------------------------------------------------------------------------
+Observations                             9,939                    888                    617                   329          
+R2                                       0.024                   0.054                  0.049                 0.179         
+Adjusted R2                              -0.363                  -2.633                -2.685                 -1.806        
+F Statistic                     85.838*** (df = 2; 7118) 6.569*** (df = 2; 231) 4.074** (df = 2; 159) 10.455*** (df = 2; 96)
+============================================================================================================================
+Note:                                                                                            *p<0.1; **p<0.05; ***p<0.01

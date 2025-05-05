@@ -1,0 +1,120 @@
+> # Load the plm package
+> library(plm)
+> # Step 1: Define the panel data structure using plm
+> panel_data <- pdata.frame(d7_merged, index = c("pid", "year"))
+> # Step 2: Filter to refinanced observations
+> panel_data <- subset(panel_data, refin1_y.n == 2)
+> # Step 3: Drop rows with missing values in regression vars
+> panel_data <- panel_data[complete.cases(panel_data[, c(
++   "int1prc_decimal", "bauer_shock_sum", "ffr_change_sum",
++   "r_fam_income_prevy", "r_wlth_no_equity", "ltv_ratio"
++ )]), ]
+> # Step 4: Run the panel regression (random effects)
+> panel_model <- plm(
++   int1prc_decimal ~ bauer_shock_sum + ffr_change_sum + r_fam_income_prevy + 
++     r_wlth_no_equity + ltv_ratio,
++   data = panel_data,
++   model = "random"
++ )
+> # View the summary of the model
+> summary(panel_model)
+Oneway (individual) effect Random Effect Model 
+   (Swamy-Arora's transformation)
+
+Call:
+plm(formula = int1prc_decimal ~ bauer_shock_sum + ffr_change_sum + 
+    r_fam_income_prevy + r_wlth_no_equity + ltv_ratio, data = panel_data, 
+    model = "random")
+
+Unbalanced Panel: n = 2252, T = 1-7, N = 6637
+
+Effects:
+                    var   std.dev share
+idiosyncratic 0.0001398 0.0118224 0.574
+individual    0.0001037 0.0101832 0.426
+theta:
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.2423  0.4432  0.4980  0.4784  0.5717  0.5982 
+
+Residuals:
+     Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+-0.062981 -0.007411 -0.001215 -0.000034  0.006343  0.296956 
+
+Coefficients:
+                      Estimate  Std. Error z-value  Pr(>|z|)    
+(Intercept)         4.0969e-02  6.4066e-04 63.9488 < 2.2e-16 ***
+bauer_shock_sum     2.3131e-02  1.7635e-03 13.1165 < 2.2e-16 ***
+ffr_change_sum     -2.8396e-03  4.2548e-04 -6.6740 2.490e-11 ***
+r_fam_income_prevy -2.3390e-08  3.0140e-09 -7.7602 8.481e-15 ***
+r_wlth_no_equity   -2.0281e-09  4.7093e-10 -4.3065 1.659e-05 ***
+ltv_ratio           5.2246e-03  6.3655e-04  8.2077 2.254e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    1.1798
+Residual Sum of Squares: 0.97421
+R-Squared:      0.17438
+Adj. R-Squared: 0.17376
+Chisq: 385.13 on 5 DF, p-value: < 2.22e-16
+
+
+
+
+
+> library(plm)
+> # Step 1: Define the panel data structure using plm
+> panel_data2 <- pdata.frame(d7_merged, index = c("pid", "year"))
+> # Step 2: Filter to refinanced observations
+> panel_data2 <- subset(panel_data2, refin1_y.n == 1)
+> # Step 3: Drop rows with missing values in regression vars
+> panel_data2 <- panel_data2[complete.cases(panel_data2[, c(
++   "int1prc_decimal", "bauer_shock_sum", "ffr_change_sum",
++   "r_fam_income_prevy", "r_wlth_no_equity", "ltv_ratio"
++ )]), ]
+> # Step 4: Run the panel regression (random effects)
+> panel_model2 <- plm(
++   int1prc_decimal ~ bauer_shock_sum + ffr_change_sum + r_fam_income_prevy + 
++     r_wlth_no_equity + ltv_ratio,
++   data = panel_data2,
++   model = "random"
++ )
+> # View the summary of the model
+> summary(panel_model2)
+Oneway (individual) effect Random Effect Model 
+   (Swamy-Arora's transformation)
+
+Call:
+plm(formula = int1prc_decimal ~ bauer_shock_sum + ffr_change_sum + 
+    r_fam_income_prevy + r_wlth_no_equity + ltv_ratio, data = panel_data2, 
+    model = "random")
+
+Unbalanced Panel: n = 2768, T = 1-7, N = 6386
+
+Effects:
+                    var   std.dev share
+idiosyncratic 0.0001692 0.0130083 0.451
+individual    0.0002062 0.0143585 0.549
+theta:
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.3286  0.4606  0.5365  0.5191  0.6245  0.6760 
+
+Residuals:
+     Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+-0.063260 -0.007143 -0.000977 -0.000007  0.005858  0.265558 
+
+Coefficients:
+                      Estimate  Std. Error z-value  Pr(>|z|)    
+(Intercept)         4.7042e-02  7.9892e-04 58.8819 < 2.2e-16 ***
+bauer_shock_sum     1.6494e-02  2.1821e-03  7.5587 4.071e-14 ***
+ffr_change_sum     -1.8036e-03  4.3673e-04 -4.1297 3.632e-05 ***
+r_fam_income_prevy -2.5761e-08  3.8841e-09 -6.6324 3.304e-11 ***
+r_wlth_no_equity   -2.7439e-09  6.3693e-10 -4.3080 1.648e-05 ***
+ltv_ratio           1.1877e-03  7.8327e-04  1.5164    0.1294    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    1.3073
+Residual Sum of Squares: 1.1198
+R-Squared:      0.14338
+Adj. R-Squared: 0.14271
+Chisq: 152.224 on 5 DF, p-value: < 2.22e-16

@@ -118,3 +118,386 @@ Residual Sum of Squares: 1.1198
 R-Squared:      0.14338
 Adj. R-Squared: 0.14271
 Chisq: 152.224 on 5 DF, p-value: < 2.22e-16
+
+
+
+
+
+
+
+#more variabkes 
+
+> library(plm)
+> # Create panel structure: pid = person, year = time
+> panel_data <- pdata.frame(ols_data, index = c("pid", "year"))
+> # Run random effects model
+> panel_model <- plm(
++   int1prc_decimal ~ bauer_shock_sum + ffr_change_sum +
++     r_fam_income_prevy + wlth_w_equity + ltv_ratio + yr_mort1_left +
++     is_variable_rate + factor(race_ref) + factor(sex_ref) + factor(educ),
++   data = panel_data,
++   model = "random"
++ )
+> summary(panel_model)
+Oneway (individual) effect Random Effect Model 
+   (Swamy-Arora's transformation)
+
+Call:
+plm(formula = int1prc_decimal ~ bauer_shock_sum + ffr_change_sum + 
+    r_fam_income_prevy + wlth_w_equity + ltv_ratio + yr_mort1_left + 
+    is_variable_rate + factor(race_ref) + factor(sex_ref) + factor(educ), 
+    data = panel_data, model = "random")
+
+Unbalanced Panel: n = 3983, T = 1-7, N = 13810
+
+Effects:
+                    var   std.dev share
+idiosyncratic 0.0001778 0.0133349 0.581
+individual    0.0001285 0.0113343 0.419
+theta:
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.2381  0.4381  0.5344  0.5004  0.5937  0.5937 
+
+Residuals:
+     Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+-0.064090 -0.007942 -0.001149 -0.000051  0.006749  0.297296 
+
+Coefficients:
+                      Estimate  Std. Error z-value  Pr(>|z|)    
+(Intercept)         4.8495e-02  1.0118e-03 47.9287 < 2.2e-16 ***
+bauer_shock_sum     2.2614e-02  1.4053e-03 16.0920 < 2.2e-16 ***
+ffr_change_sum     -2.9268e-03  3.1007e-04 -9.4394 < 2.2e-16 ***
+r_fam_income_prevy -2.1561e-08  2.5298e-09 -8.5228 < 2.2e-16 ***
+wlth_w_equity      -1.7278e-09  2.4216e-10 -7.1348 9.691e-13 ***
+ltv_ratio           5.1865e-03  5.6991e-04  9.1006 < 2.2e-16 ***
+yr_mort1_left      -7.8963e-05  2.1238e-05 -3.7179 0.0002009 ***
+is_variable_rate    2.7079e-04  6.6164e-04  0.4093 0.6823372    
+factor(race_ref)2   5.4377e-03  1.0215e-03  5.3230 1.021e-07 *** #black people pay more 
+factor(race_ref)3  -1.6138e-03  3.1449e-03 -0.5132 0.6078385    
+factor(race_ref)4  -1.5989e-03  3.1383e-03 -0.5095 0.6104067    
+factor(race_ref)5  -1.6191e-02  8.6279e-03 -1.8766 0.0605796 .  
+factor(race_ref)7   3.6242e-03  2.3130e-03  1.5668 0.1171507    
+factor(race_ref)9   1.4700e-03  3.1586e-03  0.4654 0.6416441    
+factor(sex_ref)2    8.1624e-04  6.5724e-04  1.2419 0.2142622    
+factor(educ)2      -2.1462e-03  9.9737e-04 -2.1519 0.0314085 *  
+factor(educ)3      -6.4699e-03  9.3738e-04 -6.9021 5.123e-12 *** #higher educ pay less
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    3.1318
+Residual Sum of Squares: 2.6363
+R-Squared:      0.15838
+Adj. R-Squared: 0.15741
+Chisq: 834.652 on 16 DF, p-value: < 2.22e-16
+
+#####with weights 
+
+> ols_model_weighted <- lm(
++   int1prc_decimal ~ bauer_shock_sum + ffr_change_sum + r_fam_income_prevy +
++     wlth_w_equity + ltv_ratio + yr_mort1_left +
++     is_variable_rate + factor(race_ref) + factor(sex_ref) + factor(educ),
++   data = ols_data,
++   weights = weight  # e.g., wgt_longit
++ )
+> summary(ols_model_weighted)
+
+Call:
+lm(formula = int1prc_decimal ~ bauer_shock_sum + ffr_change_sum + 
+    r_fam_income_prevy + wlth_w_equity + ltv_ratio + yr_mort1_left + 
+    is_variable_rate + factor(race_ref) + factor(sex_ref) + factor(educ), 
+    data = ols_data, weights = weight)
+
+Weighted Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.52570 -0.04997 -0.00690  0.04204  1.90911 
+
+Coefficients:
+                     Estimate Std. Error t value Pr(>|t|)    
+(Intercept)         5.252e-02  7.317e-04  71.782  < 2e-16 ***
+bauer_shock_sum     1.956e-02  1.735e-03  11.274  < 2e-16 ***
+ffr_change_sum     -2.279e-03  3.752e-04  -6.074 1.28e-09 ***
+r_fam_income_prevy -2.284e-08  2.191e-09 -10.423  < 2e-16 ***
+wlth_w_equity      -1.827e-09  2.420e-10  -7.553 4.54e-14 ***
+ltv_ratio           6.692e-03  6.024e-04  11.110  < 2e-16 ***
+yr_mort1_left      -2.636e-04  2.034e-05 -12.959  < 2e-16 ***
+is_variable_rate   -1.424e-03  6.065e-04  -2.348   0.0189 *  
+factor(race_ref)2   5.123e-03  6.992e-04   7.327 2.49e-13 ***
+factor(race_ref)3  -7.687e-03  1.882e-03  -4.085 4.44e-05 ***
+factor(race_ref)4  -3.632e-03  1.769e-03  -2.054   0.0400 *  
+factor(race_ref)5  -7.957e-03  1.006e-02  -0.791   0.4290    
+factor(race_ref)7   2.619e-03  1.372e-03   1.908   0.0564 .  
+factor(race_ref)9  -6.517e-04  2.435e-03  -0.268   0.7890    
+factor(sex_ref)2    9.351e-04  4.055e-04   2.306   0.0211 *  
+factor(educ)2      -4.397e-03  6.813e-04  -6.454 1.13e-10 ***
+factor(educ)3      -7.572e-03  6.442e-04 -11.753  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.09383 on 13793 degrees of freedom
+Multiple R-squared:  0.07698,	Adjusted R-squared:  0.07591 
+F-statistic: 71.89 on 16 and 13793 DF,  p-value: < 2.2e-16
+
+
+
+
+> # 1. Dummy: variable rate loan (1 = variable, 0 = fixed)
+> d7_merged$is_variable_rate <- ifelse(d7_merged$mort_rate1fv == 2, 1, 0)
+> # 2. Dummy: refinanced this year (refin1_y.n == 2 AND loan obtained this year)
+> d7_merged$refinanced_this_year <- ifelse(
++   d7_merged$refin1_y.n == 2 & d7_merged$year == d7_merged$mort1_year_obtained,
++   1, 0
++ )
+> # Subset to refinancers this year, complete data only
+> refinancers <- subset(d7_merged, 
++                       refinanced_this_year == 1 & 
++                         complete.cases(d7_merged[, c(
++                           "int1prc_decimal", "bauer_shock_sum", "ffr_change_sum",
++                           "r_fam_income_prevy", "wlth_w_equity", "ltv_ratio", "yr_mort1_left",
++                           "is_variable_rate", "race_ref", "sex_ref", "educ"
++                         )]))
+> # OLS model for refinancers
+> ols_refinancers <- lm(
++   int1prc_decimal ~ bauer_shock_sum + ffr_change_sum +
++     r_fam_income_prevy + wlth_w_equity + ltv_ratio + yr_mort1_left +
++     is_variable_rate + factor(race_ref) + factor(sex_ref) + factor(educ),
++   data = refinancers
++ )
+> summary(ols_refinancers)
+
+Call:
+lm(formula = int1prc_decimal ~ bauer_shock_sum + ffr_change_sum + 
+    r_fam_income_prevy + wlth_w_equity + ltv_ratio + yr_mort1_left + 
+    is_variable_rate + factor(race_ref) + factor(sex_ref) + factor(educ), 
+    data = refinancers)
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-0.031672 -0.006882  0.000899  0.004380  0.066895 
+
+Coefficients:
+                     Estimate Std. Error t value Pr(>|t|)    
+(Intercept)         3.208e-02  2.553e-03  12.564  < 2e-16 ***
+bauer_shock_sum     5.790e-02  4.455e-03  12.998  < 2e-16 ***
+ffr_change_sum     -6.431e-03  1.491e-03  -4.313 1.87e-05 ***
+r_fam_income_prevy -3.992e-10  5.374e-09  -0.074  0.94081    
+wlth_w_equity      -5.323e-10  5.428e-10  -0.981  0.32711    
+ltv_ratio           3.947e-03  2.090e-03   1.889  0.05938 .  
+yr_mort1_left       1.205e-04  5.556e-05   2.169  0.03049 *  
+is_variable_rate   -2.643e-04  2.924e-03  -0.090  0.92802    
+factor(race_ref)2   7.269e-03  2.270e-03   3.201  0.00144 ** 
+factor(race_ref)3   4.001e-03  5.278e-03   0.758  0.44870    
+factor(race_ref)4   3.404e-03  6.010e-03   0.566  0.57131    
+factor(race_ref)7  -3.767e-03  6.135e-03  -0.614  0.53939    
+factor(race_ref)9   1.211e-02  1.045e-02   1.159  0.24702    
+factor(sex_ref)2   -2.178e-04  1.390e-03  -0.157  0.87551    
+factor(educ)2      -2.952e-03  2.012e-03  -1.467  0.14286    
+factor(educ)3      -3.834e-03  1.881e-03  -2.038  0.04196 *  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.01035 on 633 degrees of freedom
+Multiple R-squared:  0.2665,	Adjusted R-squared:  0.2491 
+F-statistic: 15.33 on 15 and 633 DF,  p-value: < 2.2e-16
+
+> # Subset to people who are NOT refinancing this year (refinanced_this_year == 0)
+> originals <- subset(d7_merged,
++                     refinanced_this_year == 0 &
++                       complete.cases(d7_merged[, c(
++                         "int1prc_decimal", "bauer_shock_sum", "ffr_change_sum",
++                         "r_fam_income_prevy", "wlth_w_equity", "ltv_ratio", "yr_mort1_left",
++                         "is_variable_rate", "race_ref", "sex_ref", "educ"
++                       )]))
+> # OLS model for original loan holders
+> ols_originals <- lm(
++   int1prc_decimal ~ bauer_shock_sum + ffr_change_sum +
++     r_fam_income_prevy + wlth_w_equity + ltv_ratio + yr_mort1_left +
++     is_variable_rate + factor(race_ref) + factor(sex_ref) + factor(educ),
++   data = originals
++ )
+> summary(ols_originals)
+
+Call:
+lm(formula = int1prc_decimal ~ bauer_shock_sum + ffr_change_sum + 
+    r_fam_income_prevy + wlth_w_equity + ltv_ratio + yr_mort1_left + 
+    is_variable_rate + factor(race_ref) + factor(sex_ref) + factor(educ), 
+    data = originals)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.07383 -0.01077 -0.00162  0.00861  0.32928 
+
+Coefficients:
+                     Estimate Std. Error t value Pr(>|t|)    
+(Intercept)         5.156e-02  7.728e-04  66.710  < 2e-16 ***
+bauer_shock_sum     1.874e-02  1.814e-03  10.331  < 2e-16 ***
+ffr_change_sum     -2.835e-03  3.943e-04  -7.190 6.82e-13 ***
+r_fam_income_prevy -2.492e-08  2.304e-09 -10.816  < 2e-16 ***
+wlth_w_equity      -1.554e-09  2.546e-10  -6.104 1.06e-09 ***
+ltv_ratio           5.547e-03  5.913e-04   9.381  < 2e-16 ***
+yr_mort1_left      -2.292e-04  2.116e-05 -10.832  < 2e-16 ***
+is_variable_rate   -1.085e-03  6.414e-04  -1.692  0.09066 .  
+factor(race_ref)2   5.128e-03  7.046e-04   7.278 3.58e-13 ***
+factor(race_ref)3  -3.718e-03  2.213e-03  -1.680  0.09302 .  
+factor(race_ref)4  -2.585e-03  2.115e-03  -1.222  0.22184    
+factor(race_ref)5  -9.847e-03  7.991e-03  -1.232  0.21787    
+factor(race_ref)7   4.723e-03  1.559e-03   3.030  0.00245 ** 
+factor(race_ref)9   4.973e-04  2.353e-03   0.211  0.83261    
+factor(sex_ref)2    9.040e-04  4.786e-04   1.889  0.05890 .  
+factor(educ)2      -2.192e-03  7.091e-04  -3.091  0.00200 ** 
+factor(educ)3      -5.899e-03  6.698e-04  -8.807  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.01786 on 13063 degrees of freedom
+Multiple R-squared:  0.06916,	Adjusted R-squared:  0.06802 
+F-statistic: 60.66 on 16 and 13063 DF,  p-value: < 2.2e-16
+
+> ols_refinancers_weighted <- lm(
++   int1prc_decimal ~ bauer_shock_sum + ffr_change_sum +
++     r_fam_income_prevy + wlth_w_equity + ltv_ratio + yr_mort1_left +
++     is_variable_rate + factor(race_ref) + factor(sex_ref) + factor(educ),
++   data = refinancers,
++   weights = weight
++ )
+> ols_originals_weighted <- lm(
++   int1prc_decimal ~ bauer_shock_sum + ffr_change_sum +
++     r_fam_income_prevy + wlth_w_equity + ltv_ratio + yr_mort1_left +
++     is_variable_rate + factor(race_ref) + factor(sex_ref) + factor(educ),
++   data = originals,
++   weights = weight
++ )
+> 
+> 
+> 
+> 
+> library(plm)
+> # Panel data for refinancers
+> panel_refinancers <- pdata.frame(refinancers, index = c("pid", "year"))
+> # Random effects panel model for refinancers
+> panel_model_refinancers <- plm(
++   int1prc_decimal ~ bauer_shock_sum + ffr_change_sum +
++     r_fam_income_prevy + wlth_w_equity + ltv_ratio + yr_mort1_left +
++     is_variable_rate + factor(race_ref) + factor(sex_ref) + factor(educ),
++   data = panel_refinancers,
++   model = "random"
++ )
+> summary(panel_model_refinancers)
+Oneway (individual) effect Random Effect Model 
+   (Swamy-Arora's transformation)
+
+Call:
+plm(formula = int1prc_decimal ~ bauer_shock_sum + ffr_change_sum + 
+    r_fam_income_prevy + wlth_w_equity + ltv_ratio + yr_mort1_left + 
+    is_variable_rate + factor(race_ref) + factor(sex_ref) + factor(educ), 
+    data = panel_refinancers, model = "random")                           #REFINANCERS
+
+Unbalanced Panel: n = 594, T = 1-3, N = 649
+
+Effects:
+                   var  std.dev share
+idiosyncratic 0.000145 0.012040     1
+individual    0.000000 0.000000     0
+theta:
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+      0       0       0       0       0       0 
+
+Residuals:
+      Min.    1st Qu.     Median    3rd Qu.       Max. 
+-0.0316720 -0.0068818  0.0008987  0.0043798  0.0668954 
+
+Coefficients:
+                      Estimate  Std. Error z-value  Pr(>|z|)    
+(Intercept)         3.2081e-02  2.5535e-03 12.5636 < 2.2e-16 ***
+bauer_shock_sum     5.7903e-02  4.4548e-03 12.9979 < 2.2e-16 ***
+ffr_change_sum     -6.4308e-03  1.4911e-03 -4.3128 1.612e-05 ***
+r_fam_income_prevy -3.9916e-10  5.3739e-09 -0.0743  0.940789    
+wlth_w_equity      -5.3232e-10  5.4280e-10 -0.9807  0.326738    
+ltv_ratio           3.9470e-03  2.0898e-03  1.8888  0.058925 .  
+yr_mort1_left       1.2048e-04  5.5558e-05  2.1685  0.030119 *  
+is_variable_rate   -2.6425e-04  2.9242e-03 -0.0904  0.927994    
+factor(race_ref)2   7.2685e-03  2.2704e-03  3.2014  0.001367 ** 
+factor(race_ref)3   4.0008e-03  5.2778e-03  0.7580  0.448422    
+factor(race_ref)4   3.4044e-03  6.0104e-03  0.5664  0.571107    
+factor(race_ref)7  -3.7672e-03  6.1348e-03 -0.6141  0.539170    
+factor(race_ref)9   1.2113e-02  1.0454e-02  1.1587  0.246588    
+factor(sex_ref)2   -2.1780e-04  1.3896e-03 -0.1567  0.875457    
+factor(educ)2      -2.9520e-03  2.0122e-03 -1.4670  0.142366    
+factor(educ)3      -3.8340e-03  1.8812e-03 -2.0380  0.041547 *  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    0.092385
+Residual Sum of Squares: 0.067768
+R-Squared:      0.26645
+Adj. R-Squared: 0.24907
+Chisq: 229.932 on 15 DF, p-value: < 2.22e-16
+> # Panel data for original loan holders
+> panel_originals <- pdata.frame(originals, index = c("pid", "year"))
+> # Random effects panel model for original loans
+> panel_model_originals <- plm(
++   int1prc_decimal ~ bauer_shock_sum + ffr_change_sum +
++     r_fam_income_prevy + wlth_w_equity + ltv_ratio + yr_mort1_left +
++     is_variable_rate + factor(race_ref) + factor(sex_ref) + factor(educ),
++   data = panel_originals,
++   model = "random"
++ )
+> summary(panel_model_originals)
+Oneway (individual) effect Random Effect Model 
+   (Swamy-Arora's transformation)
+
+Call:
+plm(formula = int1prc_decimal ~ bauer_shock_sum + ffr_change_sum + 
+    r_fam_income_prevy + wlth_w_equity + ltv_ratio + yr_mort1_left + 
+    is_variable_rate + factor(race_ref) + factor(sex_ref) + factor(educ), 
+    data = panel_originals, model = "random")                            #ORIGINAL
+
+Unbalanced Panel: n = 3933, T = 1-7, N = 13080
+
+Effects:
+                    var   std.dev share
+idiosyncratic 0.0001799 0.0134115 0.574
+individual    0.0001336 0.0115576 0.426
+theta:
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.2425  0.4434  0.5394  0.4972  0.5719  0.5983 
+
+Residuals:
+     Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+-0.064414 -0.007920 -0.001071 -0.000037  0.006719  0.292675 
+
+Coefficients:
+                      Estimate  Std. Error z-value  Pr(>|z|)    
+(Intercept)         4.8964e-02  1.0408e-03 47.0464 < 2.2e-16 ***
+bauer_shock_sum     1.9185e-02  1.4717e-03 13.0357 < 2.2e-16 ***
+ffr_change_sum     -2.8699e-03  3.1721e-04 -9.0475 < 2.2e-16 ***
+r_fam_income_prevy -2.1538e-08  2.6260e-09 -8.2018 2.367e-16 ***
+wlth_w_equity      -1.6890e-09  2.5369e-10 -6.6577 2.781e-11 ***
+ltv_ratio           5.2161e-03  5.8459e-04  8.9226 < 2.2e-16 ***
+yr_mort1_left      -7.6756e-05  2.2132e-05 -3.4681 0.0005241 ***
+is_variable_rate    1.5563e-04  6.7788e-04  0.2296 0.8184148    
+factor(race_ref)2   5.1436e-03  1.0446e-03  4.9240 8.481e-07 ***
+factor(race_ref)3  -1.8228e-03  3.2036e-03 -0.5690 0.5693710    
+factor(race_ref)4  -1.8827e-03  3.1892e-03 -0.5903 0.5549599    
+factor(race_ref)5  -1.6420e-02  8.6952e-03 -1.8884 0.0589732 .  
+factor(race_ref)7   3.8937e-03  2.3790e-03  1.6367 0.1016906    
+factor(race_ref)9   7.4052e-04  3.2139e-03  0.2304 0.8177743    
+factor(sex_ref)2    8.5294e-04  6.7445e-04  1.2646 0.2059991    
+factor(educ)2      -2.1594e-03  1.0257e-03 -2.1054 0.0352557 *  
+factor(educ)3      -6.6137e-03  9.6534e-04 -6.8512 7.325e-12 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Total Sum of Squares:    2.9689
+Residual Sum of Squares: 2.5174
+R-Squared:      0.15216
+Adj. R-Squared: 0.15112
+Chisq: 712.346 on 16 DF, p-value: < 2.22e-16
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+
+> 

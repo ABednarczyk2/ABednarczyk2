@@ -493,6 +493,163 @@ R-Squared:      0.15216
 Adj. R-Squared: 0.15112
 Chisq: 712.346 on 16 DF, p-value: < 2.22e-16
 > 
+
+
+ # 1. Prepare loan data and exclude  years
+>     loan_data <- d7 %>%
++       filter(`mort_y/n` == 1,  # Active mortgages only
++              !year %in% 2009:2011) %>%  # Exclude  years
++       mutate(
++         loan_vintage = mort1_year_obtained,
++         refinanced = (`refin1_y/n` == 2)
++       )
+>     # 2. Calculate refinancing rates (excluding crisis years)
+>     refin_rates <- loan_data %>%
++       group_by(loan_vintage) %>%
++       mutate(total_loans = n()) %>%
++       group_by(loan_vintage, year) %>%
++       summarise(
++         n_refin = sum(refinanced),
++         total_loans = first(total_loans),
++         .groups = "drop"
++       ) %>%
++       mutate(refin_rate = n_refin / total_loans)
+>     # 3. Merge with shock data (keeping all shock years)
+>     refin_rates <- refin_rates %>%
++       left_join(
++         annual_sums %>% select(year, bauer_shock_sum),
++         by = c("loan_vintage" = "year")
++       ) %>%
++       left_join(
++         annual_sums %>% select(year, ffr_change_sum),
++         by = "year"
++       ) %>%
++       rename(
++         bauer_shock_vintage = bauer_shock_sum,
++         ffr_shock_current = ffr_change_sum
++       )
+>     # 4. Run regression excluding crisis years
+>     crisis_adjusted_model <- lm(refin_rate ~ bauer_shock_vintage + ffr_shock_current, 
++                                 data = refin_rates)
+>     summary(crisis_adjusted_model)
+
+Call:
+lm(formula = refin_rate ~ bauer_shock_vintage + ffr_shock_current, 
+    data = refin_rates)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.08716 -0.05357 -0.02307  0.03234  0.55324 
+
+Coefficients:
+                     Estimate Std. Error t value Pr(>|t|)    
+(Intercept)          0.071591   0.007162   9.996   <2e-16 ***
+bauer_shock_vintage  0.128858   0.065626   1.964   0.0516 .  
+ffr_shock_current   -0.005882   0.005292  -1.111   0.2683    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.0828 on 139 degrees of freedom
+  (206 observations deleted due to missingness)
+Multiple R-squared:  0.03343,	Adjusted R-squared:  0.01953 
+F-statistic: 2.404 on 2 and 139 DF,  p-value: 0.09411
+
+>     # 5. Plot non-crisis refinancing patterns
+>     ggplot(refin_rates, aes(x = year, y = refin_rate)) +
++       geom_col(aes(fill = "Refinance Rate"), alpha = 0.7) +
++       geom_line(aes(y = bauer_shock_vintage*5, color = "Bauer Shock (x5)"), size = 1) +
++       geom_line(aes(y = ffr_shock_current*5, color = "FFR Change (x5)"), size = 1) +
++       scale_y_continuous(
++         name = "Refinance Rate",
++         sec.axis = sec_axis(~./5, name = "Shock Value")
++       ) +
++       labs(title = "Refinancing Patterns (Excluding 2007-2010 Crisis)",
++            x = "Year",
++            color = "Shock Variables") +
++       theme_minimal() +
++       scale_fill_manual(values = "steelblue") +
++       guides(fill = "none")
+> 
+> 
+>     # 1. Prepare loan data and exclude  years
+>     loan_data <- d7 %>%
++       filter(`mort_y/n` == 1,  # Active mortgages only
++              !year %in% 2009:2012) %>%  # Exclude  years
++       mutate(
++         loan_vintage = mort1_year_obtained,
++         refinanced = (`refin1_y/n` == 2)
++       )
+>     # 2. Calculate refinancing rates (excluding crisis years)
+>     refin_rates <- loan_data %>%
++       group_by(loan_vintage) %>%
++       mutate(total_loans = n()) %>%
++       group_by(loan_vintage, year) %>%
++       summarise(
++         n_refin = sum(refinanced),
++         total_loans = first(total_loans),
++         .groups = "drop"
++       ) %>%
++       mutate(refin_rate = n_refin / total_loans)
+>     # 3. Merge with shock data (keeping all shock years)
+>     refin_rates <- refin_rates %>%
++       left_join(
++         annual_sums %>% select(year, bauer_shock_sum),
++         by = c("loan_vintage" = "year")
++       ) %>%
++       left_join(
++         annual_sums %>% select(year, ffr_change_sum),
++         by = "year"
++       ) %>%
++       rename(
++         bauer_shock_vintage = bauer_shock_sum,
++         ffr_shock_current = ffr_change_sum
++       )
+>     # 4. Run regression excluding crisis years
+>     crisis_adjusted_model <- lm(refin_rate ~ bauer_shock_vintage + ffr_shock_current, 
++                                 data = refin_rates)
+>     summary(crisis_adjusted_model)
+
+Call:
+lm(formula = refin_rate ~ bauer_shock_vintage + ffr_shock_current, 
+    data = refin_rates)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.08716 -0.05357 -0.02307  0.03234  0.55324 
+
+Coefficients:
+                     Estimate Std. Error t value Pr(>|t|)    
+(Intercept)          0.071591   0.007162   9.996   <2e-16 ***
+bauer_shock_vintage  0.128858   0.065626   1.964   0.0516 .  
+ffr_shock_current   -0.005882   0.005292  -1.111   0.2683    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.0828 on 139 degrees of freedom
+  (206 observations deleted due to missingness)
+Multiple R-squared:  0.03343,	Adjusted R-squared:  0.01953 
+F-statistic: 2.404 on 2 and 139 DF,  p-value: 0.09411
+
+>     # 5. Plot non-crisis refinancing patterns
+>     ggplot(refin_rates, aes(x = year, y = refin_rate)) +
++       geom_col(aes(fill = "Refinance Rate"), alpha = 0.7) +
++       geom_line(aes(y = bauer_shock_vintage*5, color = "Bauer Shock (x5)"), size = 1) +
++       geom_line(aes(y = ffr_shock_current*5, color = "FFR Change (x5)"), size = 1) +
++       scale_y_continuous(
++         name = "Refinance Rate",
++         sec.axis = sec_axis(~./5, name = "Shock Value")
++       ) +
++       labs(title = "Refinancing Patterns (Excluding 2007-2010 Crisis)",
++            x = "Year",
++            color = "Shock Variables") +
++       theme_minimal() +
++       scale_fill_manual(values = "steelblue") +
++       guides(fill = "none")
+> 
+> 
+> 
+> 
+> 
 > 
 > 
 > 

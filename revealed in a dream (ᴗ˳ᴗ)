@@ -645,9 +645,108 @@ F-statistic: 2.404 on 2 and 139 DF,  p-value: 0.09411
 +       theme_minimal() +
 +       scale_fill_manual(values = "steelblue") +
 +       guides(fill = "none")
+SO IT MATTERS AT ORIGINATION BUT NOT AT YEAR BEFORE FFS
+> View(crisis_adjusted_model)
+>     # 1. Prepare loan data (as before)
+>     loan_data <- d7 %>%
++       filter(`mort_y/n` == 1,  # Active mortgages only
++              !year %in% 2009:2012) %>%  # Exclude years
++       mutate(
++         loan_vintage = mort1_year_obtained,
++         refinanced = (`refin1_y/n` == 2)
++       )
+>     # 2. Calculate refinancing rates
+>     refin_rates <- loan_data %>%
++       group_by(loan_vintage) %>%
++       mutate(total_loans = n()) %>%
++       group_by(loan_vintage, year) %>%
++       summarise(
++         n_refin = sum(refinanced),
++         total_loans = first(total_loans),
++         .groups = "drop"
++       ) %>%
++       mutate(refin_rate = n_refin / total_loans)
+>     # 3. Lag the shocks by 1 year before merging
+>     shocks_lagged <- annual_sums %>%
++       transmute(
++         year = year + 1,  # move shock forward by one year (so they reflect lagged effect)
++         bauer_shock_lag = bauer_shock_sum,
++         ffr_shock_lag = ffr_change_sum
++       )
+>     # 4. Merge with lagged shock data
+>     refin_rates_lagged <- refin_rates %>%
++       left_join(shocks_lagged, by = c("loan_vintage" = "year"))
+>     # 5. Run regression with lagged shocks
+>     lagged_model <- lm(refin_rate ~ bauer_shock_lag + ffr_shock_lag, data = refin_rates_lagged)
+>     summary(lagged_model)
+
+Call:
+lm(formula = refin_rate ~ bauer_shock_lag + ffr_shock_lag, data = refin_rates_lagged)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.08371 -0.05556 -0.02555  0.03431  0.55035 
+
+Coefficients:
+                 Estimate Std. Error t value Pr(>|t|)    
+(Intercept)      0.077371   0.007634  10.135   <2e-16 ***
+bauer_shock_lag  0.176032   0.075832   2.321   0.0218 *  
+ffr_shock_lag   -0.013294   0.005588  -2.379   0.0188 *  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.08341 on 130 degrees of freedom
+  (215 observations deleted due to missingness)
+Multiple R-squared:  0.0536,	Adjusted R-squared:  0.03904 
+F-statistic: 3.681 on 2 and 130 DF,  p-value: 0.02786
 > 
 > 
-> 
+> YEAR BEFORE 
+
+>     # 1. Define refinancing observation dataset (excluding crisis years)
+>     loan_data_observed <- d7 %>%
++       mutate(refinanced = (`refin1_y/n` == 2))
+>     # 2. Calculate refinancing rate by observation year
+>     refin_rate_by_year <- loan_data_observed %>%
++       group_by(year) %>%
++       summarise(
++         n_refin = sum(refinanced, na.rm = TRUE),
++         total_loans = n(),
++         refin_rate = n_refin / total_loans,
++         .groups = "drop"
++       )
+>     # 3. Prepare lagged shocks (shift them to match refin year)
+>     shocks_lagged <- annual_sums %>%
++       transmute(
++         year = year + 1,  # So that 2001 shocks are used for 2002 refin decisions
++         bauer_shock_lag = bauer_shock_sum,
++         ffr_shock_lag = ffr_change_sum
++       )
+>     # 4. Merge lagged shocks with refinancing data
+>     refin_data_with_shocks <- refin_rate_by_year %>%
++       left_join(shocks_lagged, by = "year")
+>     # 5. Run regression: Do lagged shocks predict refinancing behavior?
+>     model <- lm(refin_rate ~ bauer_shock_lag + ffr_shock_lag, data = refin_data_with_shocks)
+>     summary(model)
+
+Call:
+lm(formula = refin_rate ~ bauer_shock_lag + ffr_shock_lag, data = refin_data_with_shocks)
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-0.034767 -0.028713  0.008265  0.016403  0.046970 
+
+Coefficients:
+                 Estimate Std. Error t value Pr(>|t|)    
+(Intercept)      0.205552   0.008979  22.892 2.75e-09 ***
+bauer_shock_lag -0.089543   0.086531  -1.035    0.328    
+ffr_shock_lag   -0.001726   0.006311  -0.273    0.791    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.03086 on 9 degrees of freedom
+Multiple R-squared:  0.1199,	Adjusted R-squared:  -0.07569 
+F-statistic: 0.613 on 2 and 9 DF,  p-value: 0.5629
 > 
 > 
 > 

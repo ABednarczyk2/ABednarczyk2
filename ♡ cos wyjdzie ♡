@@ -934,3 +934,251 @@ Adjusted R2                              -0.363                  -2.633         
 F Statistic                     85.838*** (df = 2; 7118) 6.569*** (df = 2; 231) 4.074** (df = 2; 159) 10.455*** (df = 2; 96)
 ============================================================================================================================
 Note:                                                                                            *p<0.1; **p<0.05; ***p<0.01
+
+
+
+
+  library(dplyr)
+>  library(plm)
+>  library(stargazer)
+>  # 1. FILTER FOR REFINANCERS ONLY (refin1_y.n == 2)
+>  d7_refinancers <- d7_merged %>%
++    filter(refin1_y.n == 2) %>%  # Keep only refinanced loans
++    mutate(
++      mort_rate = int1prc / 100,
++      ltv_group = cut(ltv_ratio,
++                      breaks = c(0, 0.8, 0.9, 1.0, Inf),
++                      labels = c("Low (<80%)", "Medium (80-90%)", 
++                                 "High (90-100%)", "Very High (>100%)"))
++    ) %>%
++    group_by(pid) %>%
++    arrange(year) %>%
++    mutate(
++      bauer_sum_lag = lag(bauer_shock_sum),  # Lagged annual Bauer shock
++      ffr_change_lag = lag(ffr_change)       # Lagged FFR change
++    ) %>%
++    ungroup()
+>  # 2. RUN MODELS (ONLY REFINANCERS)
+>  annual_models_refi <- list()
+>  for (ltv_cat in levels(d7_refinancers$ltv_group)) {
++    annual_models_refi[[ltv_cat]] <- plm(
++      mort_rate ~ bauer_sum_lag + ffr_change_lag,
++      data = filter(d7_refinancers, ltv_group == ltv_cat),  # No need for refinanced==1 filter
++      index = c("pid", "year"),
++      model = "within"
++    )
++  }
+>  # 3. PRINT RESULTS
+>  cat("\n============= ANNUAL BAUER SHOCK SUM RESULTS (REFINANCERS ONLY) =============\n")
+
+============= ANNUAL BAUER SHOCK SUM RESULTS (REFINANCERS ONLY) =============
+>  stargazer(annual_models_refi,
++            title = "Mortgage Rate Response to Annual Bauer Shock Sum by LTV (Refinancers Only)",
++            column.labels = levels(d7_refinancers$ltv_group),
++            dep.var.labels = "Mortgage Rate",
++            covariate.labels = c("Bauer Shock Annual Sum (Lagged)", "FFR Change (Lagged)"),
++            type = "text")
+
+Mortgage Rate Response to Annual Bauer Shock Sum by LTV (Refinancers Only)
+============================================================================================================================
+                                                                    Dependent variable:                                     
+                                --------------------------------------------------------------------------------------------
+                                                                       Mortgage Rate                                        
+                                       Low (<80%)           Medium (80-90%)        High (90-100%)       Very High (>100%)   
+                                          (1)                     (2)                    (3)                   (4)          
+----------------------------------------------------------------------------------------------------------------------------
+Bauer Shock Annual Sum (Lagged)        -0.009***                 -0.002                 0.007                 -0.001        
+                                        (0.002)                 (0.007)                (0.009)               (0.013)        
+                                                                                                                            
+FFR Change (Lagged)                    -0.001***               -0.001***              -0.002***             -0.004***       
+                                        (0.0001)                (0.0004)               (0.001)               (0.001)        
+                                                                                                                            
+----------------------------------------------------------------------------------------------------------------------------
+Observations                             9,939                    888                    617                   329          
+R2                                       0.024                   0.054                  0.049                 0.179         
+Adjusted R2                              -0.363                  -2.633                -2.685                 -1.806        
+F Statistic                     85.838*** (df = 2; 7118) 6.569*** (df = 2; 231) 4.074** (df = 2; 159) 10.455*** (df = 2; 96)
+============================================================================================================================
+Note:                                                                                            *p<0.1; **p<0.05; ***p<0.01
+
+> # 1. FILTER FOR REFINANCERS ONLY (refin1_y.n == 2)
+> d7_refinancers <- d7_merged %>%
++   filter(refin1_y.n == 2) %>%  # Keep only refinanced loans
++   mutate(
++     mort_rate = int1prc / 100,
++     ltv_group = cut(ltv_ratio,
++                     breaks = c(0, 0.5, 0.8, 1.0, Inf),
++                     labels = c("V Low (<50%)", "Low (50-80%)", 
++                                "Medium + High (90-100%)", "Very High (>100%)"))
++   ) %>%
++   group_by(pid) %>%
++   arrange(year) %>%
++   mutate(
++     bauer_sum_lag = lag(bauer_shock_sum),  # Lagged annual Bauer shock
++     ffr_change_lag = lag(ffr_change)       # Lagged FFR change
++   ) %>%
++   ungroup()
+> # 2. RUN MODELS (ONLY REFINANCERS)
+> annual_models_refi <- list()
+> for (ltv_cat in levels(d7_refinancers$ltv_group)) {
++   annual_models_refi[[ltv_cat]] <- plm(
++     mort_rate ~ bauer_sum_lag + ffr_change_lag,
++     data = filter(d7_refinancers, ltv_group == ltv_cat),  # No need for refinanced==1 filter
++     index = c("pid", "year"),
++     model = "within"
++   )
++ }
+> # 3. PRINT RESULTS
+> cat("\n============= ANNUAL BAUER SHOCK SUM RESULTS (REFINANCERS ONLY) =============\n")
+
+============= ANNUAL BAUER SHOCK SUM RESULTS (REFINANCERS ONLY) =============
+> stargazer(annual_models_refi,
++           title = "Mortgage Rate Response to Annual Bauer Shock Sum by LTV (Refinancers Only)",
++           column.labels = levels(d7_refinancers$ltv_group),
++           dep.var.labels = "Mortgage Rate",
++           covariate.labels = c("Bauer Shock Annual Sum (Lagged)", "FFR Change (Lagged)"),
++           type = "text")
+
+Mortgage Rate Response to Annual Bauer Shock Sum by LTV (Refinancers Only)
+================================================================================================================================
+                                                                      Dependent variable:                                       
+                                ------------------------------------------------------------------------------------------------
+                                                                         Mortgage Rate                                          
+                                      V Low (<50%)             Low (50-80%)       Medium + High (80-100%)   Very High (>100%)   
+                                          (1)                      (2)                      (3)                    (4)          
+--------------------------------------------------------------------------------------------------------------------------------
+Bauer Shock Annual Sum (Lagged)        -0.009***                 -0.005**                  0.007                  -0.001        
+                                        (0.002)                  (0.002)                  (0.005)                (0.013)        
+                                                                                                                                
+FFR Change (Lagged)                    -0.001***                -0.001***                -0.002***              -0.004***       
+                                        (0.0001)                 (0.0001)                (0.0003)                (0.001)        
+                                                                                                                                
+--------------------------------------------------------------------------------------------------------------------------------
+Observations                             4,960                    4,979                    1,505                   329          
+R2                                       0.015                    0.028                    0.057                  0.179         
+Adjusted R2                              -0.521                   -0.667                  -1.385                  -1.806        
+F Statistic                     24.959*** (df = 2; 3210) 42.014*** (df = 2; 2902) 17.822*** (df = 2; 595) 10.455*** (df = 2; 96)
+================================================================================================================================
+Note:                                                                                                *p<0.1; **p<0.05; ***p<0.01
+
+
+> # 1. FILTER FOR REFINANCERS ONLY (refin1_y.n == 2)
+> d7_refinancers <- d7_merged %>%
++   filter(refin1_y.n == 2) %>%  # Keep only refinanced loans
++   mutate(
++     mort_rate = int1prc / 100,
++     ltv_group = cut(ltv_ratio,
++                     breaks = c(0, 0.3, 0.5, 0.8, Inf),
++                     labels = c("V Low (<50%)", "Low (50-80%)", 
++                                "Medium + High (90-100%)", "Very High (>100%)"))
++   ) %>%
++   group_by(pid) %>%
++   arrange(year) %>%
++   mutate(
++     bauer_sum_lag = lag(bauer_shock_sum),  # Lagged annual Bauer shock
++     ffr_change_lag = lag(ffr_change)       # Lagged FFR change
++   ) %>%
++   ungroup()
+> # 2. RUN MODELS (ONLY REFINANCERS)
+> annual_models_refi <- list()
+> for (ltv_cat in levels(d7_refinancers$ltv_group)) {
++   annual_models_refi[[ltv_cat]] <- plm(
++     mort_rate ~ bauer_sum_lag + ffr_change_lag,
++     data = filter(d7_refinancers, ltv_group == ltv_cat),  # No need for refinanced==1 filter
++     index = c("pid", "year"),
++     model = "within"
++   )
++ }
+> # 3. PRINT RESULTS
+> cat("\n============= ANNUAL BAUER SHOCK SUM RESULTS (REFINANCERS ONLY) =============\n")
+
+============= ANNUAL BAUER SHOCK SUM RESULTS (REFINANCERS ONLY) =============
+> stargazer(annual_models_refi,
++           title = "Mortgage Rate Response to Annual Bauer Shock Sum by LTV (Refinancers Only)",
++           column.labels = levels(d7_refinancers$ltv_group),
++           dep.var.labels = "Mortgage Rate",
++           covariate.labels = c("Bauer Shock Annual Sum (Lagged)", "FFR Change (Lagged)"),
++           type = "text")
+
+Mortgage Rate Response to Annual Bauer Shock Sum by LTV (Refinancers Only)
+==========================================================================================================================
+                                                                   Dependent variable:                                    
+                                ------------------------------------------------------------------------------------------
+                                                                      Mortgage Rate                                       
+                                    V Low (<30%)           Low (30-50%)       Medium + High (50-80%)   Very High (>80%) 
+                                        (1)                    (2)                      (3)                    (4)        
+--------------------------------------------------------------------------------------------------------------------------
+Bauer Shock Annual Sum (Lagged)        -0.005               -0.014***                -0.010***                0.005       
+                                      (0.005)                (0.003)                  (0.002)                (0.004)      
+                                                                                                                          
+--------------------------------------------------------------------------------------------------------------------------
+Observations                           2,102                  2,858                    4,979                  1,834       
+R2                                     0.001                  0.019                    0.007                  0.001       
+Adjusted R2                            -0.851                 -0.937                   -0.703                -1.187       
+F Statistic                     0.824 (df = 1; 1134) 27.697*** (df = 1; 1447) 20.608*** (df = 1; 2903) 1.222 (df = 1; 837)
+==========================================================================================================================
+Note:                                                                                          *p<0.1; **p<0.05; ***p<0.01
+
+
+> # 1. FILTER FOR REFINANCERS ONLY (refin1_y.n == 2)
+> d7_no_refinancers <- d7_merged %>%
++   filter(refin1_y.n == 1) %>%  # Keep only orig
++   mutate(
++     mort_rate = int1prc / 100,
++     ltv_group = cut(ltv_ratio,
++                     breaks = c(0, 0.8, 0.9, 1.0, Inf),
++                     labels = c("V Low (<80%)", "Low (80-90%)", 
++                                "Medium  (90-100%)", "High (>100%)"))
++   ) %>%
++   group_by(pid) %>%
++   arrange(year) %>%
++   mutate(
++     bauer_sum_lag = lag(bauer_shock_sum),  # Lagged annual Bauer shock
++     ffr_change_lag = lag(ffr_change)       # Lagged FFR change
++   ) %>%
++   ungroup()
+> # 2. RUN MODELS (ONLY REFINANCERS)
+> annual_models_refi <- list()
+> for (ltv_cat in levels(d7_no_refinancers$ltv_group)) {
++   annual_models_refi[[ltv_cat]] <- plm(
++     mort_rate ~ bauer_sum_lag + ffr_change_lag,
++     data = filter(d7_no_refinancers, ltv_group == ltv_cat),  # No need for refinanced==1 filter
++     index = c("pid", "year"),
++     model = "within"
++   )
++ }
+> # 3. PRINT RESULTS
+> cat("\n============= ANNUAL BAUER SHOCK SUM RESULTS (REFINANCERS ONLY) =============\n")
+
+============= ANNUAL BAUER SHOCK SUM RESULTS (REFINANCERS ONLY) =============
+> # 3. PRINT RESULTS
+> cat("\n============= ANNUAL BAUER SHOCK SUM RESULTS (NO REFINANCERS) =============\n")
+
+============= ANNUAL BAUER SHOCK SUM RESULTS (NO REFINANCERS) =============
+> stargazer(annual_models_refi,
++           title = "Mortgage Rate Response to Annual Bauer Shock Sum by LTV (Refinancers Only)",
++           column.labels = levels(d7_no_refinancers$ltv_group),
++           dep.var.labels = "Mortgage Rate",
++           covariate.labels = c("Bauer Shock Annual Sum (Lagged)", "FFR Change (Lagged)"),
++           type = "text")
+
+Mortgage Rate Response to Annual Bauer Shock Sum by LTV (Refinancers Only)
+===================================================================================================================
+                                                                Dependent variable:                                
+                                -----------------------------------------------------------------------------------
+                                                                   Mortgage Rate                                   
+                                      V Low (<80%)          Low (80-90%)      Medium (90-100%)      High (>100%)   
+                                          (1)                    (2)                 (3)                (4)        
+-------------------------------------------------------------------------------------------------------------------
+Bauer Shock Annual Sum (Lagged)        -0.017***               -0.004              -0.006              0.026       
+                                        (0.002)                (0.009)             (0.006)            (0.021)      
+                                                                                                                   
+-------------------------------------------------------------------------------------------------------------------
+Observations                             8,065                  1,658               1,597               394        
+R2                                       0.019                  0.001               0.002              0.017       
+Adjusted R2                              -0.700                -3.246              -3.001              -3.246      
+F Statistic                     90.014*** (df = 1; 4653) 0.249 (df = 1; 390) 0.911 (df = 1; 398) 1.550 (df = 1; 91)
+===================================================================================================================
+Note:                                                                                   *p<0.1; **p<0.05; ***p<0.01
+> 
+

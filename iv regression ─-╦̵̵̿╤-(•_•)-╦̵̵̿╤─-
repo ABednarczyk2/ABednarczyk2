@@ -1,0 +1,347 @@
+ # For fixed rates (mort_rate1fv = 1)
+> iv_model_fe_fixed <- feols(
++   int1prc ~ 1 | pid | fedfunds_change_sum ~ MPS_ORTH_sum,
++   data = subset(final_data2, mort_rate1fv == 1),  # Explicitly subset
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTE: 900 observations removed because of NA values (LHS: 900).
+> # For variable rates (mort_rate1fv = 2)
+> iv_model_fe_var <- feols(
++   int1prc ~ 1 | pid | fedfunds_change_sum ~ MPS_ORTH_sum,
++   data = subset(final_data2, mort_rate1fv == 2),  # Explicitly subset
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTE: 148 observations removed because of NA values (LHS: 148).
+> summary(iv_model_fe_fixed)
+TSLS estimation - Dep. Var.: int1prc
+                  Endo.    : fedfunds_change_sum
+                  Instr.   : MPS_ORTH_sum
+Second stage: Dep. Var.: int1prc
+Observations: 16,075
+Weights: weight
+Fixed-effects: pid: 4,326
+Standard-errors: Clustered (pid) 
+                        Estimate Std. Error t value  Pr(>|t|)    
+fit_fedfunds_change_sum 8.83e-07   4.97e-08 17.7762 < 2.2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 0.082762     Adj. R2:  0.045086
+                 Within R2: -0.58368 
+F-test (1st stage), fedfunds_change_sum: stat = 903.4, p < 2.2e-16, on 1 and 16,073 DoF.
+                             Wu-Hausman: stat = 401.3, p < 2.2e-16, on 1 and 11,747 DoF.
+> summary(iv_model_fe_var)
+TSLS estimation - Dep. Var.: int1prc
+                  Endo.    : fedfunds_change_sum
+                  Instr.   : MPS_ORTH_sum
+Second stage: Dep. Var.: int1prc
+Observations: 1,302
+Weights: weight
+Fixed-effects: pid: 670
+Standard-errors: Clustered (pid) 
+                        Estimate Std. Error t value   Pr(>|t|)    
+fit_fedfunds_change_sum 1.37e-06   3.75e-07 3.66119 0.00027086 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 0.086967     Adj. R2:  0.137871
+                 Within R2: -0.925844
+F-test (1st stage), fedfunds_change_sum: stat = 35.3, p = 3.715e-9, on 1 and 1,300 DoF.
+                             Wu-Hausman: stat = 16.7, p = 4.897e-5, on 1 and 630 DoF.
+> library(dplyr)
+> final_data2 <- final_data2 %>%
++   group_by(pid) %>%  # Ensure lags are within panel units
++   arrange(pid, date_column) %>%  # Sort by time within each panel
++   mutate(
++     fedfunds_change_sum_L1 = dplyr::lag(fedfunds_change_sum, 1),  # Lag 1
++     MPS_ORTH_sum_L1 = dplyr::lag(MPS_ORTH_sum, 1)  # Lagged instrument
++   ) %>%
++   
++   library(fixest)
+Error in library(., fixest) : there is no package called ‘.’
+> final_data2 <- final_data2 %>%
++   group_by(pid) %>%  # Ensure lags are within panel units
++   arrange(pid, date_column) %>%  # Sort by time within each panel
++   mutate(
++     fedfunds_change_sum_L1 = dplyr::lag(fedfunds_change_sum, 1),  # Lag 1
++     MPS_ORTH_sum_L1 = dplyr::lag(MPS_ORTH_sum, 1)  # Lagged instrument
++   ) %>%
++   
++   library(fixest)
+Error in library(., fixest) : there is no package called ‘.’
+> final_data2 <- final_data2 %>%
++   group_by(pid) %>%  # Ensure lags are within panel units
++   arrange(pid, date_column) %>%  # Sort by time within each panel
++   mutate(
++     fedfunds_change_sum_L1 = dplyr::lag(fedfunds_change_sum, 1),  # Lag 1
++     MPS_ORTH_sum_L1 = dplyr::lag(MPS_ORTH_sum, 1)  # Lagged instrument
++   ) %>%
++   
++   library(fixtest)
+Error in library(., fixtest) : there is no package called ‘.’
+> final_data2 <- final_data2 %>%
++   group_by(pid) %>%  # Ensure lags are within panel units
++   arrange(pid, date_column) %>%  # Sort by time within each panel
++   mutate(
++     fedfunds_change_sum_L1 = dplyr::lag(fedfunds_change_sum, 1),  # Lag 1
++     MPS_ORTH_sum_L1 = dplyr::lag(MPS_ORTH_sum, 1)  # Lagged instrument
++   ) %>%
++   
++ 
++ 
++ # For fixed rates (mort_rate1fv == 1)
++ iv_model_fe_fixed_lags <- feols(
++   int1prc ~ 1 | pid | 
++     c(fedfunds_change_sum, fedfunds_change_sum_L1) ~ 
++     c(MPS_ORTH_sum, MPS_ORTH_sum_L1),
++   data = subset(final_data2, mort_rate1fv == 1),
++   weights = ~weight,
++   cluster = ~pid
++ )
+Error in feols(int1prc ~ 1 | pid | c(fedfunds_change_sum, fedfunds_change_sum_L1) ~  : 
+  The variables 'fedfunds_change_sum_L1' and 'MPS_ORTH_sum_L1' are in the IV part of the formula but not in
+the data set.
+> final_data2 <- final_data2 %>%
++   group_by(pid) %>%  # Ensure lags are within panel units
++   arrange(pid, date_column) %>%  # Sort by time within each panel
++   mutate(
++     fedfunds_change_sum_L1 = dplyr::lag(fedfunds_change_sum, 1),  # Lag 1
++     MPS_ORTH_sum_L1 = dplyr::lag(MPS_ORTH_sum, 1)  # Lagged instrument
++   ) %>%
++   
++ 
++ 
++ # For fixed rates (mort_rate1fv == 1)
++ iv_model_fe_fixed_lags <- feols(
++   int1prc ~ 1 | pid | 
++     c(fedfunds_change_sum, fedfunds_change_sum_L1) ~ 
++     c(MPS_ORTH_sum, MPS_ORTH_sum_L1),
++   data = subset(final_data2, mort_rate1fv == 1),
++   weights = ~weight,
++   cluster = ~pid
++ )
+Error in feols(int1prc ~ 1 | pid | c(fedfunds_change_sum, fedfunds_change_sum_L1) ~  : 
+  The variables 'fedfunds_change_sum_L1' and 'MPS_ORTH_sum_L1' are in the IV part of the formula but not in
+the data set.
+> summary(iv_model_fe_fixed_lags)
+Error: object 'iv_model_fe_fixed_lags' not found
+>   ungroup()
+Error in UseMethod("ungroup") : 
+  no applicable method for 'ungroup' applied to an object of class "NULL"
+> final_data2 <- final_data2 %>%
++   group_by(pid) %>%  # Ensure lags are within panel units
++   arrange(pid, date_column) %>%  # Sort by time within each panel
++   mutate(
++     fedfunds_change_sum_L1 = dplyr::lag(fedfunds_change_sum, 1),  # Lag 1
++     MPS_ORTH_sum_L1 = dplyr::lag(MPS_ORTH_sum, 1)  # Lagged instrument
++   ) %>%
++   
++ 
++ 
++ # For fixed rates (mort_rate1fv == 1)
++ iv_model_fe_fixed_lags <- feols(
++   int1prc ~ 1 | pid | 
++     c(fedfunds_change_sum, fedfunds_change_sum_L1) ~ 
++     c(MPS_ORTH_sum, MPS_ORTH_sum_L1),
++   data = subset(final_data2, mort_rate1fv == 1),
++   weights = ~weight,
++   cluster = ~pid
++ )
+Error in feols(int1prc ~ 1 | pid | c(fedfunds_change_sum, fedfunds_change_sum_L1) ~  : 
+  The variables 'fedfunds_change_sum_L1' and 'MPS_ORTH_sum_L1' are in the IV part of the formula but not in
+the data set.
+> summary(iv_model_fe_fixed_lags)
+Error: object 'iv_model_fe_fixed_lags' not found
+> # Create lagged variables (group by pid to ensure lags are within individuals)
+> final_data2 <- final_data2 %>%
++   group_by(pid) %>%  
++   arrange(pid, date_column) %>%  # Replace 'date_column' with your actual time variable
++   mutate(
++     fedfunds_change_sum_L1 = dplyr::lag(fedfunds_change_sum, 1),  # Lag 1 of endogenous var
++     MPS_ORTH_sum_L1 = dplyr::lag(MPS_ORTH_sum, 1)                 # Lag 1 of instrument
++   ) %>%
++   ungroup()  # Critical: ungroup to avoid issues in subsequent operations
+Error in `arrange()`:
+ℹ In argument: `..2 = date_column`.
+Caused by error:
+! object 'date_column' not found
+Run `rlang::last_trace()` to see where the error occurred.
+> # Create lagged variables (group by pid to ensure lags are within individuals)
+> final_data2 <- final_data2 %>%
++   group_by(pid) %>%  
++   arrange(pid, year) %>%  # Replace 'date_column' with your actual time variable
++   mutate(
++     fedfunds_change_sum_L1 = dplyr::lag(fedfunds_change_sum, 1),  # Lag 1 of endogenous var
++     MPS_ORTH_sum_L1 = dplyr::lag(MPS_ORTH_sum, 1)                 # Lag 1 of instrument
++   ) %>%
++   ungroup()  # Critical: ungroup to avoid issues in subsequent operations
+> # For fixed rates (mort_rate1fv == 1)
+> iv_model_fe_fixed_lags <- feols(
++   int1prc ~ 1 | pid | 
++     c(fedfunds_change_sum, fedfunds_change_sum_L1) ~ 
++     c(MPS_ORTH_sum, MPS_ORTH_sum_L1),
++   data = subset(final_data2, mort_rate1fv == 1),
++   weights = ~weight,
++   cluster = ~pid
++ )
+Error in feols(int1prc ~ 1 | pid | c(fedfunds_change_sum, fedfunds_change_sum_L1) ~  : 
+  Evaluation of the left-hand-side of the IV part (equal to c(fedfunds_change_sum, fedfunds_change_sum_L1))
+raises an error:
+
+  In dimnames(x) <- dn: length of 'dimnames' [2] not equal to array extent
+> iv_model_fe_fixed_lags <- feols(
++   int1prc ~ 1 | pid | 
++     fedfunds_change_sum + fedfunds_change_sum_L1 ~ 
++     MPS_ORTH_sum + MPS_ORTH_sum_L1,
++   data = subset(final_data2, mort_rate1fv == 1),
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTE: 1,632 observations removed because of NA values (LHS: 900, IV: 825/825).
+> summary(iv_model_fe_fixed_lags)
+TSLS estimation - Dep. Var.: int1prc
+                  Endo.    : fedfunds_change_sum, fedfunds_change_sum_L1
+                  Instr.   : MPS_ORTH_sum, MPS_ORTH_sum_L1
+Second stage: Dep. Var.: int1prc
+Observations: 15,343
+Weights: weight
+Fixed-effects: pid: 4,099
+Standard-errors: Clustered (pid) 
+                             Estimate Std. Error  t value  Pr(>|t|)    
+fit_fedfunds_change_sum     3.990e-07  4.590e-08  8.68778 < 2.2e-16 ***
+fit_fedfunds_change_sum_L1 -2.934e-06  3.251e-07 -9.02701 < 2.2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 0.180798     Adj. R2: -3.45203
+                 Within R2: -6.40251
+F-test (1st stage), fedfunds_change_sum   : stat = 725.9, p < 2.2e-16 , on 2 and 15,340 DoF.
+F-test (1st stage), fedfunds_change_sum_L1: stat =  15.1, p = 2.761e-7, on 2 and 15,340 DoF.
+                                Wu-Hausman: stat = 189.4, p < 2.2e-16 , on 2 and 11,240 DoF.
+>   ungroup()
+Error in UseMethod("ungroup") : 
+  no applicable method for 'ungroup' applied to an object of class "NULL"
+>   # Run the same model for variable-rate subset
+>   iv_model_fe_var_lags <- feols(
++     int1prc ~ 1 | pid | 
++       fedfunds_change_sum + fedfunds_change_sum_L1 ~ 
++       MPS_ORTH_sum + MPS_ORTH_sum_L1,
++     data = subset(final_data2, mort_rate1fv == 2),
++     weights = ~weight,
++     cluster = ~pid
++   )
+NOTE: 201 observations removed because of NA values (LHS: 148, IV: 68/68).
+>   summary(iv_model_fe_var_lags)
+TSLS estimation - Dep. Var.: int1prc
+                  Endo.    : fedfunds_change_sum, fedfunds_change_sum_L1
+                  Instr.   : MPS_ORTH_sum, MPS_ORTH_sum_L1
+Second stage: Dep. Var.: int1prc
+Observations: 1,249
+Weights: weight
+Fixed-effects: pid: 627
+Standard-errors: Clustered (pid) 
+                             Estimate Std. Error  t value  Pr(>|t|)    
+fit_fedfunds_change_sum     6.090e-07   2.43e-07  2.51231 0.0122447 *  
+fit_fedfunds_change_sum_L1 -1.929e-06   7.32e-07 -2.63424 0.0086412 ** 
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 0.13902     Adj. R2: -1.11327
+                Within R2: -3.79274
+F-test (1st stage), fedfunds_change_sum   : stat = 60.5    , p < 2.2e-16 , on 2 and 1,246 DoF.
+F-test (1st stage), fedfunds_change_sum_L1: stat =  6.99673, p = 9.513e-4, on 2 and 1,246 DoF.
+                                Wu-Hausman: stat = 12.4    , p = 5.271e-6, on 2 and 618 DoF.
+>   # Add L2 instruments
+>   final_data2 <- final_data2 %>%
++     group_by(pid) %>%
++     mutate(
++       MPS_ORTH_sum_L2 = dplyr::lag(MPS_ORTH_sum, 2)  # Lag 2 of instrument
++     ) %>%
++     ungroup()
+>   # Run IV with L2 instruments
+>   iv_model_fe_var_lags_L2 <- feols(
++     int1prc ~ 1 | pid | 
++       fedfunds_change_sum + fedfunds_change_sum_L1 ~ 
++       MPS_ORTH_sum + MPS_ORTH_sum_L2,  # Use L2 instead of L1 for the lag
++     data = subset(final_data2, mort_rate1fv == 2),
++     weights = ~weight,
++     cluster = ~pid
++   )  
+NOTE: 260 observations removed because of NA values (LHS: 148, IV: 68/139).
+> summary(iv_model_fe_var_lags_L2)  
+TSLS estimation - Dep. Var.: int1prc
+                  Endo.    : fedfunds_change_sum, fedfunds_change_sum_L1
+                  Instr.   : MPS_ORTH_sum, MPS_ORTH_sum_L2
+Second stage: Dep. Var.: int1prc
+Observations: 1,190
+Weights: weight
+Fixed-effects: pid: 589
+Standard-errors: Clustered (pid) 
+                            Estimate Std. Error t value   Pr(>|t|)    
+fit_fedfunds_change_sum    1.564e-06   4.47e-07 3.49831 0.00050361 ***
+fit_fedfunds_change_sum_L1 4.790e-07   2.86e-07 1.67894 0.09369575 .  
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 0.091198     Adj. R2: 0.110503
+                 Within R2: -1.05113
+F-test (1st stage), fedfunds_change_sum   : stat = 27.1, p = 3.107e-12, on 2 and 1,187 DoF.
+F-test (1st stage), fedfunds_change_sum_L1: stat = 45.9, p < 2.2e-16  , on 2 and 1,187 DoF.
+                                Wu-Hausman: stat = 14.2, p = 9.049e-7 , on 2 and 597 DoF.
+>   iv_model_deeper_lags <- feols(
++     int1prc ~ 1 | pid | 
++       fedfunds_change_sum + fedfunds_change_sum_L1 ~ 
++       MPS_ORTH_sum + MPS_ORTH_sum_L2,
++     data = subset(final_data2, mort_rate1fv == 1),
++     weights = ~weight,
++     cluster = ~pid
++   )
+NOTE: 2,551 observations removed because of NA values (LHS: 900, IV: 825/1,830).
+>   summary(iv_model_deeper_lags)
+TSLS estimation - Dep. Var.: int1prc
+                  Endo.    : fedfunds_change_sum, fedfunds_change_sum_L1
+                  Instr.   : MPS_ORTH_sum, MPS_ORTH_sum_L2
+Second stage: Dep. Var.: int1prc
+Observations: 14,424
+Weights: weight
+Fixed-effects: pid: 3,832
+Standard-errors: Clustered (pid) 
+                           Estimate Std. Error  t value   Pr(>|t|)    
+fit_fedfunds_change_sum    9.22e-07   5.85e-08 15.75734  < 2.2e-16 ***
+fit_fedfunds_change_sum_L1 3.31e-07   6.85e-08  4.82243 1.4733e-06 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 0.085362     Adj. R2:  0.031577
+                 Within R2: -0.618905
+F-test (1st stage), fedfunds_change_sum   : stat = 473.5, p < 2.2e-16, on 2 and 14,421 DoF.
+F-test (1st stage), fedfunds_change_sum_L1: stat = 318.1, p < 2.2e-16, on 2 and 14,421 DoF.
+                                Wu-Hausman: stat = 178.0, p < 2.2e-16, on 2 and 10,588 DoF.
+> final_data2 <- final_data2 %>%
++   group_by(pid) %>%
++   mutate(MPS_ORTH_sum_L3 = dplyr::lag(MPS_ORTH_sum, 3)) %>%
++   ungroup()
+> feols(
++   int1prc ~ 1 | pid | 
++     fedfunds_change_sum + fedfunds_change_sum_L1 ~ 
++     MPS_ORTH_sum + MPS_ORTH_sum_L3,
++   data = subset(final_data2, mort_rate1fv == 2),
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTE: 334 observations removed because of NA values (LHS: 148, IV: 68/229).
+TSLS estimation - Dep. Var.: int1prc
+                  Endo.    : fedfunds_change_sum, fedfunds_change_sum_L1
+                  Instr.   : MPS_ORTH_sum, MPS_ORTH_sum_L3
+Second stage: Dep. Var.: int1prc
+Observations: 1,116
+Weights: weight
+Fixed-effects: pid: 550
+Standard-errors: Clustered (pid) 
+                             Estimate Std. Error   t value   Pr(>|t|)    
+fit_fedfunds_change_sum     1.298e-06   2.43e-07  5.343587 1.3377e-07 ***
+fit_fedfunds_change_sum_L1 -1.830e-07   3.53e-07 -0.517275 6.0517e-01    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 0.090929     Adj. R2:  0.054406
+                 Within R2: -0.965136
+F-test (1st stage), fedfunds_change_sum   : stat = 199.0, p < 2.2e-16, on 2 and 1,113 DoF.
+F-test (1st stage), fedfunds_change_sum_L1: stat =  43.1, p < 2.2e-16, on 2 and 1,113 DoF.
+                                Wu-Hausman: stat =  75.0, p < 2.2e-16, on 2 and 562 DoF.
+> 

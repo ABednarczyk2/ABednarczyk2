@@ -345,3 +345,94 @@ F-test (1st stage), fedfunds_change_sum   : stat = 199.0, p < 2.2e-16, on 2 and 
 F-test (1st stage), fedfunds_change_sum_L1: stat =  43.1, p < 2.2e-16, on 2 and 1,113 DoF.
                                 Wu-Hausman: stat =  75.0, p < 2.2e-16, on 2 and 562 DoF.
 > 
+
+
+                              Wu-Hausman: stat =   751.8, p < 2.2e-16, on 2 and 9,862 DoF.
+> # Test for asymmetric adjustment
+> final_data2 <- final_data2 %>%
++   mutate(
++     rate_type = ifelse(mort_rate1fv == 1, "Fixed", "Variable"),
++     fedfunds_increase = fedfunds_change_sum > 0
++   )
+> # Interaction model
+> feols(
++   int1prc ~ fedfunds_increase*rate_type | pid | 
++     fedfunds_change_sum + fedfunds_change_sum_L1 ~ 
++     MPS_ORTH_sum + MPS_ORTH_sum_L3,
++   data = final_data2,
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTES: 450 observation removed because of 0-weight.
+       32,105 observations removed because of NA values (LHS: 1,987, RHS: 20,345, IV: 10,720/27,634).
+TSLS estimation - Dep. Var.: int1prc
+                  Endo.    : fedfunds_change_sum, fedfunds_change_sum_L1
+                  Instr.   : MPS_ORTH_sum, MPS_ORTH_sum_L3
+Second stage: Dep. Var.: int1prc
+Observations: 30,614
+Weights: weight
+Fixed-effects: pid: 6,415
+Standard-errors: Clustered (pid) 
+                                            Estimate   Std. Error   t value   Pr(>|t|)    
+fit_fedfunds_change_sum                  0.000000959 0.0000000406  23.62789  < 2.2e-16 ***
+fit_fedfunds_change_sum_L1              -0.000000180 0.0000000359  -5.01387 5.4777e-07 ***
+fedfunds_increaseTRUE                   -0.016256653 0.0006887865 -23.60187  < 2.2e-16 ***
+rate_typeVariable                       -0.040675186 0.0007439337 -54.67582  < 2.2e-16 ***
+fedfunds_increaseTRUE:rate_typeVariable  0.002280402 0.0003866386   5.89802 3.8663e-09 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 0.079221     Adj. R2: 0.628376
+                 Within R2: 0.155589
+F-test (1st stage), fedfunds_change_sum   : stat = 2,751.0, p < 2.2e-16, on 2 and 30,608 DoF.
+F-test (1st stage), fedfunds_change_sum_L1: stat =   844.6, p < 2.2e-16, on 2 and 30,608 DoF.
+                                Wu-Hausman: stat =   880.5, p < 2.2e-16, on 2 and 24,192 DoF.
+> # First create refinancing dummy (example threshold at 50bps rate drop)
+> final_data2 <- final_data2 %>%
++   group_by(pid) %>%
++   mutate(
++     refi_dummy = as.numeric(dplyr::lag(int1prc, 1) - int1prc > 0.5),  # 50bps threshold
++     refi_X_fedfunds = refi_dummy * fedfunds_change_sum
++   ) %>%
++   ungroup()
+> # Full interaction model
+> iv_refi_interaction <- feols(
++   int1prc ~ refi_dummy + rate_type + fedfunds_increase | pid | 
++     fedfunds_change_sum + fedfunds_change_sum_L1 + refi_X_fedfunds ~
++     MPS_ORTH_sum + MPS_ORTH_sum_L3 + I(MPS_ORTH_sum * refi_dummy),
++   data = final_data2,
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTES: 450 observation removed because of 0-weight.
+       32,743 observations removed because of NA values (LHS: 1,987, RHS: 26,181, IV: 13,439/29,385).
+The exogenous variable 'refi_dummy' have been removed because of collinearity (see $collin.var).
+> 
+> 
+> summmary(iv_refi_interaction)
+Error in summmary(iv_refi_interaction) : 
+  could not find function "summmary"
+> summary(iv_refi_interaction)
+TSLS estimation - Dep. Var.: int1prc
+                  Endo.    : fedfunds_change_sum, fedfunds_change_sum_L1, refi_X_fedfunds
+                  Instr.   : MPS_ORTH_sum, MPS_ORTH_sum_L3, I(MPS_ORTH_sum * refi_dummy)
+Second stage: Dep. Var.: int1prc
+Observations: 29,976
+Weights: weight
+Fixed-effects: pid: 6,344
+Standard-errors: Clustered (pid) 
+                               Estimate   Std. Error   t value   Pr(>|t|)    
+fit_fedfunds_change_sum     0.000000933 0.0000000406  22.96124  < 2.2e-16 ***
+fit_fedfunds_change_sum_L1 -0.000000185 0.0000000357  -5.17388 2.3632e-07 ***
+fit_refi_X_fedfunds         0.000002265 0.0000000438  51.67110  < 2.2e-16 ***
+rate_typeVariable          -0.039325836 0.0007049909 -55.78205  < 2.2e-16 ***
+fedfunds_increaseTRUE      -0.014361996 0.0006095387 -23.56207  < 2.2e-16 ***
+... 1 variable was removed because of collinearity (refi_dummy)
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 0.077819     Adj. R2: 0.635956
+                 Within R2: 0.162346
+F-test (1st stage), fedfunds_change_sum   : stat =  1,810.6, p < 2.2e-16, on 3 and 29,970 DoF.
+F-test (1st stage), fedfunds_change_sum_L1: stat =    545.1, p < 2.2e-16, on 3 and 29,970 DoF.
+F-test (1st stage), refi_X_fedfunds       : stat = 79,942.4, p < 2.2e-16, on 3 and 29,970 DoF.
+                                Wu-Hausman: stat =     NA  , p = NA     , on 3 and 23,624 DoF.
+> 

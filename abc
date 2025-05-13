@@ -1,0 +1,282 @@
+library(fixest)
+
+# First ensure we're using the right fedfunds_change variable
+final_data2 <- final_data2 %>%
+  group_by(pid) %>%
+  arrange(pid, year) %>%
+  mutate(
+    fedfunds_change_L1 = dplyr::lag(fedfunds_change, 1)  # Create lag of periodic change
+  ) %>%
+  ungroup()
+
+# Run the corrected fixed-rate model
+iv_model_fe_fixed_corrected <- feols(
+  int1prc ~ 1 | pid | fedfunds_change ~ MPS_ORTH_sum,
+  data = subset(final_data2, mort_rate1fv == 1),
+  weights = ~weight,
+  cluster = ~pid
+)
+
+# View results
+summary(iv_model_fe_fixed_corrected)
+
+
+iv_model_fe_var_corrected <- feols(
+  int1prc ~ 1 | pid | fedfunds_change ~ MPS_ORTH_sum,
+  data = subset(final_data2, mort_rate1fv == 2),
+  weights = ~weight,
+  cluster = ~pid
+)
+summary(iv_model_fe_var_corrected)
+
+
+
+library(dplyr)
+library(fixest)
+
+# Create proper lagged variables using fedfunds_change (not _sum)
+final_data2 <- final_data2 %>%
+  group_by(pid) %>%  
+  arrange(pid, year) %>%
+  mutate(
+    fedfunds_change_L1 = dplyr::lag(fedfunds_change, 1),  # Lag of periodic change
+    MPS_ORTH_sum_L1 = dplyr::lag(MPS_ORTH_sum, 1)        # Lagged instrument
+  ) %>%
+  ungroup()
+
+# Corrected fixed-rate model with periodic changes
+iv_model_fe_fixed_corrected <- feols(
+  int1prc ~ 1 | pid | 
+    fedfunds_change + fedfunds_change_L1 ~  # Using periodic changes
+    MPS_ORTH_sum + MPS_ORTH_sum_L1,
+  data = subset(final_data2, mort_rate1fv == 1),
+  weights = ~weight,
+  cluster = ~pid
+)
+
+# View results
+summary(iv_model_fe_fixed_corrected)
+
+# For variable rates
+iv_model_fe_var_corrected <- feols(
+  int1prc ~ 1 | pid | 
+    fedfunds_change + fedfunds_change_L1 ~ 
+    MPS_ORTH_sum + MPS_ORTH_sum_L1,
+  data = subset(final_data2, mort_rate1fv == 2),
+  weights = ~weight,
+  cluster = ~pid
+)
+summary(iv_model_fe_var_corrected)
+
+# CLEAN LAG RECREATION WITH DISTINCT NAMES
+final_data2 <- final_data2 %>%
+  group_by(pid) %>%
+  arrange(pid, year) %>%
+  mutate(
+    # New properly scaled lags (periodic changes)
+    ffd_change = fedfunds_change,                    # Base periodic change
+    ffd_L1 = dplyr::lag(fedfunds_change, 1),         # Lag 1 periodic
+    ffd_L2 = dplyr::lag(fedfunds_change, 2),         # Lag 2 periodic
+    ffd_L3 = dplyr::lag(fedfunds_change, 3),         # Lag 3 periodic
+    
+    # Refi interaction with NEW periodic change
+    refi_X_ffd = refi_dummy * ffd_change,
+    
+    # Keep instrument lags (unchanged)
+    mps_L1 = dplyr::lag(MPS_ORTH_sum, 1),
+    mps_L2 = dplyr::lag(MPS_ORTH_sum, 2), 
+    mps_L3 = dplyr::lag(MPS_ORTH_sum, 3)
+  ) %>%
+  ungroup()
+
+
+library(dplyr)
+library(fixest)
+
+# First create proper lagged variables (using fedfunds_change, not _sum)
+final_data2 <- final_data2 %>%
+  group_by(pid) %>%
+  arrange(pid, year) %>%
+  mutate(
+    fedfunds_change_L1 = dplyr::lag(fedfunds_change, 1),  # Lag 1 of periodic change
+    fedfunds_change_L2 = dplyr::lag(fedfunds_change, 2),  # Lag 2 of periodic change
+    MPS_ORTH_sum_L1 = dplyr::lag(MPS_ORTH_sum, 1),       # Lag 1 instrument
+    MPS_ORTH_sum_L2 = dplyr::lag(MPS_ORTH_sum, 2)        # Lag 2 instrument
+  ) %>%
+  ungroup()
+
+# Corrected variable-rate model with L2 instruments
+iv_model_var_L2 <- feols(
+  int1prc ~ 1 | pid | 
+    fedfunds_change + fedfunds_change_L1 ~  # Using periodic changes
+    MPS_ORTH_sum + MPS_ORTH_sum_L2,        # Using L2 instrument
+  data = subset(final_data2, mort_rate1fv == 2),
+  weights = ~weight,
+  cluster = ~pid
+)
+
+# Corrected fixed-rate model with L2 instruments
+iv_model_fixed_L2 <- feols(
+  int1prc ~ 1 | pid | 
+    fedfunds_change + fedfunds_change_L1 ~ 
+    MPS_ORTH_sum + MPS_ORTH_sum_L2,
+  data = subset(final_data2, mort_rate1fv == 1),
+  weights = ~weight,
+  cluster = ~pid
+)
+
+# View results
+summary(iv_model_var_L2)
+summary(iv_model_fixed_L2)
+
+
+
+final_data2 <- final_data2 %>%
+  group_by(pid) %>%
+  arrange(pid, year) %>%
+  mutate(
+    # Correct: Lags of PERIODIC changes (not sums)
+    fedfunds_change_L1 = dplyr::lag(fedfunds_change, 1),
+    fedfunds_change_L2 = dplyr::lag(fedfunds_change, 2),
+    fedfunds_change_L3 = dplyr::lag(fedfunds_change, 3),
+    
+    # Correct: Refi interaction with periodic change
+    refi_X_fedfunds = refi_dummy * fedfunds_change,
+    
+    # Recreate instrument lags
+    MPS_ORTH_sum_L1 = dplyr::lag(MPS_ORTH_sum, 1),
+    MPS_ORTH_sum_L2 = dplyr::lag(MPS_ORTH_sum, 2),
+    MPS_ORTH_sum_L3 = dplyr::lag(MPS_ORTH_sum, 3)
+  ) %>%
+  ungroup()
+
+
+
+library(dplyr)
+library(fixest)
+
+# First create NEW properly named lagged variables
+final_data2 <- final_data2 %>%
+  group_by(pid) %>%
+  arrange(pid, year) %>%
+  mutate(
+    # Base periodic change (renamed for clarity)
+    ffd_change = fedfunds_change,
+    
+    # New lagged versions (not summed!)
+    ffd_L1 = dplyr::lag(ffd_change, 1),  # Lag 1
+    ffd_L2 = dplyr::lag(ffd_change, 2),  # Lag 2
+    
+    # Instrument lags (original names kept)
+    MPS_ORTH_sum_L1 = dplyr::lag(MPS_ORTH_sum, 1),
+    MPS_ORTH_sum_L2 = dplyr::lag(MPS_ORTH_sum, 2)
+  ) %>%
+  ungroup()
+
+# Corrected fixed-rate model with NEW lagged variables
+iv_model_fe_fixed_corrected <- feols(
+  int1prc ~ 1 | pid | 
+    ffd_change + ffd_L1 ~  # Using new periodic change variables
+    MPS_ORTH_sum + MPS_ORTH_sum_L1,
+  data = subset(final_data2, mort_rate1fv == 1),
+  weights = ~weight,
+  cluster = ~pid
+)
+
+# View results
+summary(iv_model_fe_fixed_corrected)
+
+
+library(dplyr)
+library(fixest)
+
+# First create NEW properly named lagged variables
+final_data2 <- final_data2 %>%
+  group_by(pid) %>%
+  arrange(pid, year) %>%
+  mutate(
+    # Base periodic change (renamed for clarity)
+    ffd_change = fedfunds_change,
+    
+    # New lagged versions (not summed!)
+    ffd_L1 = dplyr::lag(ffd_change, 1),  # Lag 1
+    ffd_L2 = dplyr::lag(ffd_change, 2),  # Lag 2
+    
+    # Instrument lags (original names kept)
+    MPS_ORTH_sum_L1 = dplyr::lag(MPS_ORTH_sum, 1),
+    MPS_ORTH_sum_L2 = dplyr::lag(MPS_ORTH_sum, 2)
+  ) %>%
+  ungroup()
+
+# Corrected fixed-rate model with NEW lagged variables
+iv_model_fe_fixed_corrected <- feols(
+  int1prc ~ 1 | pid | 
+    ffd_change + ffd_L1 ~  # Using new periodic change variables
+    MPS_ORTH_sum + MPS_ORTH_sum_L1,
+  data = subset(final_data2, mort_rate1fv == 1),
+  weights = ~weight,
+  cluster = ~pid
+)
+
+# View results
+summary(iv_model_fe_fixed_corrected)
+
+
+library(dplyr)
+library(fixest)
+
+# Create ALL fresh lags with clear names
+final_data2 <- final_data2 %>%
+  group_by(pid) %>%
+  arrange(pid, year) %>%
+  mutate(
+    # Base periodic change (ffd = Fed Funds Delta)
+    ffd = fedfunds_change,  
+    
+    # Lagged Fed changes
+    ffd_L1 = dplyr::lag(ffd, 1),
+    ffd_L2 = dplyr::lag(ffd, 2), 
+    ffd_L3 = dplyr::lag(ffd, 3),
+    
+    # Lagged instruments (mps = Monetary Policy Shock)
+    mps = MPS_ORTH_sum,
+    mps_L1 = dplyr::lag(mps, 1),
+    mps_L2 = dplyr::lag(mps, 2),
+    mps_L3 = dplyr::lag(mps, 3)
+  ) %>%
+  ungroup()
+
+# 1. FIXED RATE MODELS (mort_rate1fv == 1) --------------------------------
+
+# Model 1A: L1 lags
+feols(int1prc ~ 1 | pid | ffd + ffd_L1 ~ mps + mps_L1,
+      data = subset(final_data2, mort_rate1fv == 1),
+      weights = ~weight, cluster = ~pid) %>% summary()
+
+# Model 1B: L2 lags  
+feols(int1prc ~ 1 | pid | ffd + ffd_L2 ~ mps + mps_L2,
+      data = subset(final_data2, mort_rate1fv == 1),
+      weights = ~weight, cluster = ~pid) %>% summary()
+
+# Model 1C: L3 lags
+feols(int1prc ~ 1 | pid | ffd + ffd_L3 ~ mps + mps_L3,
+      data = subset(final_data2, mort_rate1fv == 1),
+      weights = ~weight, cluster = ~pid) %>% summary()
+
+# 2. VARIABLE RATE MODELS (mort_rate1fv == 2) -----------------------------
+
+# Model 2A: L1 lags
+feols(int1prc ~ 1 | pid | ffd + ffd_L1 ~ mps + mps_L1,
+      data = subset(final_data2, mort_rate1fv == 2),
+      weights = ~weight, cluster = ~pid) %>% summary()
+
+# Model 2B: L2 lags
+feols(int1prc ~ 1 | pid | ffd + ffd_L2 ~ mps + mps_L2,
+      data = subset(final_data2, mort_rate1fv == 2),
+      weights = ~weight, cluster = ~pid) %>% summary()
+
+# Model 2C: L3 lags 
+feols(int1prc ~ 1 | pid | ffd + ffd_L3 ~ mps + mps_L3,
+      data = subset(final_data2, mort_rate1fv == 2),
+      weights = ~weight, cluster = ~pid) %>% summary()
+

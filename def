@@ -1,0 +1,757 @@
+>    iv_model_ndc <- feols(
++      r_nondurcons ~ 1 | pid | FEDFUNDS_change_biennial_clean ~ MPS_ORTH_sum_clean,
++      data = d7tr,
++      weights = ~weight,
++      cluster = ~pid
++    )
+NOTE: 369 observation removed because of 0-weight.
+>    summary(iv_model_ndc)
+TSLS estimation - Dep. Var.: r_nondurcons
+                  Endo.    : FEDFUNDS_change_biennial_clean
+                  Instr.   : MPS_ORTH_sum_clean
+Second stage: Dep. Var.: r_nondurcons
+Observations: 45,250
+Weights: weight
+Fixed-effects: pid: 7,169
+Standard-errors: Clustered (pid) 
+                                   Estimate Std. Error t value  Pr(>|t|)    
+fit_FEDFUNDS_change_biennial_clean  9156.75    226.357 40.4527 < 2.2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 100,736.8     Adj. R2: -0.13221
+                  Within R2: -1.33365
+F-test (1st stage), FEDFUNDS_change_biennial_clean: stat =   954.9, p < 2.2e-16, on 1 and 45,248 DoF.
+                                        Wu-Hausman: stat = 1,191.2, p < 2.2e-16, on 1 and 38,079 DoF.
+>    iv_model_ndc2 <- feols(
++      r_nondshelcons ~ 1 | pid | FEDFUNDS_change_biennial_clean ~ MPS_ORTH_sum_clean,
++      data = d7tr,
++      weights = ~weight,
++      cluster = ~pid
++    )
+Error in feols(r_nondshelcons ~ 1 | pid | FEDFUNDS_change_biennial_clean ~  : 
+  The variable 'r_nondshelcons' is in the LHS of the formula but not in the data set.
+>    iv_model_ndc2 <- feols(
++      r_nonshelcons ~ 1 | pid | FEDFUNDS_change_biennial_clean ~ MPS_ORTH_sum_clean,
++      data = d7tr,
++      weights = ~weight,
++      cluster = ~pid
++    )
+NOTES: 369 observation removed because of 0-weight.
+       2,053 observations removed because of NA values (LHS: 2,053).
+>    summary(iv_model_ndc2)
+TSLS estimation - Dep. Var.: r_nonshelcons
+                  Endo.    : FEDFUNDS_change_biennial_clean
+                  Instr.   : MPS_ORTH_sum_clean
+Second stage: Dep. Var.: r_nonshelcons
+Observations: 43,208
+Weights: weight
+Fixed-effects: pid: 7,112
+Standard-errors: Clustered (pid) 
+                                   Estimate Std. Error t value  Pr(>|t|)    
+fit_FEDFUNDS_change_biennial_clean  7827.43     355.85 21.9964 < 2.2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 114,769.5     Adj. R2:  0.320186
+                  Within R2: -0.453994
+F-test (1st stage), FEDFUNDS_change_biennial_clean: stat = 911.7, p < 2.2e-16, on 1 and 43,206 DoF.
+                                        Wu-Hausman: stat = 366.9, p < 2.2e-16, on 1 and 36,094 DoF.
+> d7tr_mortgage_fix <- d7tr %>% filter(mort_rate1fv == 1)
+> d7tr_mortgage_var <- d7tr %>% filter(mort_rate1fv == 2)
+> iv_model_mortgage_only <- feols(
++   r_nonshelcons ~ 1 | pid | FEDFUNDS_change_biennial_clean ~ MPS_ORTH_sum_clean,
++   data = d7tr_mortgage_fix,
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTE: 658 observations removed because of NA values (LHS: 658).
+> summary(iv_model_mortgage_only)
+TSLS estimation - Dep. Var.: r_nonshelcons
+                  Endo.    : FEDFUNDS_change_biennial_clean
+                  Instr.   : MPS_ORTH_sum_clean
+Second stage: Dep. Var.: r_nonshelcons
+Observations: 13,878
+Weights: weight
+Fixed-effects: pid: 3,747
+Standard-errors: Clustered (pid) 
+                                   Estimate Std. Error t value  Pr(>|t|)    
+fit_FEDFUNDS_change_biennial_clean  3600.41    379.272 9.49294 < 2.2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 93,466.3     Adj. R2:  0.506443
+                 Within R2: -0.066575
+F-test (1st stage), FEDFUNDS_change_biennial_clean: stat = 720.8, p < 2.2e-16  , on 1 and 13,876 DoF.
+                                        Wu-Hausman: stat =  41.8, p = 1.078e-10, on 1 and 10,129 DoF.
+> iv_model_mortgage_only2 <- feols(
++   r_nonshelcons ~ 1 | pid | FEDFUNDS_change_biennial_clean ~ MPS_ORTH_sum_clean,
++   data = d7tr_mortgage_var,
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTE: 89 observations removed because of NA values (LHS: 89).
+> summary(iv_model_mortgage_only2)
+TSLS estimation - Dep. Var.: r_nonshelcons
+                  Endo.    : FEDFUNDS_change_biennial_clean
+                  Instr.   : MPS_ORTH_sum_clean
+Second stage: Dep. Var.: r_nonshelcons
+Observations: 1,049
+Weights: weight
+Fixed-effects: pid: 564
+Standard-errors: Clustered (pid) 
+                                   Estimate Std. Error t value  Pr(>|t|)    
+fit_FEDFUNDS_change_biennial_clean  14395.3    4399.42 3.27209 0.0011329 ** 
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 137,618.3     Adj. R2: -0.524553
+                  Within R2: -2.55718 
+F-test (1st stage), FEDFUNDS_change_biennial_clean: stat = 17.7, p = 2.811e-5, on 1 and 1,047 DoF.
+                                        Wu-Hausman: stat = 22.2, p = 3.213e-6, on 1 and 483 DoF.
+> d7tr_mortgage <- d7tr %>% filter(mort_rate1fv =1 , 2)
+Error in `filter()`:
+! We detected a named input.
+ℹ This usually means that you've used `=` instead of `==`.
+ℹ Did you mean `mort_rate1fv == 1`?
+Run `rlang::last_trace()` to see where the error occurred.
+> d7tr_mortgage <- d7tr %>% filter(mort_rate1fv ==1 , 2)
+Error in `filter()`:
+ℹ In argument: `2`.
+Caused by error:
+! `..2` must be a logical vector, not the number 2.
+Run `rlang::last_trace()` to see where the error occurred.
+> d7tr_mortgage <- d7tr %>% filter(mort_rate1fv == 1 ,mort_rate1fv == 2 )
+> iv_model_mortgage <- feols(
++   r_nonshelcons ~ 1 | pid | FEDFUNDS_change_biennial_clean ~ MPS_ORTH_sum_clean,
++   data = d7tr_mortgage,
++   weights = ~weight,
++   cluster = ~pid
++ )
+Error in feols(r_nonshelcons ~ 1 | pid | FEDFUNDS_change_biennial_clean ~  : 
+  The left hand side must be a numeric matrix (or vector). Problem: it is of length 0, while it should have a
+ positive length.
+> d7tr_mortgage <- d7tr %>% filter(mort_rate1fv %in% c(1, 2))
+> iv_model_mortgage <- feols(
++   r_nonshelcons ~ 1 | pid | FEDFUNDS_change_biennial_clean ~ MPS_ORTH_sum_clean,
++   data = d7tr_mortgage,
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTE: 747 observations removed because of NA values (LHS: 747).
+> summary(iv_model_mortgage)
+TSLS estimation - Dep. Var.: r_nonshelcons
+                  Endo.    : FEDFUNDS_change_biennial_clean
+                  Instr.   : MPS_ORTH_sum_clean
+Second stage: Dep. Var.: r_nonshelcons
+Observations: 14,927
+Weights: weight
+Fixed-effects: pid: 3,888
+Standard-errors: Clustered (pid) 
+                                   Estimate Std. Error t value  Pr(>|t|)    
+fit_FEDFUNDS_change_biennial_clean  3915.19    381.917 10.2514 < 2.2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 95,595.0     Adj. R2:  0.494338
+                 Within R2: -0.087922
+F-test (1st stage), FEDFUNDS_change_biennial_clean: stat = 740.2, p < 2.2e-16  , on 1 and 14,925 DoF.
+                                        Wu-Hausman: stat =  55.2, p = 1.179e-13, on 1 and 11,037 DoF.
+> iv_model_mortgage_controls <- feols(
++   r_nonshelcons ~ r_fam_income_prevy + r_educ_expen_prevy | pid | FEDFUNDS_change_biennial_clean ~ MPS_ORTH_sum_clean,
++   data = d7tr_mortgage,
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTE: 1,034 observations removed because of NA values (LHS: 747, RHS: 509).
+> summary(iv_model_mortgage_controls)
+TSLS estimation - Dep. Var.: r_nonshelcons
+                  Endo.    : FEDFUNDS_change_biennial_clean
+                  Instr.   : MPS_ORTH_sum_clean
+Second stage: Dep. Var.: r_nonshelcons
+Observations: 14,640
+Weights: weight
+Fixed-effects: pid: 3,856
+Standard-errors: Clustered (pid) 
+                                      Estimate Std. Error t value  Pr(>|t|)    
+fit_FEDFUNDS_change_biennial_clean 3736.571659 359.012394 10.4079 < 2.2e-16 ***
+r_fam_income_prevy                    0.152241   0.008174 18.6248 < 2.2e-16 ***
+r_educ_expen_prevy                    1.011416   0.056712 17.8342 < 2.2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 85,402.2     Adj. R2: 0.560486
+                 Within R2: 0.067695
+F-test (1st stage), FEDFUNDS_change_biennial_clean: stat = 711.7, p < 2.2e-16 , on 1 and 14,636 DoF.
+                                        Wu-Hausman: stat =  62.2, p = 3.34e-15, on 1 and 10,780 DoF.
+> iv_model_mortgage2 <- feols(
++   r_nondurcons ~ 1 | pid | FEDFUNDS_change_biennial_clean ~ MPS_ORTH_sum_clean,
++   data = d7tr_mortgage,
++   weights = ~weight,
++   cluster = ~pid
++ )
+> summary(iv_model_mortgage2)
+TSLS estimation - Dep. Var.: r_nondurcons
+                  Endo.    : FEDFUNDS_change_biennial_clean
+                  Instr.   : MPS_ORTH_sum_clean
+Second stage: Dep. Var.: r_nondurcons
+Observations: 15,674
+Weights: weight
+Fixed-effects: pid: 3,989
+Standard-errors: Clustered (pid) 
+                                   Estimate Std. Error t value  Pr(>|t|)    
+fit_FEDFUNDS_change_biennial_clean  6555.06    250.802 26.1364 < 2.2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 83,398.2     Adj. R2:  0.207974
+                 Within R2: -0.519997
+F-test (1st stage), FEDFUNDS_change_biennial_clean: stat = 775.2, p < 2.2e-16, on 1 and 15,672 DoF.
+                                        Wu-Hausman: stat = 354.2, p < 2.2e-16, on 1 and 11,683 DoF.
+> ols_model <- feols(
++   r_nonshelcons ~ int1prc + r_fam_income_prevy + wlth_no_equity,
++   data = d7tr,
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTES: 369 observation removed because of 0-weight.
+       21,049 observations removed because of NA values (LHS: 2,053, RHS: 20,010).
+> summary(ols_model)
+OLS estimation, Dep. Var.: r_nonshelcons
+Observations: 24,570
+Weights: weight
+Standard-errors: Clustered (pid) 
+                       Estimate Std. Error  t value  Pr(>|t|)    
+(Intercept)        17494.942618 410.811556 42.58630 < 2.2e-16 ***
+int1prc             1354.157749  95.080238 14.24226 < 2.2e-16 ***
+r_fam_income_prevy     0.268830   0.004907 54.78379 < 2.2e-16 ***
+wlth_no_equity         0.001061   0.000648  1.63690    0.1017    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 116,295.2   Adj. R2: 0.489153
+> ols_model <- feols(
++   r_nondurcons ~ int1prc + r_fam_income_prevy + wlth_no_equity,
++   data = d7tr,
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTES: 369 observation removed because of 0-weight.
+       20,010 observations removed because of NA values (RHS: 20,010).
+> summary(ols_model)
+OLS estimation, Dep. Var.: r_nondurcons
+Observations: 25,609
+Weights: weight
+Standard-errors: Clustered (pid) 
+                       Estimate Std. Error  t value  Pr(>|t|)    
+(Intercept)        15594.879386 289.696358 53.83181 < 2.2e-16 ***
+int1prc             1044.135512  66.072026 15.80299 < 2.2e-16 ***
+r_fam_income_prevy     0.160524   0.002964 54.15890 < 2.2e-16 ***
+wlth_no_equity         0.000455   0.000243  1.87063  0.061445 .  
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 84,259.5   Adj. R2: 0.433305
+> ols_model <- feols(
++   r_tot_expen ~ int1prc + r_fam_income_prevy + wlth_no_equity,
++   data = d7tr,
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTES: 369 observation removed because of 0-weight.
+       20,349 observations removed because of NA values (LHS: 903, RHS: 20,010).
+> summary(ols_model)
+OLS estimation, Dep. Var.: r_tot_expen
+Observations: 25,270
+Weights: weight
+Standard-errors: Clustered (pid) 
+                       Estimate Std. Error  t value  Pr(>|t|)    
+(Intercept)        21804.416149 400.423196 54.45343 < 2.2e-16 ***
+int1prc             2154.813194 107.366073 20.06978 < 2.2e-16 ***
+r_fam_income_prevy     0.289080   0.004469 64.68377 < 2.2e-16 ***
+wlth_no_equity         0.000503   0.000296  1.69953  0.089272 .  
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 114,919.6   Adj. R2: 0.561716
+> feols(
++   r_nonshelcons ~ FEDFUNDS_change_biennial_clean * r_mort1 | pid,
++   data = d7tr,
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTES: 369 observation removed because of 0-weight.
+       3,171 observations removed because of NA values (LHS: 2,053, RHS: 1,528).
+OLS estimation, Dep. Var.: r_nonshelcons
+Observations: 42,097
+Weights: weight
+Fixed-effects: pid: 7,080
+Standard-errors: Clustered (pid) 
+                                         Estimate Std. Error t value  Pr(>|t|)    
+FEDFUNDS_change_biennial_clean         711.087104  56.237274 12.6444 < 2.2e-16 ***
+r_mort1                                  0.050701   0.003127 16.2138 < 2.2e-16 ***
+FEDFUNDS_change_biennial_clean:r_mort1   0.005911   0.000509 11.6118 < 2.2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 92,279.1     Adj. R2: 0.555038
+                 Within R2: 0.044991
+> feols(
++   r_nonshelcons ~ 1 | pid |
++     FEDFUNDS_change_biennial_clean * r_mort1 ~ MPS_ORTH_sum_clean * r_mort1,
++   data = d7tr,
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTES: 369 observation removed because of 0-weight.
+       3,171 observations removed because of NA values (LHS: 2,053, IV: 1,528/1,528).
+TSLS estimation - Dep. Var.: r_nonshelcons
+                  Endo.    : FEDFUNDS_change_biennial_clean, r_mort1, FEDFUNDS_change_biennial_clean:r_mort1
+                  Instr.   : MPS_ORTH_sum_clean, r_mort1, MPS_ORTH_sum_clean:r_mort1
+Second stage: Dep. Var.: r_nonshelcons
+Observations: 42,097
+Weights: weight
+Fixed-effects: pid: 7,080
+Standard-errors: Clustered (pid) 
+                                              Estimate Std. Error  t value  Pr(>|t|)    
+fit_FEDFUNDS_change_biennial_clean         4399.163090 413.509686 10.63860 < 2.2e-16 ***
+fit_r_mort1                                   0.068305   0.003818 17.88887 < 2.2e-16 ***
+fit_FEDFUNDS_change_biennial_clean:r_mort1    0.043949   0.005114  8.59435 < 2.2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 120,781.9     Adj. R2:  0.237711
+                  Within R2: -0.636078
+F-test (1st stage), FEDFUNDS_change_biennial_clean        : stat = 296.5     , p < 2.2e-16, on 3 and 42,093 DoF.
+F-test (1st stage), r_mort1                               : stat =   2.76e+35, p < 2.2e-16, on 3 and 42,093 DoF.
+F-test (1st stage), FEDFUNDS_change_biennial_clean:r_mort1: stat = 378.6     , p < 2.2e-16, on 3 and 42,093 DoF.
+                                                Wu-Hausman: stat =  NA       , p = NA     , on 3 and 35,011 DoF.
+> iv_model_full <- feols(
++   r_nonshelcons ~ FEDFUNDS_change_biennial_clean * (r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ) | pid |
++     FEDFUNDS_change_biennial_clean * (r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ) ~
++     MPS_ORTH_sum_clean * (r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ),
++   data = d7tr,
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTES: 369 observation removed because of 0-weight.
+       21,310 observations removed because of NA values (LHS: 2,053, RHS: 20,473, IV: 20,473/20,473).
+Error: in feols(r_nonshelcons ~ FEDFUNDS_change_biennial_cl...: 
+Endogenous variables should not be used as exogenous regressors. The variables 'FEDFUNDS_change_biennial_clean',
+'r_mort1', 'r_fam_income_prevy', 'r_wlth_w_equity', 'educ', 'FEDFUNDS_change_biennial_clean:r_mort1' and 3 others
+were found in the first part of the multipart formula: they should not be there. If there is no exogenous variable,
+just use '1' in the first part of the formula.
+> iv_model_full <- feols(
++   r_nonshelcons ~ 1 | pid |
++     FEDFUNDS_change_biennial_clean * (r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ) ~
++     MPS_ORTH_sum_clean * (r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ),
++   data = d7tr,
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTES: 369 observation removed because of 0-weight.
+       21,310 observations removed because of NA values (LHS: 2,053, IV: 20,473/20,473).
+> summary(iv_model_full)
+TSLS estimation - Dep. Var.: r_nonshelcons
+                  Endo.    : FEDFUNDS_change_biennial_clean, r_mort1, r_fam_income_prevy, r_wlth_w_equity, educ, FEDFUNDS_change_biennial_clean:r_mort1, FEDFUNDS_change_biennial_clean:r_fam_income_prevy, FEDFUNDS_change_biennial_clean:r_wlth_w_equity, FEDFUNDS_change_biennial_clean:educ
+                  Instr.   : MPS_ORTH_sum_clean, r_mort1, r_fam_income_prevy, r_wlth_w_equity, educ, MPS_ORTH_sum_clean:r_mort1, MPS_ORTH_sum_clean:r_fam_income_prevy, MPS_ORTH_sum_clean:r_wlth_w_equity, MPS_ORTH_sum_clean:educ
+Second stage: Dep. Var.: r_nonshelcons
+Observations: 24,309
+Weights: weight
+Fixed-effects: pid: 5,794
+Standard-errors: Clustered (pid) 
+                                                         Estimate  Std. Error   t value   Pr(>|t|)    
+fit_FEDFUNDS_change_biennial_clean                    -277.940391 1146.057653 -0.242519 0.80838687    
+fit_r_mort1                                              0.070792    0.006685 10.590321  < 2.2e-16 ***
+fit_r_fam_income_prevy                                   0.131785    0.009183 14.350289  < 2.2e-16 ***
+fit_r_wlth_w_equity                                      0.010104    0.001212  8.337880  < 2.2e-16 ***
+fit_educ                                              3601.931361 1232.148815  2.923292 0.00347692 ** 
+fit_FEDFUNDS_change_biennial_clean:r_mort1               0.029089    0.007090  4.102509 0.00004143 ***
+fit_FEDFUNDS_change_biennial_clean:r_fam_income_prevy    0.004780    0.007929  0.602791 0.54667144    
+fit_FEDFUNDS_change_biennial_clean:r_wlth_w_equity       0.001080    0.001164  0.927643 0.35363164    
+fit_FEDFUNDS_change_biennial_clean:educ                392.187280  467.028262  0.839751 0.40108287    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 85,434.2     Adj. R2:  0.626413
+                 Within R2: -0.03887 
+F-test (1st stage), FEDFUNDS_change_biennial_clean                   : stat = 103.5      , p < 2.2e-16, on 9 and 24,299 DoF.
+F-test (1st stage), r_mort1                                          : stat =   1.522e+34, p < 2.2e-16, on 9 and 24,299 DoF.
+F-test (1st stage), r_fam_income_prevy                               : stat =   1.414e+35, p < 2.2e-16, on 9 and 24,299 DoF.
+F-test (1st stage), r_wlth_w_equity                                  : stat =   4.714e+34, p < 2.2e-16, on 9 and 24,299 DoF.
+F-test (1st stage), educ                                             : stat =   5.484e+34, p < 2.2e-16, on 9 and 24,299 DoF.
+F-test (1st stage), FEDFUNDS_change_biennial_clean:r_mort1           : stat = 182.0      , p < 2.2e-16, on 9 and 24,299 DoF.
+F-test (1st stage), FEDFUNDS_change_biennial_clean:r_fam_income_prevy: stat = 154.9      , p < 2.2e-16, on 9 and 24,299 DoF.
+F-test (1st stage), FEDFUNDS_change_biennial_clean:r_wlth_w_equity   : stat = 168.5      , p < 2.2e-16, on 9 and 24,299 DoF.
+F-test (1st stage), FEDFUNDS_change_biennial_clean:educ              : stat = 101.5      , p < 2.2e-16, on 9 and 24,299 DoF.
+                                                           Wu-Hausman: stat =  NA        , p = NA     , on 9 and 18,497 DoF.
+> feols(
++   r_nonshelcons ~ int_controls | pid | 
++     FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1 ~ 
++     MPS_ORTH_sum_clean + MPS_ORTH_sum_clean:r_mort1,
++   data = d7tr,
++   weights = ~weight,
++   cluster = ~pid
++ )
+Error in feols(r_nonshelcons ~ int_controls | pid | FEDFUNDS_change_biennial_clean +  : 
+  The variable 'int_controls' is in the RHS (first part) of the formula but not in the data set.
+> iv_model <- feols(
++   r_nonshelcons ~ r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ | 
++     pid | 
++     FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1 ~ 
++     MPS_ORTH_sum_clean + MPS_ORTH_sum_clean:r_mort1,
++   data = d7tr,
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTES: 369 observation removed because of 0-weight.
+       21,310 observations removed because of NA values (LHS: 2,053, RHS: 20,473, IV: 1,528/1,528).
+> summary(iv_model)
+TSLS estimation - Dep. Var.: r_nonshelcons
+                  Endo.    : FEDFUNDS_change_biennial_clean, FEDFUNDS_change_biennial_clean:r_mort1
+                  Instr.   : MPS_ORTH_sum_clean, MPS_ORTH_sum_clean:r_mort1
+Second stage: Dep. Var.: r_nonshelcons
+Observations: 24,309
+Weights: weight
+Fixed-effects: pid: 5,794
+Standard-errors: Clustered (pid) 
+                                              Estimate  Std. Error  t value   Pr(>|t|)    
+fit_FEDFUNDS_change_biennial_clean         1248.946294  403.465993  3.09554 1.9739e-03 ** 
+fit_FEDFUNDS_change_biennial_clean:r_mort1    0.033505    0.005424  6.17708 6.9737e-10 ***
+r_mort1                                       0.074251    0.005836 12.72371  < 2.2e-16 ***
+r_fam_income_prevy                            0.126304    0.007186 17.57522  < 2.2e-16 ***
+r_wlth_w_equity                               0.009599    0.000947 10.13901  < 2.2e-16 ***
+educ                                       2831.220346 1161.027393  2.43855 1.4776e-02 *  
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 86,410.8     Adj. R2:  0.617885
+                 Within R2: -0.062757
+F-test (1st stage), FEDFUNDS_change_biennial_clean        : stat = 396.3, p < 2.2e-16, on 2 and 24,302 DoF.
+F-test (1st stage), FEDFUNDS_change_biennial_clean:r_mort1: stat = 236.2, p < 2.2e-16, on 2 and 24,302 DoF.
+                                                Wu-Hausman: stat =  49.4, p < 2.2e-16, on 2 and 18,507 DoF.
+> iv_model <- feols(
++   r_tot_expen ~ r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ | 
++     pid | 
++     FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1 ~ 
++     MPS_ORTH_sum_clean + MPS_ORTH_sum_clean:r_mort1,
++   data = d7tr,
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTES: 369 observation removed because of 0-weight.
+       20,751 observations removed because of NA values (LHS: 903, RHS: 20,473, IV: 1,528/1,528).
+> summary(iv_model)
+TSLS estimation - Dep. Var.: r_tot_expen
+                  Endo.    : FEDFUNDS_change_biennial_clean, FEDFUNDS_change_biennial_clean:r_mort1
+                  Instr.   : MPS_ORTH_sum_clean, MPS_ORTH_sum_clean:r_mort1
+Second stage: Dep. Var.: r_tot_expen
+Observations: 24,868
+Weights: weight
+Fixed-effects: pid: 5,854
+Standard-errors: Clustered (pid) 
+                                              Estimate  Std. Error   t value   Pr(>|t|)    
+fit_FEDFUNDS_change_biennial_clean          919.224809  362.476807  2.535955 0.01123991 *  
+fit_FEDFUNDS_change_biennial_clean:r_mort1    0.015379    0.004489  3.425763 0.00061729 ***
+r_mort1                                       0.075861    0.005362 14.149111  < 2.2e-16 ***
+r_fam_income_prevy                            0.108619    0.006110 17.777403  < 2.2e-16 ***
+r_wlth_w_equity                              -0.000096    0.000749 -0.128496 0.89776089    
+educ                                       1027.809726 1209.064352  0.850087 0.39531156    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 75,639.4     Adj. R2: 0.73726 
+                 Within R2: 0.024201
+F-test (1st stage), FEDFUNDS_change_biennial_clean        : stat = 420.5, p < 2.2e-16  , on 2 and 24,861 DoF.
+F-test (1st stage), FEDFUNDS_change_biennial_clean:r_mort1: stat = 207.1, p < 2.2e-16  , on 2 and 24,861 DoF.
+                                                Wu-Hausman: stat =  22.1, p = 2.574e-10, on 2 and 19,006 DoF.
+> iv_model <- feols(
++   r_nindurcons ~ r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ | 
++     pid | 
++     FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1 ~ 
++     MPS_ORTH_sum_clean + MPS_ORTH_sum_clean:r_mort1,
++   data = d7tr,
++   weights = ~weight,
++   cluster = ~pid
++ )
+Error in feols(r_nindurcons ~ r_mort1 + r_fam_income_prevy + r_wlth_w_equity +  : 
+  The variable 'r_nindurcons' is in the LHS of the formula but not in the data set.
+> iv_model <- feols(
++   r_nondurcons ~ r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ | 
++     pid | 
++     FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1 ~ 
++     MPS_ORTH_sum_clean + MPS_ORTH_sum_clean:r_mort1,
++   data = d7tr,
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTES: 369 observation removed because of 0-weight.
+       20,473 observations removed because of NA values (RHS: 20,473, IV: 1,528/1,528).
+> summary(iv_model)
+TSLS estimation - Dep. Var.: r_nondurcons
+                  Endo.    : FEDFUNDS_change_biennial_clean, FEDFUNDS_change_biennial_clean:r_mort1
+                  Instr.   : MPS_ORTH_sum_clean, MPS_ORTH_sum_clean:r_mort1
+Second stage: Dep. Var.: r_nondurcons
+Observations: 25,146
+Weights: weight
+Fixed-effects: pid: 5,870
+Standard-errors: Clustered (pid) 
+                                               Estimate  Std. Error  t value   Pr(>|t|)    
+fit_FEDFUNDS_change_biennial_clean          5216.488959  327.653730 15.92074  < 2.2e-16 ***
+fit_FEDFUNDS_change_biennial_clean:r_mort1     0.043639    0.005896  7.40137 1.5376e-13 ***
+r_mort1                                        0.080013    0.007101 11.26814  < 2.2e-16 ***
+r_fam_income_prevy                             0.049351    0.005782  8.53552  < 2.2e-16 ***
+r_wlth_w_equity                                0.004300    0.000711  6.05081 1.5302e-09 ***
+educ                                       -3512.011942 1396.594370 -2.51470 1.1940e-02 *  
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 94,840.7     Adj. R2: 0.012826
+                 Within R2: -1.4708 
+F-test (1st stage), FEDFUNDS_change_biennial_clean        : stat = 411.4, p < 2.2e-16, on 2 and 25,139 DoF.
+F-test (1st stage), FEDFUNDS_change_biennial_clean:r_mort1: stat = 207.4, p < 2.2e-16, on 2 and 25,139 DoF.
+                                                Wu-Hausman: stat = 440.2, p < 2.2e-16, on 2 and 19,268 DoF.
+> colnames(d7tr)
+  [1] "pid"                                "year"                               "int_no_ind"                        
+  [4] "1968id"                             "age_ref"                            "car_mainten_expen"                 
+  [7] "child_expen_prevy"                  "educ_expen_prevy"                   "educ_ref"                          
+ [10] "fam_income_prevy"                   "famcomp_change"                     "food_expen"                        
+ [13] "gas_expen"                          "health_expen"                       "house_expen"                       
+ [16] "house_value"                        "int1prc"                            "int2prc"                           
+ [19] "is2refin"                           "mort1"                              "mort1_instal_month"                
+ [22] "mort2"                              "mort2_instal_month"                 "mort_expen"                        
+ [25] "mort_y/n"                           "no_fu"                              "park_expen_month"                  
+ [28] "proptax_expen"                      "pub_trans_expen_month"              "race_ref"                          
+ [31] "refin1_y/n"                         "rel_no"                             "rent_expen"                        
+ [34] "sex_ref"                            "split_indic"                        "taxi_expen_month"                  
+ [37] "tot_expen"                          "trans_incom_prevy"                  "util_expen"                        
+ [40] "weight"                             "yr_mort1_left"                      "yr_mort2_left"                     
+ [43] "interview"                          "behin_mort1"                        "behin_mort2"                       
+ [46] "card_debt"                          "cloth_expen_prevy"                  "covid_behin"                       
+ [49] "family_debt"                        "legal_debt"                         "med_debt"                          
+ [52] "mort1_restruct"                     "mort2_restruct"                     "mort_rate1fv"                      
+ [55] "mort_rate2fv"                       "mths_behin_mort1"                   "mths_behin_mort2"                  
+ [58] "other_debt"                         "otr_recre_expen_prevy"              "phone_expen"                       
+ [61] "prob_behin_mort1"                   "prob_behin_mort2"                   "restr_mort1"                       
+ [64] "restr_mort2"                        "stocks_y/n"                         "stu_debt"                          
+ [67] "trips_expen_prevy"                  "value_business"                     "valuehouse_ifrent"                 
+ [70] "wlth_no_equity"                     "wlth_w_equity"                      "ID1968"                            
+ [73] "pernum"                             "sequence"                           "relation.head"                     
+ [76] "relation_ref"                       "seq_no"                             "mort1_year_obtained"               
+ [79] "mort2_year_obtained"                "mort1_instal"                       "mort2_instal"                      
+ [82] "park_expen"                         "pub_trans_expen"                    "taxi_expen"                        
+ [85] "cpi_rebased"                        "cpi_rebased_prev"                   "r_med_debt"                        
+ [88] "r_proptax_expen"                    "r_rent_expen"                       "r_tot_expen"                       
+ [91] "r_util_expen"                       "r_car_mainten_expen"                "r_food_expen"                      
+ [94] "r_gas_expen"                        "r_health_expen"                     "r_house_expen"                     
+ [97] "r_house_value"                      "r_mort1"                            "r_mort2"                           
+[100] "r_mort_expen"                       "r_other_debt"                       "r_card_debt"                       
+[103] "r_family_debt"                      "r_legal_debt"                       "r_phone_expen"                     
+[106] "r_stu_debt"                         "r_value_business"                   "r_valuehouse_ifrent"               
+[109] "r_wlth_no_equity"                   "r_wlth_w_equity"                    "r_mort1_instal"                    
+[112] "r_mort2_instal"                     "r_pub_trans_expen"                  "r_park_expen"                      
+[115] "r_taxi_expen"                       "r_cloth_expen_prevy"                "r_trans_incom_prevy"               
+[118] "r_child_expen_prevy"                "r_educ_expen_prevy"                 "r_fam_income_prevy"                
+[121] "r_trips_expen_prevy"                "r_otr_recre_expen_prevy"            "educ"                              
+[124] "r_nondurcons"                       "r_nonshelcons"                      "real_mort"                         
+[127] "FEDFUNDS_avg_clean"                 "FEDFUNDS_change_biennial_clean"     "FEDFUNDS_pct_change_biennial_clean"
+[130] "MPS_ORTH_sum_clean"                
+> colnames(d7tr)
+  [1] "pid"                                "year"                               "int_no_ind"                        
+  [4] "1968id"                             "age_ref"                            "car_mainten_expen"                 
+  [7] "child_expen_prevy"                  "educ_expen_prevy"                   "educ_ref"                          
+ [10] "fam_income_prevy"                   "famcomp_change"                     "food_expen"                        
+ [13] "gas_expen"                          "health_expen"                       "house_expen"                       
+ [16] "house_value"                        "int1prc"                            "int2prc"                           
+ [19] "is2refin"                           "mort1"                              "mort1_instal_month"                
+ [22] "mort2"                              "mort2_instal_month"                 "mort_expen"                        
+ [25] "mort_y/n"                           "no_fu"                              "park_expen_month"                  
+ [28] "proptax_expen"                      "pub_trans_expen_month"              "race_ref"                          
+ [31] "refin1_y/n"                         "rel_no"                             "rent_expen"                        
+ [34] "sex_ref"                            "split_indic"                        "taxi_expen_month"                  
+ [37] "tot_expen"                          "trans_incom_prevy"                  "util_expen"                        
+ [40] "weight"                             "yr_mort1_left"                      "yr_mort2_left"                     
+ [43] "interview"                          "behin_mort1"                        "behin_mort2"                       
+ [46] "card_debt"                          "cloth_expen_prevy"                  "covid_behin"                       
+ [49] "family_debt"                        "legal_debt"                         "med_debt"                          
+ [52] "mort1_restruct"                     "mort2_restruct"                     "mort_rate1fv"                      
+ [55] "mort_rate2fv"                       "mths_behin_mort1"                   "mths_behin_mort2"                  
+ [58] "other_debt"                         "otr_recre_expen_prevy"              "phone_expen"                       
+ [61] "prob_behin_mort1"                   "prob_behin_mort2"                   "restr_mort1"                       
+ [64] "restr_mort2"                        "stocks_y/n"                         "stu_debt"                          
+ [67] "trips_expen_prevy"                  "value_business"                     "valuehouse_ifrent"                 
+ [70] "wlth_no_equity"                     "wlth_w_equity"                      "ID1968"                            
+ [73] "pernum"                             "sequence"                           "relation.head"                     
+ [76] "relation_ref"                       "seq_no"                             "mort1_year_obtained"               
+ [79] "mort2_year_obtained"                "mort1_instal"                       "mort2_instal"                      
+ [82] "park_expen"                         "pub_trans_expen"                    "taxi_expen"                        
+ [85] "cpi_rebased"                        "cpi_rebased_prev"                   "r_med_debt"                        
+ [88] "r_proptax_expen"                    "r_rent_expen"                       "r_tot_expen"                       
+ [91] "r_util_expen"                       "r_car_mainten_expen"                "r_food_expen"                      
+ [94] "r_gas_expen"                        "r_health_expen"                     "r_house_expen"                     
+ [97] "r_house_value"                      "r_mort1"                            "r_mort2"                           
+[100] "r_mort_expen"                       "r_other_debt"                       "r_card_debt"                       
+[103] "r_family_debt"                      "r_legal_debt"                       "r_phone_expen"                     
+[106] "r_stu_debt"                         "r_value_business"                   "r_valuehouse_ifrent"               
+[109] "r_wlth_no_equity"                   "r_wlth_w_equity"                    "r_mort1_instal"                    
+[112] "r_mort2_instal"                     "r_pub_trans_expen"                  "r_park_expen"                      
+[115] "r_taxi_expen"                       "r_cloth_expen_prevy"                "r_trans_incom_prevy"               
+[118] "r_child_expen_prevy"                "r_educ_expen_prevy"                 "r_fam_income_prevy"                
+[121] "r_trips_expen_prevy"                "r_otr_recre_expen_prevy"            "educ"                              
+[124] "r_nondurcons"                       "r_nonshelcons"                      "real_mort"                         
+[127] "FEDFUNDS_avg_clean"                 "FEDFUNDS_change_biennial_clean"     "FEDFUNDS_pct_change_biennial_clean"
+[130] "MPS_ORTH_sum_clean"                
+> iv_model <- feols(
++   r_nondurcons ~ r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ | 
++     pid | 
++     FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1 ~ 
++     MPS_ORTH_sum_clean + MPS_ORTH_sum_clean:r_mort1,
++   data = d7tr_mortgage,
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTE: 3,338 observations removed because of NA values (RHS: 3,338, IV: 922/922).
+> summary(iv_model)
+TSLS estimation - Dep. Var.: r_nondurcons
+                  Endo.    : FEDFUNDS_change_biennial_clean, FEDFUNDS_change_biennial_clean:r_mort1
+                  Instr.   : MPS_ORTH_sum_clean, MPS_ORTH_sum_clean:r_mort1
+Second stage: Dep. Var.: r_nondurcons
+Observations: 12,336
+Weights: weight
+Fixed-effects: pid: 3,529
+Standard-errors: Clustered (pid) 
+                                               Estimate  Std. Error  t value   Pr(>|t|)    
+fit_FEDFUNDS_change_biennial_clean          6054.185038 1425.900989  4.24587 2.2336e-05 ***
+fit_FEDFUNDS_change_biennial_clean:r_mort1     0.045421    0.011356  3.99979 6.4699e-05 ***
+r_mort1                                        0.085488    0.015318  5.58101 2.5715e-08 ***
+r_fam_income_prevy                             0.047190    0.009749  4.84064 1.3497e-06 ***
+r_wlth_w_equity                                0.004397    0.001206  3.64616 2.7003e-04 ***
+educ                                       -9122.330102 3189.686685 -2.85995 4.2620e-03 ** 
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 124,532.8     Adj. R2: -0.931326
+                  Within R2: -2.68885 
+F-test (1st stage), FEDFUNDS_change_biennial_clean        : stat = 134.4, p < 2.2e-16, on 2 and 12,329 DoF.
+F-test (1st stage), FEDFUNDS_change_biennial_clean:r_mort1: stat =  87.9, p < 2.2e-16, on 2 and 12,329 DoF.
+                                                Wu-Hausman: stat = 269.9, p < 2.2e-16, on 2 and 8,799 DoF.
+> iv_model <- feols(
++   r_nonshelcons ~ r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ + r_house_value | 
++     pid | 
++     FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1 ~ 
++     MPS_ORTH_sum_clean + MPS_ORTH_sum_clean:r_mort1,
++   data = d7tr,
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTES: 369 observation removed because of 0-weight.
+       21,521 observations removed because of NA values (LHS: 2,053, RHS: 20,722, IV: 1,528/1,528).
+> summary(iv_model)
+TSLS estimation - Dep. Var.: r_nonshelcons
+                  Endo.    : FEDFUNDS_change_biennial_clean, FEDFUNDS_change_biennial_clean:r_mort1
+                  Instr.   : MPS_ORTH_sum_clean, MPS_ORTH_sum_clean:r_mort1
+Second stage: Dep. Var.: r_nonshelcons
+Observations: 24,098
+Weights: weight
+Fixed-effects: pid: 5,774
+Standard-errors: Clustered (pid) 
+                                              Estimate  Std. Error   t value   Pr(>|t|)    
+fit_FEDFUNDS_change_biennial_clean         1855.310908  394.068488  4.708093 2.5589e-06 ***
+fit_FEDFUNDS_change_biennial_clean:r_mort1    0.032168    0.005071  6.343785 2.4123e-10 ***
+r_mort1                                      -0.006077    0.007657 -0.793638 4.2744e-01    
+r_fam_income_prevy                            0.111556    0.006877 16.220632  < 2.2e-16 ***
+r_wlth_w_equity                               0.001845    0.000938  1.966072 4.9338e-02 *  
+educ                                        821.474341 1175.118120  0.699057 4.8454e-01    
+r_house_value                                 0.083417    0.005245 15.902988  < 2.2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 83,867.9     Adj. R2:  0.638292
+                 Within R2: -0.006952
+F-test (1st stage), FEDFUNDS_change_biennial_clean        : stat = 395.2, p < 2.2e-16, on 2 and 24,090 DoF.
+F-test (1st stage), FEDFUNDS_change_biennial_clean:r_mort1: stat = 243.1, p < 2.2e-16, on 2 and 24,090 DoF.
+                                                Wu-Hausman: stat =  62.9, p < 2.2e-16, on 2 and 18,315 DoF.
+> iv_model <- feols(
++   r_nonshelcons ~ r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ + r_house_value | 
++     pid | 
++     FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1 ~ 
++     MPS_ORTH_sum_clean + MPS_ORTH_sum_clean:r_mort1,
++   data = d7tr_mortgage,
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTE: 3,734 observations removed because of NA values (LHS: 747, RHS: 3,451, IV: 922/922).
+> summary(iv_model)
+TSLS estimation - Dep. Var.: r_nonshelcons
+                  Endo.    : FEDFUNDS_change_biennial_clean, FEDFUNDS_change_biennial_clean:r_mort1
+                  Instr.   : MPS_ORTH_sum_clean, MPS_ORTH_sum_clean:r_mort1
+Second stage: Dep. Var.: r_nonshelcons
+Observations: 11,940
+Weights: weight
+Fixed-effects: pid: 3,464
+Standard-errors: Clustered (pid) 
+                                               Estimate  Std. Error   t value   Pr(>|t|)    
+fit_FEDFUNDS_change_biennial_clean          4180.364328 1259.529958  3.318988 0.00091279 ***
+fit_FEDFUNDS_change_biennial_clean:r_mort1     0.024847    0.008634  2.877684 0.00403058 ** 
+r_mort1                                       -0.023377    0.010569 -2.211908 0.02703804 *  
+r_fam_income_prevy                             0.106642    0.009341 11.416042  < 2.2e-16 ***
+r_wlth_w_equity                                0.001265    0.001344  0.941485 0.34652188    
+educ                                       -2447.272650 3076.120755 -0.795571 0.42633592    
+r_house_value                                  0.117253    0.007009 16.729543  < 2.2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 98,651.8     Adj. R2:  0.42659
+                 Within R2: -0.24637
+F-test (1st stage), FEDFUNDS_change_biennial_clean        : stat = 138.9, p < 2.2e-16, on 2 and 11,932 DoF.
+F-test (1st stage), FEDFUNDS_change_biennial_clean:r_mort1: stat = 106.3, p < 2.2e-16, on 2 and 11,932 DoF.
+                                                Wu-Hausman: stat =  51.9, p < 2.2e-16, on 2 and 8,467 DoF.
+> iv_model <- feols(
++   r_tot_expen ~ r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ + r_house_value | 
++     pid | 
++     FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1 ~ 
++     MPS_ORTH_sum_clean + MPS_ORTH_sum_clean:r_mort1,
++   data = d7tr_mortgage,
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTE: 3,556 observations removed because of NA values (LHS: 340, RHS: 3,451, IV: 922/922).
+> summary(iv_model)
+TSLS estimation - Dep. Var.: r_tot_expen
+                  Endo.    : FEDFUNDS_change_biennial_clean, FEDFUNDS_change_biennial_clean:r_mort1
+                  Instr.   : MPS_ORTH_sum_clean, MPS_ORTH_sum_clean:r_mort1
+Second stage: Dep. Var.: r_tot_expen
+Observations: 12,118
+Weights: weight
+Fixed-effects: pid: 3,491
+Standard-errors: Clustered (pid) 
+                                               Estimate  Std. Error   t value   Pr(>|t|)    
+fit_FEDFUNDS_change_biennial_clean          1276.865882 1118.221909  1.141872 2.5359e-01    
+fit_FEDFUNDS_change_biennial_clean:r_mort1     0.014396    0.007743  1.859252 6.3075e-02 .  
+r_mort1                                        0.052184    0.009305  5.608395 2.2009e-08 ***
+r_fam_income_prevy                             0.087282    0.008526 10.237297  < 2.2e-16 ***
+r_wlth_w_equity                               -0.002137    0.001130 -1.890865 5.8725e-02 .  
+educ                                       -2597.343211 3179.480916 -0.816908 4.1404e-01    
+r_house_value                                  0.039674    0.005729  6.924676 5.1793e-12 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 78,758.8     Adj. R2:  0.665307
+                 Within R2: -0.098312
+F-test (1st stage), FEDFUNDS_change_biennial_clean        : stat = 139.2, p < 2.2e-16 , on 2 and 12,110 DoF.
+F-test (1st stage), FEDFUNDS_change_biennial_clean:r_mort1: stat =  91.0, p < 2.2e-16 , on 2 and 12,110 DoF.
+                                                Wu-Hausman: stat =  15.6, p = 1.667e-7, on 2 and 8,618 DoF.
+> iv_model <- feols(
++   r_nondurcons ~ r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ + r_house_value | 
++     pid | 
++     FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1 ~ 
++     MPS_ORTH_sum_clean + MPS_ORTH_sum_clean:r_mort1,
++   data = d7tr_mortgage,
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTE: 3,451 observations removed because of NA values (RHS: 3,451, IV: 922/922).
+> summary(iv_model)
+TSLS estimation - Dep. Var.: r_nondurcons
+                  Endo.    : FEDFUNDS_change_biennial_clean, FEDFUNDS_change_biennial_clean:r_mort1
+                  Instr.   : MPS_ORTH_sum_clean, MPS_ORTH_sum_clean:r_mort1
+Second stage: Dep. Var.: r_nondurcons
+Observations: 12,223
+Weights: weight
+Fixed-effects: pid: 3,505
+Standard-errors: Clustered (pid) 
+                                                Estimate  Std. Error  t value   Pr(>|t|)    
+fit_FEDFUNDS_change_biennial_clean           6229.951494 1330.385452  4.68282 2.9369e-06 ***
+fit_FEDFUNDS_change_biennial_clean:r_mort1      0.043097    0.010169  4.23790 2.3143e-05 ***
+r_mort1                                         0.017489    0.012737  1.37301 1.6984e-01    
+r_fam_income_prevy                              0.023591    0.009421  2.50396 1.2326e-02 *  
+r_wlth_w_equity                                -0.003336    0.001452 -2.29839 2.1598e-02 *  
+educ                                       -12669.518062 3170.264910 -3.99636 6.5648e-05 ***
+r_house_value                                   0.105186    0.008611 12.21477  < 2.2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 118,322.4     Adj. R2: -0.762422
+                  Within R2: -2.36069 
+F-test (1st stage), FEDFUNDS_change_biennial_clean        : stat = 137.5, p < 2.2e-16, on 2 and 12,215 DoF.
+F-test (1st stage), FEDFUNDS_change_biennial_clean:r_mort1: stat =  92.4, p < 2.2e-16, on 2 and 12,215 DoF.
+                                                Wu-Hausman: stat = 279.8, p < 2.2e-16, on 2 and 8,709 DoF.

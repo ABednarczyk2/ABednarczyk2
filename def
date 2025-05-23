@@ -799,3 +799,41 @@ RMSE: 102,307.1     Adj. R2: -0.101252
 F-test (1st stage), FEDFUNDS_change_biennial_clean        : stat = 139.2, p < 2.2e-16, on 2 and 12,110 DoF.
 F-test (1st stage), FEDFUNDS_change_biennial_clean:r_mort1: stat =  91.0, p < 2.2e-16, on 2 and 12,110 DoF.
                                                 Wu-Hausman: stat =  75.2, p < 2.2e-16, on 2 and 8,618 DoF.
+
+
+
+> d7tr_mortgage$durable_expen_no_houscost <- d7tr_mortgage$r_tot_expen - d7tr_mortgage$r_nondurcons - d7tr_mortgage$r_mort_expen - d7tr_mortgage$r_rent_expen
+> iv_model <- feols(
++   durable_expen_no_houscost ~ r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ + r_house_value | 
++     pid | 
++     FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1 ~ 
++     MPS_ORTH_sum_clean + MPS_ORTH_sum_clean:r_mort1,
++   data = d7tr_mortgage,
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTE: 3,621 observations removed because of NA values (LHS: 559, RHS: 3,451, IV: 922/922).
+> summary(iv_model)
+TSLS estimation - Dep. Var.: durable_expen_no_houscost
+                  Endo.    : FEDFUNDS_change_biennial_clean, FEDFUNDS_change_biennial_clean:r_mort1
+                  Instr.   : MPS_ORTH_sum_clean, MPS_ORTH_sum_clean:r_mort1
+Second stage: Dep. Var.: durable_expen_no_houscost
+Observations: 12,053
+Weights: weight
+Fixed-effects: pid: 3,482
+Standard-errors: Clustered (pid) 
+                                               Estimate  Std. Error    t value   Pr(>|t|)    
+fit_FEDFUNDS_change_biennial_clean         -5630.842068 1168.652130  -4.818236 1.5102e-06 ***
+fit_FEDFUNDS_change_biennial_clean:r_mort1    -0.026455    0.007822  -3.382003 7.2753e-04 ***
+r_mort1                                        0.004968    0.009560   0.519655 6.0334e-01    
+r_fam_income_prevy                             0.059418    0.009872   6.018759 1.9399e-09 ***
+r_wlth_w_equity                                0.002353    0.001411   1.668384 9.5329e-02 .  
+educ                                       11362.444275 3869.842338   2.936152 3.3449e-03 ** 
+r_house_value                                 -0.071438    0.007054 -10.127601  < 2.2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 101,959.1     Adj. R2: -0.407379
+                  Within R2: -0.887191
+F-test (1st stage), FEDFUNDS_change_biennial_clean        : stat = 144.7, p < 2.2e-16, on 2 and 12,045 DoF.
+F-test (1st stage), FEDFUNDS_change_biennial_clean:r_mort1: stat = 114.5, p < 2.2e-16, on 2 and 12,045 DoF.
+                                                Wu-Hausman: stat =  99.7, p < 2.2e-16, on 2 and 8,562 DoF.

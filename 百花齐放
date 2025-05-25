@@ -1,0 +1,210 @@
+🌸 zdefiniowalam FEDFUNDS_change_biennial_clean w taki sposob zeby instrumented fedfunds changes wplywaly na intprc1 (czyli na interest rates na mortgage w psid)
+wiemy o tym ze one MUSZA wplywac (macroeconomic theory, transmission etc.) wiec tak reduktywnie rzecz ujmujac chyba jest oki 
+
+problem jest w tym ze nie wszystkie metody agregowania tych macrovariables i dopasowywanie ich do psid panelu moga obiecac jakies efekty - po co sie na nich skupiac - jesli jednak trzeba, pls call me out
+
+kod w appendix 
+
+🌸 REGRESSIONS
+
+For fixed rate 
+
+TSLS estimation - Dep. Var.: int1prc
+                  Endo.    : FEDFUNDS_change_biennial_clean
+                  Instr.   : MPS_ORTH_sum_clean
+Second stage: Dep. Var.: int1prc
+Observations: 16,075
+Weights: weight
+Fixed-effects: pid: 4,326
+Standard-errors: Clustered (pid) 
+                                   Estimate Std. Error t value  Pr(>|t|)    
+fit_FEDFUNDS_change_biennial_clean 0.450628   0.025267  17.835 < 2.2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 8.10727     Adj. R2:  0.083682
+                Within R2: -0.519671
+F-test (1st stage), FEDFUNDS_change_biennial_clean: stat = 1,006.4, p < 2.2e-16, on 1 and 16,073 DoF.
+                                        Wu-Hausman: stat =   397.3, p < 2.2e-16, on 1 and 11,747 DoF.]
+
+
+for variable 
+
+TSLS estimation - Dep. Var.: int1prc
+                  Endo.    : FEDFUNDS_change_biennial_clean
+                  Instr.   : MPS_ORTH_sum_clean
+Second stage: Dep. Var.: int1prc
+Observations: 1,302
+Weights: weight
+Fixed-effects: pid: 670
+Standard-errors: Clustered (pid) 
+                                   Estimate Std. Error t value   Pr(>|t|)    
+fit_FEDFUNDS_change_biennial_clean 0.704861   0.190994 3.69048 0.00024205 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 8.44561     Adj. R2:  0.186942
+                Within R2: -0.816228
+F-test (1st stage), FEDFUNDS_change_biennial_clean: stat = 39.1, p = 5.519e-10, on 1 and 1,300 DoF.
+                                        Wu-Hausman: stat = 16.4, p = 5.758e-5 , on 1 and 630 DoF.
+
+For all people 
+
+TSLS estimation - Dep. Var.: int1prc
+                  Endo.    : FEDFUNDS_change_biennial_clean
+                  Instr.   : MPS_ORTH_sum_clean
+Second stage: Dep. Var.: int1prc
+Observations: 60,301
+Weights: weight
+Fixed-effects: pid: 10,483
+Standard-errors: Clustered (pid) 
+                                    Estimate Std. Error  t value  Pr(>|t|)    
+fit_FEDFUNDS_change_biennial_clean -0.407272    0.03029 -13.4455 < 2.2e-16 *** # wrong sign? i understand that measuring i for everyone messses with the sign 
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 11.1     Adj. R2:  0.409962
+             Within R2: -0.129711
+F-test (1st stage), FEDFUNDS_change_biennial_clean: stat = 1,659.9, p < 2.2e-16, on 1 and 60,299 DoF.
+                                        Wu-Hausman: stat =   180.5, p < 2.2e-16, on 1 and 49,816 DoF.
+
+
+🌸 REGRESSIONS for consumption
+in this case its durable consumption because other consumption definitions (including total expenditure) yielded bad results (inverted sign again - does it make sense at all even if i included controls??? we have no variable for financial assets - ill think about it - that could explain it)
+
+also other consumptions are noisy...
+
+i guess its not rocket science to do this but *some* science to prove such (baking soda volcano)
+
+i mean i would expect general consumption dip just sliiiiighlty 
+
+anyway 
+
+TSLS estimation - Dep. Var.: delta_durcons
+                  Endo.    : FEDFUNDS_change_biennial_clean
+                  Instr.   : MPS_ORTH_sum_clean
+Second stage: Dep. Var.: delta_durcons
+Observations: 3,626
+Weights: weight
+Fixed-effects: pid: 1,396
+Standard-errors: Clustered (pid) 
+                                       Estimate  Std. Error  t value   Pr(>|t|)    
+fit_FEDFUNDS_change_biennial_clean -8491.086299 1455.385926 -5.83425 6.7076e-09 ***
+delta_income                           0.026796    0.014806  1.80986 7.0533e-02 .  
+educ                               -8925.365782 4453.800440 -2.00399 4.5264e-02 *  
+age_ref                             2589.416255  449.419368  5.76169 1.0233e-08 ***
+r_house_value                         -0.124218    0.027479 -4.52048 6.6921e-06 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 97,732.0     Adj. R2: -0.529233
+                 Within R2: -0.358482
+F-test (1st stage), FEDFUNDS_change_biennial_clean: stat = 123.2, p < 2.2e-16 , on 1 and 3,620 DoF.
+                                        Wu-Hausman: stat =  30.4, p = 3.834e-8, on 1 and 2,224 DoF.
+> model_mid <- feols(
++   delta_durcons ~ delta_income + educ + age_ref + r_house_value |
++     pid |
++     FEDFUNDS_change_biennial_clean ~ MPS_ORTH_sum_clean,
++   data = d7tr_mortgage[d7tr_mortgage$mort_bin == "mid", ],
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTE: 1,914 observations removed because of NA values (LHS: 1,842, RHS: 1,863, IV: 478/478, Fixed-effects: 478, Weights: 478).
+> summary(model_mid)
+TSLS estimation - Dep. Var.: delta_durcons
+                  Endo.    : FEDFUNDS_change_biennial_clean
+                  Instr.   : MPS_ORTH_sum_clean
+Second stage: Dep. Var.: delta_durcons
+Observations: 3,624
+Weights: weight
+Fixed-effects: pid: 1,453
+Standard-errors: Clustered (pid) 
+                                        Estimate  Std. Error  t value   Pr(>|t|)    
+fit_FEDFUNDS_change_biennial_clean -12386.031245 2381.059486 -5.20190 2.2546e-07 ***
+delta_income                            0.030342    0.025738  1.17887 2.3864e-01    
+educ                                -4347.718423 2790.037992 -1.55830 1.1938e-01    
+age_ref                              3595.777611  739.529466  4.86225 1.2867e-06 ***
+r_house_value                          -0.133609    0.036528 -3.65766 2.6362e-04 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 117,506.2     Adj. R2: -0.939585
+                  Within R2: -0.629246
+F-test (1st stage), FEDFUNDS_change_biennial_clean: stat = 91.1, p < 2.2e-16 , on 1 and 3,618 DoF.
+                                        Wu-Hausman: stat = 36.8, p = 1.509e-9, on 1 and 2,165 DoF.
+> model_high <- feols(
++   delta_durcons ~ delta_income + educ + age_ref + r_house_value |
++     pid |
++     FEDFUNDS_change_biennial_clean ~ MPS_ORTH_sum_clean,
++   data = d7tr_mortgage[d7tr_mortgage$mort_bin == "high", ],
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTE: 2,266 observations removed because of NA values (LHS: 2,140, RHS: 1,955, IV: 478/478, Fixed-effects: 478, Weights: 478).
+> summary(model_high)
+TSLS estimation - Dep. Var.: delta_durcons
+                  Endo.    : FEDFUNDS_change_biennial_clean
+                  Instr.   : MPS_ORTH_sum_clean
+Second stage: Dep. Var.: delta_durcons
+Observations: 3,276
+Weights: weight
+Fixed-effects: pid: 1,253
+Standard-errors: Clustered (pid) 
+                                        Estimate   Std. Error   t value   Pr(>|t|)    
+fit_FEDFUNDS_change_biennial_clean -13163.941521  1433.904706 -9.180486  < 2.2e-16 ***
+delta_income                            0.051375     0.016091  3.192844 1.4439e-03 ** 
+educ                                 8124.877101 11159.400850  0.728075 4.6670e-01    
+age_ref                              3394.400623   446.585250  7.600790 5.7462e-14 ***
+r_house_value                          -0.080678     0.014580 -5.533465 3.8200e-08 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 128,594.8     Adj. R2: -0.68467 
+                  Within R2: -0.406886
+F-test (1st stage), FEDFUNDS_change_biennial_clean: stat = 260.8, p < 2.2e-16, on 1 and 3,270 DoF.
+                                        Wu-Hausman: stat =  77.5, p < 2.2e-16, on 1 and 2,017 DoF.
+
+
+
+🌸 you could ask why is it split to bins? because otherwise its not significant. if i split it in 3 and have ineraction with all its only ALMOST SIGNIFICANT (significant at 0.1 level which is bad)  for low and high mortgage balance 
+but look, coefficient changes. its smallest (uhhh biggest in absolute terms) for highest mortgages. also 1st stage F test is highest there nd i think its a good thing
+
+this interaction (fedfunds*mort1) IS significant for levels but you told me to use changes
+
+let me know what needs to be corrected 
+
+
+
+
+🌸 APPENDIX
+
+   # 1 MPS by year (biennial format)
+   mps_biennial_sum <- monetary_policy_surprises_data %>%
+     group_by(Year) %>%
+     summarise(MPS_ORTH_sum_clean = sum(MPS_ORTH, na.rm = TRUE)) %>%
+     rename(year = Year)
+   
+   # 2  FedFunds by year (average)
+   fedfunds_annual_clean <- FEDFUNDS %>%
+     mutate(year = year(as.Date(observation_date))) %>%
+     group_by(year) %>%
+     summarise(FEDFUNDS_avg_clean = mean(FEDFUNDS, na.rm = TRUE)) %>%
+     arrange(year)
+   
+   # 3 biennial FedFunds changes (level and percent)
+   fedfunds_biennial_change <- fedfunds_annual_clean %>%
+     mutate(
+       FEDFUNDS_change_biennial_clean = FEDFUNDS_avg_clean - lag(FEDFUNDS_avg_clean, 2),
+       FEDFUNDS_pct_change_biennial_clean = (FEDFUNDS_avg_clean / lag(FEDFUNDS_avg_clean, 2) - 1) * 100 # didint really use this garbage but i was trying to recreate the skibidi process i used before to the t not to f up 
+     ) %>%
+     filter(year %in% seq(1999, 2021, by = 2))
+   
+   # 4 FedFunds with MPS data merge
+   iv_dataset_clean <- fedfunds_biennial_change %>%
+     left_join(mps_biennial_sum, by = "year")
+   
+   # main panel merge
+   d7tr <- d7tr %>%
+     left_join(iv_dataset_clean, by = "year") %>%
+     filter(year %in% 1999:2021)  # Keep valid biennial years
+
+this way its making sure the rate change is forward-looking from the previous two years,  IV (MPS_ORTH_sum_2yr) is aligned to match that time period
+when int1prc is observed in 1999, my instruments are changes that happened in the lead-up to that year
+KILL ME IF ITS NOT RIGHT 
+
+
+🌸 

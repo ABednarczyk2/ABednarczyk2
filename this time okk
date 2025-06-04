@@ -1,0 +1,1286 @@
+library(dplyr)   # For data manipulation
+library(lubridate) # For handling dates 
+
+library(dplyr)
+
+# Step 1: Extract needed columns
+mps_data <- monetary_policy_surprises_data %>%
+  select(Year, MPS_ORTH)
+
+# Step 2A: Aggregate by year
+mps_annual <- mps_data %>%
+  group_by(Year) %>%
+  summarise(MPS_ORTH_sum_1yr = sum(MPS_ORTH, na.rm = TRUE))
+
+# Step 2B: Make 2-year rolling sums (e.g., for 1999 = 1998 + 1999)
+mps_2yr <- mps_annual %>%
+  mutate(Year = as.integer(Year)) %>%
+  arrange(Year) %>%
+  mutate(
+    MPS_ORTH_sum_2yr = MPS_ORTH_sum_1yr + lag(MPS_ORTH_sum_1yr)
+  ) %>%
+  filter(!is.na(MPS_ORTH_sum_2yr))  # drop first NA
+
+# Step 3: Merge both back into one df (align by Year)
+mps_merged <- mps_annual %>%
+  left_join(mps_2yr %>% select(Year, MPS_ORTH_sum_2yr), by = "Year")
+
+# Step 4: Merge into panel data (d7), matching year to Year
+# Assumes `d7$year` is in 1999, 2001, 2003 form
+final_panel <- d7 %>%
+  left_join(mps_merged, by = c("year" = "Year"))
+
+colnames(final_panel)
+
+
+
+
+
+
+library(dplyr)
+library(lubridate)
+
+# Step 1: Assume you have FEDFUNDS data in something like this:
+# FEDFUNDS_data has columns: Date (monthly), FEDFUNDS (rate)
+FEDFUNDS_data <- FEDFUNDS_data %>%
+  mutate(Year = year(Date))
+
+# Step 2A: Aggregate yearly FEDFUNDS — you can use mean or sum depending on what you need
+fedfunds_annual <- FEDFUNDS_data %>%
+  group_by(Year) %>%
+  summarise(FEDFUNDS_avg_1yr = mean(FEDFUNDS, na.rm = TRUE))  # or use sum()
+
+# Step 2B: Get 2-year aggregates — align with panel like before
+fedfunds_2yr <- fedfunds_annual %>%
+  arrange(Year) %>%
+  mutate(FEDFUNDS_avg_2yr = FEDFUNDS_avg_1yr + lag(FEDFUNDS_avg_1yr)) %>%
+  filter(!is.na(FEDFUNDS_avg_2yr))  # remove year with no lag
+
+# Step 3: Merge both into single FEDFUNDS summary table
+fedfunds_merged <- fedfunds_annual %>%
+  left_join(fedfunds_2yr %>% select(Year, FEDFUNDS_avg_2yr), by = "Year")
+
+# Step 4: Merge into your final panel (which already has MPS info)
+final_panel <- final_panel %>%
+  left_join(fedfunds_merged, by = c("year" = "Year"))
+
+
+
+
+library(dplyr)
+library(lubridate)
+
+# Step 0: Prep FEDFUNDS data
+fedfunds_data <- FEDFUNDS %>%
+  mutate(year = year(observation_date))
+
+# Step 1: Get yearly average and end-of-year (Dec) FEDFUNDS level
+fedfunds_yearly <- fedfunds_data %>%
+  group_by(year) %>%
+  summarise(
+    FEDFUNDS_avg_1yr = mean(FEDFUNDS, na.rm = TRUE),
+    FEDFUNDS_end_of_year = FEDFUNDS[which.max(month(observation_date))]  # usually December
+  ) %>%
+  arrange(year) %>%
+  mutate(
+    FEDFUNDS_change_1yr = FEDFUNDS_end_of_year - lag(FEDFUNDS_end_of_year),
+    FEDFUNDS_change_2yr = FEDFUNDS_end_of_year - lag(FEDFUNDS_end_of_year, 2)
+  )
+
+# Step 2: Create 2-year average FEDFUNDS levels (rolling sum or mean)
+fedfunds_2yr_avg <- fedfunds_yearly %>%
+  mutate(
+    FEDFUNDS_avg_2yr = (FEDFUNDS_avg_1yr + lag(FEDFUNDS_avg_1yr)) / 2
+  )
+
+# Step 3: Final FEDFUNDS summary table
+fedfunds_summary <- fedfunds_2yr_avg %>%
+  select(
+    year,
+    FEDFUNDS_avg_1yr,
+    FEDFUNDS_avg_2yr,
+    FEDFUNDS_change_1yr,
+    FEDFUNDS_change_2yr
+  )
+
+# Step 4: Merge into your final panel
+final_panel <- final_panel %>%
+  left_join(fedfunds_summary, by = "year")
+colnames(final_panel)
+
+
+
+library(fixest)
+#chnage of fedfunds
+iv_model_fe_1yr <- feols(
+  int1prc ~ 1 | pid | FEDFUNDS_change_1yr ~ MPS_ORTH_sum_1yr,
+  data = final_panel,
+  weights = ~weight,
+  cluster = ~pid
+)
+
+summary(iv_model_fe_1yr)
+
+
+iv_model_fe_2yr <- feols(
+  int1prc ~ 1 | pid | FEDFUNDS_change_2yr ~ MPS_ORTH_sum_2yr,
+  data = final_panel,
+  weights = ~weight,
+  cluster = ~pid
+)
+
+summary(iv_model_fe_2yr)
+
+#levels of fedfunds
+iv_model_le_1yr <- feols(
+  int1prc ~ 1 | pid | FEDFUNDS_avg_1yr ~ MPS_ORTH_sum_1yr,
+  data = final_panel,
+  weights = ~weight,
+  cluster = ~pid
+)
+
+summary(iv_model_le_1yr)
+
+
+iv_model_le_2yr <- feols(
+  int1prc ~ 1 | pid | FEDFUNDS_avg_2yr ~ MPS_ORTH_sum_2yr,
+  data = final_panel,
+  weights = ~weight,
+  cluster = ~pid
+)
+
+summary(iv_model_le_2yr)
+
+
+#fixed
+# Run the corrected fixed-rate model
+iv_model_fe_fixed <- feols(
+  int1prc ~ 1 | pid | FEDFUNDS_change_1yr ~ MPS_ORTH_sum_1yr,
+  data = subset(final_panel, mort_rate1fv == 1),
+  weights = ~weight,
+  cluster = ~pid
+)
+
+summary(iv_model_fe_fixed)
+
+
+#variable
+iv_model_fe_variable <- feols(
+  int1prc ~ 1 | pid | FEDFUNDS_change_1yr ~ MPS_ORTH_sum_1yr,
+  data = subset(final_panel, mort_rate1fv == 2),
+  weights = ~weight,
+  cluster = ~pid
+)
+
+summary(iv_model_fe_variable)
+
+# Run the corrected fixed-rate model
+iv_model_fe_fixed2 <- feols(
+  int1prc ~ 1 | pid | FEDFUNDS_change_2yr ~ MPS_ORTH_sum_2yr,
+  data = subset(final_panel, mort_rate1fv == 1),
+  weights = ~weight,
+  cluster = ~pid
+)
+
+summary(iv_model_fe_fixed2)
+
+
+#variable
+iv_model_fe_variable2 <- feols(
+  int1prc ~ 1 | pid | FEDFUNDS_change_2yr ~ MPS_ORTH_sum_2yr,
+  data = subset(final_panel, mort_rate1fv == 2),
+  weights = ~weight,
+  cluster = ~pid
+)
+
+summary(iv_model_fe_variable2)
+
+#in this case fedfunds change is calculated by takng an end of the year value of fedfunds (last month i presume) and caculating from it
+# in the file before it was clacxulated frim the average level that is this years average value of fedfunds minust the last years avg value 
+# boath is ok but i get better results from agerage i feel 
+
+save(final_panel, file = "D:/finpanel2.RData")
+head(fedfunds_2yr_avg)
+
+fedfunds_avg_renamed <- fedfunds_2yr_avg %>%
+  select(
+    year,
+    FEDFUNDS_change_avg_1yr = FEDFUNDS_avg_1yr,  # renamed for clarity 
+    FEDFUNDS_change_avg_2yr = FEDFUNDS_avg_2yr
+  )
+
+# Merge into panel
+final_panel <- final_panel %>%
+  left_join(fedfunds_avg_renamed, by = "year")
+
+#FEDFUNDS_change_avg_1yr: change from average (year t – year t−1)
+
+#FEDFUNDS_change_avg_2yr: change from 2-yr average (year t – year t−2)
+
+
+
+iv_model_fe_avg_1yr <- feols(
+  int1prc ~ 1 | pid | FEDFUNDS_change_avg_1yr ~ MPS_ORTH_sum_1yr,
+  data = final_panel,
+  weights = ~weight,
+  cluster = ~pid
+)
+
+summary(iv_model_fe_avg_1yr)
+
+
+iv_model_fe_avg_2yr <- feols(
+  int1prc ~ 1 | pid | FEDFUNDS_change_avg_2yr ~ MPS_ORTH_sum_2yr,
+  data = final_panel,
+  weights = ~weight,
+  cluster = ~pid
+)
+
+summary(iv_model_fe_avg_2yr)
+
+
+
+
+iv_model_fe_fixed_avg <- feols( 
+  int1prc ~ 1 | pid | FEDFUNDS_change_avg_1yr ~ MPS_ORTH_sum_1yr,
+  data = subset(final_panel, mort_rate1fv == 1),
+  weights = ~weight,
+  cluster = ~pid
+)
+
+summary(iv_model_fe_fixed_avg)
+
+
+iv_model_fe_fixed_avg_2yr <- feols( 
+  int1prc ~ 1 | pid | FEDFUNDS_change_avg_2yr ~ MPS_ORTH_sum_2yr,
+  data = subset(final_panel, mort_rate1fv == 1),
+  weights = ~weight,
+  cluster = ~pid
+)
+
+summary(iv_model_fe_fixed_avg_2yr)
+
+
+summary(final_panel$FEDFUNDS_change_avg_2yr)
+summary(final_panel$MPS_ORTH_sum_2yr)
+summary(final_panel$FEDFUNDS_change_avg_1yr)
+summary(final_panel$MPS_ORTH_sum_1yr)
+
+
+
+names(final_panel)
+
+fedfunds_2yr_avg <- fedfunds_2yr_avg %>%
+  arrange(year) %>%
+  mutate(
+    FEDFUNDS_change_avg_1yr = FEDFUNDS_avg_1yr - lag(FEDFUNDS_avg_1yr, 1)
+  )
+
+
+fedfunds_2yr_avg <- fedfunds_2yr_avg %>%
+  arrange(year) %>%
+  mutate(
+    FEDFUNDS_change_avg_1yr = FEDFUNDS_avg_1yr - lag(FEDFUNDS_avg_1yr, 1)
+  )
+
+fedfunds_filtered <- fedfunds_2yr_avg %>%
+  filter(year >= 1996 & year <= 2023)
+
+final_panel2 <- final_panel %>%
+  left_join(fedfunds_filtered, by = "year")
+
+
+
+
+
+
+
+
+
+library(fixest)
+
+rate_types <- list(Fixed = 1, Variable = 0)
+windows <- c(1, 2)
+methods <- c("end", "avg")
+
+iv_models <- list()
+
+for (rate_name in names(rate_types)) {
+  rate_val <- rate_types[[rate_name]]
+  
+  for (window in windows) {
+    for (method in methods) {
+      dep <- paste0("FEDFUNDS_change_", ifelse(method == "avg", "avg_", ""), window, "yr")
+      instr <- paste0("MPS_ORTH_sum_", window, "yr")
+      
+      model_name <- paste(rate_name, window, "yr", method, sep = "_")
+      cat("Running model:", model_name, "\n")
+      
+      iv_models[[model_name]] <- feols(
+        int1prc ~ 1 | pid | as.formula(paste(dep, "~", instr)),
+        data = subset(final_panel2, mort_rate1fv == rate_val),
+        weights = ~weight,
+        cluster = ~pid
+      )
+    }
+  }
+}
+
+
+colnames(final_panel2)
+
+final_panel2 <- final_panel2 %>%
+  rename(
+    FEDFUNDS_change_1yr = FEDFUNDS_change_1yr.x,
+    FEDFUNDS_change_2yr = FEDFUNDS_change_2yr.x,
+    FEDFUNDS_change_avg_1yr = FEDFUNDS_change_avg_1yr.y,
+    FEDFUNDS_change_avg_2yr = FEDFUNDS_change_avg_2yr  # no suffix, you're good
+  )
+library(dplyr)
+
+# Check a few rows and columns side-by-side
+final_panel2 %>%
+  select(year, FEDFUNDS_change_1yr, FEDFUNDS_change_2yr, FEDFUNDS_change_avg_1yr, FEDFUNDS_change_avg_2yr) %>%
+  slice(1:10) %>%
+  print()
+head(fedfunds_filtered)
+
+fedfunds_averages <- fedfunds_filtered %>%
+  select(year, FEDFUNDS_avg_1yr) %>%
+  arrange(year) %>%
+  mutate(FEDFUNDS_change_avg_1yr = FEDFUNDS_avg_1yr - lag(FEDFUNDS_avg_1yr))
+
+fedfunds_averages <- fedfunds_averages %>%
+  mutate(FEDFUNDS_avg_2yr = (FEDFUNDS_avg_1yr + lag(FEDFUNDS_avg_1yr)) / 2) %>%  # 2-year avg level
+  mutate(FEDFUNDS_change_avg_2yr = FEDFUNDS_avg_2yr - lag(FEDFUNDS_avg_2yr))
+
+create_fedfunds_vars <- function(df) {
+  df %>%
+    arrange(year) %>%
+    mutate(
+      # 1-year average level change: avg this year - avg last year
+      FEDFUNDS_change_avg_1yr = FEDFUNDS_avg_1yr - lag(FEDFUNDS_avg_1yr),
+      
+      # 2-year rolling average level: average of this year and last year avg levels
+      FEDFUNDS_avg_2yr_calc = (FEDFUNDS_avg_1yr + lag(FEDFUNDS_avg_1yr)) / 2,
+      
+      # 2-year average change: current 2-year avg minus previous 2-year avg
+      FEDFUNDS_change_avg_2yr = FEDFUNDS_avg_2yr_calc - lag(FEDFUNDS_avg_2yr_calc)
+    ) %>%
+    # Optional: remove intermediate variable if you don't want it cluttering your df
+    select(-FEDFUNDS_avg_2yr_calc)
+}
+fedfunds_clean <- create_fedfunds_vars(fedfunds_filtered)
+fedfunds_clean %>% select(year, FEDFUNDS_avg_1yr, FEDFUNDS_change_avg_1yr, FEDFUNDS_avg_2yr, FEDFUNDS_change_avg_2yr) %>% print(n=10)
+
+
+
+final_panel <- final_panel %>%
+  left_join(fedfunds_averages %>%
+              select(year, FEDFUNDS_avg_1yr, FEDFUNDS_change_avg_1yr, FEDFUNDS_avg_2yr, FEDFUNDS_change_avg_2yr),
+            by = "year")
+fedfunds_endyr <- fedfunds_filtered %>%
+  arrange(year) %>%
+  select(year, FEDFUNDS_end_of_year) %>%
+  mutate(
+    FEDFUNDS_change_end_1yr = FEDFUNDS_end_of_year - lag(FEDFUNDS_end_of_year),
+    FEDFUNDS_avg_end_2yr = (FEDFUNDS_end_of_year + lag(FEDFUNDS_end_of_year)) / 2,
+    FEDFUNDS_change_end_2yr = FEDFUNDS_avg_end_2yr - lag(FEDFUNDS_avg_end_2yr)
+  )
+final_panel <- final_panel %>%
+  left_join(fedfunds_endyr, by = "year")
+
+
+
+
+
+
+
+
+# 1-year average change
+model_1yr_avg <- feols(
+  int1prc ~ 1 | pid | FEDFUNDS_change_avg_1yr ~ MPS_ORTH_sum_1yr,
+  data = final_panel,
+  weights = ~weight,
+  cluster = ~pid
+)
+summary(model_1yr_avg)
+# 2-year average change
+model_2yr_avg <- feols(
+  int1prc ~ 1 | pid | FEDFUNDS_change_avg_2yr ~ MPS_ORTH_sum_2yr,
+  data = final_panel,
+  weights = ~weight,
+  cluster = ~pid
+)
+summary(model_2yr_avg)
+# 1-year end-of-year change
+model_1yr_end <- feols(
+  int1prc ~ 1 | pid | FEDFUNDS_change_end_1yr ~ MPS_ORTH_sum_1yr,
+  data = final_panel,
+  weights = ~weight,
+  cluster = ~pid
+)
+summary(model_1yr_end)
+# 2-year end-of-year change
+model_2yr_end <- feols(
+  int1prc ~ 1 | pid | FEDFUNDS_change_end_2yr ~ MPS_ORTH_sum_2yr,
+  data = final_panel,
+  weights = ~weight,
+  cluster = ~pid
+)
+summary(model_2yr_end)
+colnames(final_panel)
+final_panel <- final_panel %>%
+  rename(
+    FEDFUNDS_avg_1yr = FEDFUNDS_avg_1yr.y,
+    FEDFUNDS_change_avg_1yr = FEDFUNDS_change_avg_1yr.y,
+    FEDFUNDS_avg_2yr = FEDFUNDS_avg_2yr.y,
+    FEDFUNDS_change_avg_2yr = FEDFUNDS_change_avg_2yr.y,
+    FEDFUNDS_end_of_year = FEDFUNDS_end_of_year,
+    FEDFUNDS_change_end_1yr = FEDFUNDS_change_end_1yr,
+    FEDFUNDS_avg_end_2yr = FEDFUNDS_avg_end_2yr,
+    FEDFUNDS_change_end_2yr = FEDFUNDS_change_end_2yr
+  )
+
+
+model_fixed_1yr_avg <- feols(
+  int1prc ~ 1 | pid | FEDFUNDS_change_1yr ~ MPS_ORTH_sum_1yr,
+  data = subset(final_panel, mort_rate1fv == 1),
+  weights = ~weight,
+  cluster = ~pid
+)
+summary(model_fixed_1yr_avg)
+summary(final_panel2$FEDFUNDS_change_avg_1yr)
+summary(final_panel2$MPS_ORTH_sum_1yr)
+
+
+model_fixed_2yr_avg <- feols(
+  int1prc ~ 1 | pid | FEDFUNDS_change_avg_2yr ~ MPS_ORTH_sum_2yr,
+  data = subset(final_panel, mort_rate1fv == 1),
+  weights = ~weight,
+  cluster = ~pid
+)
+summary(model_fixed_2yr_avg)
+summary(final_panel2$FEDFUNDS_change_avg_1yr)
+summary(final_panel2$FEDFUNDS_change_avg_2yr)
+summary(final_panel2$FEDFUNDS_change_1yr)
+
+
+
+library(dplyr)
+library(lubridate)
+
+# Create fresh FedFunds yearly summary with new variable names
+fedfunds_annual_new <- FEDFUNDS %>%
+  mutate(year = year(observation_date)) %>%
+  group_by(year) %>%
+  summarise(
+    fed_avg_new = mean(FEDFUNDS, na.rm = TRUE),
+    fed_end_new = FEDFUNDS[which.max(observation_date)]
+  ) %>%
+  arrange(year) %>%
+  mutate(
+    fed_change_1yr_new = fed_end_new - lag(fed_end_new, 1),
+    fed_change_avg_1yr_new = fed_avg_new - lag(fed_avg_new, 1),
+    fed_change_2yr_new = fed_end_new - lag(fed_end_new, 2),
+    fed_change_avg_2yr_new = fed_avg_new - lag(fed_avg_new, 2)
+  )
+
+# Join these fresh vars to final_panel by year
+final_panel <- final_panel %>%
+  left_join(fedfunds_annual_new, by = "year")
+
+
+library(dplyr)
+
+# Step 1: Calculate 2-year end-of-year changes in full_data2
+FEDFUNDS_changes <- full_data2 %>%
+  arrange(year) %>%
+  mutate(
+    fedfunds_change_2yr = FEDFUNDS - lag(FEDFUNDS, 2),
+    fedfunds_pct_change_2yr = (FEDFUNDS - lag(FEDFUNDS, 2)) / lag(FEDFUNDS, 2) * 100
+  ) %>%
+  select(year, fedfunds_change_2yr, fedfunds_pct_change_2yr)
+
+# Step 2: Merge those fresh variables into final_panel by year
+final_panel <- final_panel %>%
+  left_join(FEDFUNDS_changes, by = "year")
+
+
+model_1yr_avg_new <- feols(
+  int1prc ~ 1 | pid | fed_change_avg_1yr_new ~ MPS_ORTH_sum_1yr,
+  data = final_panel,
+  weights = ~weight,
+  cluster = ~pid
+)
+summary(model_1yr_avg_new)
+model_2yr_end_new <- feols(
+  int1prc ~ 1 | pid | fed_change_2yr_new ~ MPS_ORTH_sum_2yr,
+  data = final_panel,
+  weights = ~weight,
+  cluster = ~pid
+)
+summary(model_2yr_end_new)
+
+
+library(fixest)
+
+# Model 1: 1-year avg change
+model_1yr_avg_new <- feols(
+  int1prc ~ 1 | pid | fed_change_avg_1yr_new ~ MPS_ORTH_sum_1yr,
+  data = final_panel %>% filter(mort_rate1fv == 1),
+  weights = ~weight,
+  cluster = ~pid
+)
+
+# Model 2: 1-year end-of-year change
+model_1yr_end_new <- feols(
+  int1prc ~ 1 | pid | fed_change_1yr_new ~ MPS_ORTH_sum_1yr,
+  data = final_panel %>% filter(mort_rate1fv == 1),
+  weights = ~weight,
+  cluster = ~pid
+)
+
+model_1yr_avg_new <- feols(
+  int1prc ~ 1 | pid | fed_change_avg_1yr_new ~ MPS_ORTH_sum_1yr,
+  data = final_panel %>% filter(mort_rate1fv == 1),
+  weights = ~weight,
+  cluster = ~pid
+)
+
+
+# Model 2: 1-year end-of-year change
+model_1yr_end_new <- feols(
+  int1prc ~ 1 | pid | fed_change_1yr_new ~ MPS_ORTH_sum_1yr,
+  data = final_panel %>% filter(mort_rate1fv == 1),
+  weights = ~weight,
+  cluster = ~pid
+)
+ summary(model_1yr_end_new)   
+
+ 
+ 
+ 
+ library(dplyr)
+ library(lubridate)
+ 
+ fedfunds_monthly <- FEDFUNDS %>%
+   arrange(observation_date) %>%
+   mutate(
+     # Calculate 1-month difference first
+     change_1m = FEDFUNDS - lag(FEDFUNDS, 1),
+     
+     # Calculate 12-month difference for 1-year changes (could be used for checks)
+     change_12m = FEDFUNDS - lag(FEDFUNDS, 12),
+     
+     # Calculate 24-month difference for 2-year changes
+     change_24m = FEDFUNDS - lag(FEDFUNDS, 24),
+     
+     # Extract the year for grouping
+     year = year(observation_date)
+   )
+ 
+ # Now sum the 1-year changes and 2-year changes **within each year**:
+ 
+ bob_changes <- fedfunds_monthly %>%
+   group_by(year) %>%
+   summarise(
+     bob_the_builder_1 = sum(change_12m, na.rm = TRUE),  # sum of 12-month diffs within year
+     bob_the_builder_2 = sum(change_24m, na.rm = TRUE)   # sum of 24-month diffs within year
+   ) %>%
+   ungroup()
+
+ 
+ final_panel <- final_panel %>%
+   left_join(bob_changes, by = "year")
+colnames(bob_changes)
+
+
+
+library(dplyr)
+library(lubridate)
+library(zoo)
+
+# Step 1: Sort and create monthly changes
+fed_monthly_changes <- FEDFUNDS %>%
+  arrange(observation_date) %>%
+  mutate(
+    fedfunds_monthly_change = FEDFUNDS - lag(FEDFUNDS),
+    year = year(observation_date)
+  )
+
+# Step 2: Calculate rolling sums (1-year = 12 months, 2-year = 24 months)
+fed_monthly_changes <- fed_monthly_changes %>%
+  mutate(
+    bob_the_builder_1 = rollapply(fedfunds_monthly_change, width = 12, align = "right", fill = NA, partial = FALSE, FUN = sum, na.rm = TRUE),
+    bob_the_builder_2 = rollapply(fedfunds_monthly_change, width = 24, align = "right", fill = NA, partial = FALSE, FUN = sum, na.rm = TRUE)
+  )
+
+# Step 3: Keep only Decembers between 1996–2022
+fed_bob_summary <- fed_monthly_changes %>%
+  filter(month(observation_date) == 12 & year >= 1996 & year <= 2022) %>%
+  select(year, bob_the_builder_1, bob_the_builder_2)
+
+# Step 4: Merge to final_panel
+final_panel <- final_panel %>%
+  left_join(fed_bob_summary, by = "year")
+
+
+
+library(dplyr)
+library(lubridate)
+
+# Step 1: Monthly changes + year column
+fed_monthly_changes <- FEDFUNDS %>%
+  arrange(observation_date) %>%
+  mutate(
+    fedfunds_change_monthly = FEDFUNDS - lag(FEDFUNDS),
+    year = year(observation_date)
+  )
+
+# Step 2: Aggregate to annual sum of monthly changes
+annual_changes <- fed_monthly_changes %>%
+  group_by(year) %>%
+  summarise(
+    bob_the_builder_1 = sum(fedfunds_change_monthly, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  filter(year >= 1998, year <= 2022)
+
+# Step 3: Make 2-year sums over specific pairs (1998+1999, 2000+2001, etc.)
+bob_the_builder_2 <- annual_changes %>%
+  mutate(next_year = lead(year)) %>%
+  filter(year %% 2 == 0) %>%  # Even years: 1998, 2000, 2002, ...
+  inner_join(annual_changes, by = c("next_year" = "year"), suffix = c("_first", "_second")) %>%
+  transmute(
+    year = next_year,  # Assign sum to the second year in the pair
+    bob_the_builder_2 = bob_the_builder_1_first + bob_the_builder_1_second
+  )
+
+# Step 4: Final summary
+fed_bob_summary <- annual_changes %>%
+  left_join(bob_the_builder_2, by = "year")
+
+# Step 5: Keep only years with proper 2-year values (1999, 2001, ..., 2021)
+fed_bob_summary_trimmed <- fed_bob_summary %>%
+  filter(year %% 2 == 1, year >= 1999, year <= 2021)
+
+# Step 6: Merge into final_panel by year
+final_panel <- final_panel %>%
+  left_join(fed_bob_summary_trimmed, by = "year")
+
+
+
+
+
+
+
+
+
+library(fixest)
+
+# 1-year summed monthly changes (bob_the_builder_1)
+model_bob_1 <- feols(
+  int1prc ~ 1 | pid | bob_the_builder_1 ~ MPS_ORTH_sum_1yr,
+  data = final_panel,
+  weights = ~weight,
+  cluster = ~pid
+)
+summary(model_bob_1)
+
+# 2-year summed monthly changes (bob_the_builder_2)
+model_bob_2 <- feols(
+  int1prc ~ 1 | pid | bob_the_builder_2 ~ MPS_ORTH_sum_2yr,
+  data = final_panel,
+  weights = ~weight,
+  cluster = ~pid
+)
+summary(model_bob_2)
+
+# Subset to fixed-rate only
+final_panel_fixed <- final_panel %>% filter(mort_rate1fv == 1)
+
+# 1-year summed monthly changes (bob_the_builder_1), fixed rate only
+model_bob_1_fixed <- feols(
+  int1prc ~ 1 | pid | bob_the_builder_1 ~ MPS_ORTH_sum_1yr,
+  data = final_panel_fixed,
+  weights = ~weight,
+  cluster = ~pid
+)
+summary(model_bob_1_fixed)
+
+# 2-year summed monthly changes (bob_the_builder_2), fixed rate only
+model_bob_2_fixed <- feols(
+  int1prc ~ 1 | pid | bob_the_builder_2 ~ MPS_ORTH_sum_2yr,
+  data = final_panel_fixed,
+  weights = ~weight,
+  cluster = ~pid
+)
+summary(model_bob_2_fixed)
+
+
+
+
+
+iv_model_fe_fixed_corrected <- feols(
+     int1prc ~ 1 | pid | fedfunds_change ~ MPS_ORTH_sum,
+     data = subset(final_data2, mort_rate1fv == 1),
+     weights = ~weight,
+     cluster = ~pid
+   )
+
+   summary(iv_model_fe_fixed_corrected)
+   
+   
+   final_data2 %>%
+     select( pid, fedfunds_change, MPS_ORTH_sum) %>%
+     distinct() %>%         # Optional: avoids repeated pid-year rows
+     arrange( pid) %>% 
+     head(33)               # View top 20 rows
+   
+
+   ################################################################################################
+   #NOW ITS GONNA BE GOOD 
+   ################################################################################################
+   
+   library(dplyr)
+   library(lubridate)
+   
+   # Step 1: Annual sum of MPS_ORTH surprises
+   mps_biennial_sum <- monetary_policy_surprises_data_2_ %>%
+     group_by(Year) %>%
+     summarise(MPS_ORTH_sum_clean = sum(MPS_ORTH, na.rm = TRUE)) %>%
+     rename(year = Year)
+   
+   # Step 2: Annual average Fed Funds rate
+   fedfunds_annual_clean <- FEDFUNDS %>%
+     mutate(year = year(as.Date(observation_date))) %>%
+     group_by(year) %>%
+     summarise(FEDFUNDS_avg_clean = mean(FEDFUNDS, na.rm = TRUE)) %>%
+     arrange(year)
+   
+   # Step 3: Calculate 2-year changes (level and %)
+   fedfunds_biennial_change <- fedfunds_annual_clean %>%
+     mutate(
+       FEDFUNDS_change_biennial_clean = FEDFUNDS_avg_clean - lag(FEDFUNDS_avg_clean, 2),
+       FEDFUNDS_pct_change_biennial_clean = (FEDFUNDS_avg_clean / lag(FEDFUNDS_avg_clean, 2) - 1) * 100
+     ) %>%
+     filter(year %in% seq(1999, 2021, by = 2))  # Keep only relevant years
+   
+   # Step 4: Merge MPS and FedFunds changes
+   iv_dataset_clean <- fedfunds_biennial_change %>%
+     left_join(mps_biennial_sum, by = "year")
+   
+   # Step 5: Merge into your main panel (assuming one row per year-pid combo)
+   final_panel <- final_panel %>%
+     left_join(iv_dataset_clean, by = "year") %>%
+     filter(year %in% 1999:2021)  # Trim to clean range
+   
+   
+   library(dplyr)
+   library(lubridate)
+   
+   # Recreate MPS biennial sum (DO THIS FIRST!)
+   mps_biennial_sum <- monetary_policy_surprises_data_2_ %>%
+     group_by(Year) %>%
+     summarise(MPS_ORTH_sum_clean = sum(MPS_ORTH, na.rm = TRUE)) %>%
+     rename(year = Year)
+   
+   # Annual average FedFunds
+   fedfunds_annual_clean <- FEDFUNDS %>%
+     mutate(year = year(as.Date(observation_date))) %>%
+     group_by(year) %>%
+     summarise(FEDFUNDS_avg_clean = mean(FEDFUNDS, na.rm = TRUE)) %>%
+     arrange(year)
+   
+   # Compute 2-year level and percent changes
+   fedfunds_biennial_change <- fedfunds_annual_clean %>%
+     mutate(
+       FEDFUNDS_change_biennial_clean = FEDFUNDS_avg_clean - lag(FEDFUNDS_avg_clean, 2),
+       FEDFUNDS_pct_change_biennial_clean = (FEDFUNDS_avg_clean / lag(FEDFUNDS_avg_clean, 2) - 1) * 100
+     ) %>%
+     filter(year %in% seq(1999, 2021, by = 2))  # Only years we care about
+   
+   # Now join MPS into FedFunds summary
+   iv_dataset_clean <- fedfunds_biennial_change %>%
+     left_join(mps_biennial_sum, by = "year")
+   
+   # And finally join into the panel (filtering to matching years)
+   final_panel <- final_panel %>%
+     left_join(iv_dataset_clean, by = "year") %>%
+     filter(year %in% 1999:2021)
+   
+  ######the right panel##### 
+   
+   library(dplyr)
+   library(lubridate)
+   
+   # Step 1: Summarise MPS by year (biennial format)
+   mps_biennial_sum <- monetary_policy_surprises_data %>%
+     group_by(Year) %>%
+     summarise(MPS_ORTH_sum_clean = sum(MPS_ORTH, na.rm = TRUE)) %>%
+     rename(year = Year)
+   
+   # Step 2: Summarise FedFunds by year (average)
+   fedfunds_annual_clean <- FEDFUNDS %>%
+     mutate(year = year(as.Date(observation_date))) %>%
+     group_by(year) %>%
+     summarise(FEDFUNDS_avg_clean = mean(FEDFUNDS, na.rm = TRUE)) %>%
+     arrange(year)
+   
+   # Step 3: Compute biennial FedFunds changes (level and percent)
+   fedfunds_biennial_change <- fedfunds_annual_clean %>%
+     mutate(
+       FEDFUNDS_change_biennial_clean = FEDFUNDS_avg_clean - lag(FEDFUNDS_avg_clean, 2),
+       FEDFUNDS_pct_change_biennial_clean = (FEDFUNDS_avg_clean / lag(FEDFUNDS_avg_clean, 2) - 1) * 100
+     ) %>%
+     filter(year %in% seq(1999, 2021, by = 2))
+   
+   # Step 4: Merge FedFunds with MPS data
+   iv_dataset_clean <- fedfunds_biennial_change %>%
+     left_join(mps_biennial_sum, by = "year")
+   
+   # Step 5: Merge into your main panel
+   d7tr <- d7tr %>%
+     left_join(iv_dataset_clean, by = "year") %>%
+     filter(year %in% 1999:2021)  # Keep valid biennial years
+   
+   iv_model_fe_full <- feols(
+     int1prc ~ 1 | pid | FEDFUNDS_change_biennial_clean ~ MPS_ORTH_sum_clean,
+     data = d7tr,
+     weights = ~weight,
+     cluster = ~pid
+   )
+   
+   summary(iv_model_fe_full)
+   
+   
+   final_data2 %>%
+     select(year, fedfunds_change) %>%
+     distinct() %>%
+     arrange(year)
+   
+   final_panel %>%
+     select(year, FEDFUNDS_change_biennial_clean) %>%
+     distinct() %>%
+     arrange(year)
+  
+   final_data2 %>%
+     select(year, MPS_ORTH_sum) %>%
+     distinct() %>%
+     arrange(year)
+   
+   final_panel %>%
+     select(year, MPS_ORTH_sum_1yr) %>%
+     distinct() %>%
+     arrange(year) 
+   
+  
+   final_data2 %>%
+     select(year, int1prc) %>%
+     distinct() %>%
+     arrange(year)
+   
+   final_panel %>%
+     select(year, int1prc) %>%
+     distinct() %>%
+     arrange(year)
+   
+   iv_model_ndc <- feols(
+     r_nondurcons ~ 1 | pid | FEDFUNDS_change_biennial_clean ~ MPS_ORTH_sum_clean,
+     data = d7tr,
+     weights = ~weight,
+     cluster = ~pid
+   )
+   
+   summary(iv_model_ndc)
+
+   
+   iv_model_ndc2 <- feols(
+     r_nonshelcons ~ 1 | pid | FEDFUNDS_change_biennial_clean ~ MPS_ORTH_sum_clean,
+     data = d7tr,
+     weights = ~weight,
+     cluster = ~pid
+   )
+   
+   summary(iv_model_ndc2)
+   
+   
+   
+   colnames(final_panel)   
+colnames(d7tr)
+
+
+
+d7tr_mortgage_fix <- d7tr %>% filter(mort_rate1fv == 1)
+d7tr_mortgage_var <- d7tr %>% filter(mort_rate1fv == 2)
+
+iv_model_mortgage_only <- feols(
+  r_nonshelcons ~ 1 | pid | FEDFUNDS_change_biennial_clean ~ MPS_ORTH_sum_clean,
+  data = d7tr_mortgage_fix,
+  weights = ~weight,
+  cluster = ~pid
+)
+summary(iv_model_mortgage_only)
+
+iv_model_mortgage_only2 <- feols(
+  r_nonshelcons ~ 1 | pid | FEDFUNDS_change_biennial_clean ~ MPS_ORTH_sum_clean,
+  data = d7tr_mortgage_var,
+  weights = ~weight,
+  cluster = ~pid
+)
+summary(iv_model_mortgage_only2)
+
+
+d7tr_mortgage <- d7tr %>% filter(mort_rate1fv %in% c(1, 2))
+
+
+iv_model_mortgage <- feols(
+  r_nonshelcons ~ 1 | pid | FEDFUNDS_change_biennial_clean ~ MPS_ORTH_sum_clean,
+  data = d7tr_mortgage,
+  weights = ~weight,
+  cluster = ~pid
+)
+summary(iv_model_mortgage)
+
+iv_model_mortgage2 <- feols(
+  r_nondurcons ~ 1 | pid | FEDFUNDS_change_biennial_clean ~ MPS_ORTH_sum_clean,
+  data = d7tr_mortgage,
+  weights = ~weight,
+  cluster = ~pid
+)
+summary(iv_model_mortgage2)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+iv_model_mortgage_controls <- feols(
+  r_nonshelcons ~ r_fam_income_prevy + r_educ_expen_prevy | pid | FEDFUNDS_change_biennial_clean ~ MPS_ORTH_sum_clean,
+  data = d7tr_mortgage,
+  weights = ~weight,
+  cluster = ~pid
+)
+summary(iv_model_mortgage_controls)
+
+
+
+ols_model <- feols(
+  r_tot_expen ~ int1prc + r_fam_income_prevy + wlth_no_equity,
+  data = d7tr,
+  weights = ~weight,
+  cluster = ~pid
+)
+
+summary(ols_model)
+
+
+feols(
+  r_nonshelcons ~ FEDFUNDS_change_biennial_clean * r_mort1 | pid,
+  data = d7tr,
+  weights = ~weight,
+  cluster = ~pid
+)
+
+
+feols(
+  r_nonshelcons ~ 1 | pid |
+    FEDFUNDS_change_biennial_clean * r_mort1 ~ MPS_ORTH_sum_clean * r_mort1,
+  data = d7tr,
+  weights = ~weight,
+  cluster = ~pid
+)
+
+
+
+
+iv_model_full <- feols(
+  r_nonshelcons ~ FEDFUNDS_change_biennial_clean * (r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ) | pid |
+    FEDFUNDS_change_biennial_clean * (r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ) ~
+    MPS_ORTH_sum_clean * (r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ),
+  data = d7tr,
+  weights = ~weight,
+  cluster = ~pid
+)
+
+
+
+
+
+iv_model <- feols(
+  r_nondurcons ~ r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ | 
+    pid | 
+    FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1 ~ 
+    MPS_ORTH_sum_clean + MPS_ORTH_sum_clean:r_mort1,
+  data = d7tr_mortgage,
+  weights = ~weight,
+  cluster = ~pid
+)
+summary(iv_model)
+colnames(d7tr)
+
+
+iv_model <- feols(
+  durable_expen_no_houscost ~ r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ + r_house_value | 
+    pid | 
+    FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1 ~ 
+    MPS_ORTH_sum_clean + MPS_ORTH_sum_clean:r_mort1,
+  data = d7tr_mortgage,
+  weights = ~weight,
+  cluster = ~pid
+)
+summary(iv_model)
+
+
+d7tr_mortgage$durable_expen_no_houscost <- d7tr_mortgage$r_tot_expen - d7tr_mortgage$r_nondurcons - d7tr_mortgage$r_mort_expen - d7tr_mortgage$r_rent_expen
+
+library(dplyr)
+
+d7tr_mortgage <- d7tr_mortgage %>%
+  arrange(pid, year) %>%  # or whatever your time variable is
+  group_by(pid) %>%
+  mutate(
+    delta_cons = r_nonshelcons - lag(r_nonshelcons),
+    delta_income = r_fam_income_prevy - lag(r_fam_income_prevy),
+    delta_durcons = durable_expen_no_houscost - lag(durable_expen_no_houscost),
+    delta_tot_exp = r_tot_expen - lag(r_tot_expen)
+  ) %>%
+  ungroup()
+
+feols(
+  delta_durcons  ~ delta_income + mort1  + educ + age_ref + r_house_value  |
+    pid |
+    FEDFUNDS_change_biennial_clean + mort1:FEDFUNDS_change_biennial_clean ~ 
+    MPS_ORTH_sum_clean + mort1:MPS_ORTH_sum_clean,
+  data = d7tr_mortgage,
+  weights = ~weight,
+  cluster = ~pid
+)
+
+
+
+
+library(fixest)
+
+# Fixed-rate mortgage model
+model_fixed <- feols(
+  delta_durcons ~ delta_income + educ + age_ref + r_house_value |
+    pid |
+    FEDFUNDS_change_biennial_clean ~ MPS_ORTH_sum_clean,
+  data = subset(d7tr_mortgage, mort_rate1fv == 1),
+  weights = ~weight,
+  cluster = ~pid
+)
+
+# Variable-rate mortgage model
+model_variable <- feols(
+  delta_durcons ~ delta_income + educ + age_ref + r_house_value |
+    pid |
+    FEDFUNDS_change_biennial_clean ~ MPS_ORTH_sum_clean,
+  data = subset(d7tr_mortgage, mort_rate1fv == 2),
+  weights = ~weight,
+  cluster = ~pid
+)
+
+# Show the results side-by-side
+etable(model_fixed, model_variable, headers = c("Fixed Rate", "Variable Rate"))
+
+
+
+# Fixed-rate mortgage sample (mort_rate1fv == 1)
+model_fixed <- feols(
+  delta_tot_exp ~ delta_income + mort1 + educ + age_ref + r_house_value |
+    pid |
+    FEDFUNDS_change_biennial_clean + mort1:FEDFUNDS_change_biennial_clean ~ 
+    MPS_ORTH_sum_clean + mort1:MPS_ORTH_sum_clean,
+  data = subset(d7tr_mortgage, mort_rate1fv == 1),
+  weights = ~weight,
+  cluster = ~pid
+)
+
+# Variable-rate mortgage sample (mort_rate1fv == 2)
+model_variable <- feols(
+  delta_tot_exp ~ delta_income + mort1 + educ + age_ref + r_house_value |
+    pid |
+    FEDFUNDS_change_biennial_clean + mort1:FEDFUNDS_change_biennial_clean ~ 
+    MPS_ORTH_sum_clean + mort1:MPS_ORTH_sum_clean,
+  data = subset(d7tr_mortgage, mort_rate1fv == 2),
+  weights = ~weight,
+  cluster = ~pid
+)
+
+# Compare results
+etable(model_fixed, model_variable, headers = c("Fixed Rate", "Variable Rate"))
+
+# Pooled regression: includes both mortgage types
+
+model_pooled <- feols(
+  delta_tot_exp ~ delta_income + educ + age_ref + r_house_value |
+    pid |
+    (FEDFUNDS_change_biennial_clean + 
+       mort1:FEDFUNDS_change_biennial_clean + 
+       factor(mort_rate1fv):FEDFUNDS_change_biennial_clean +
+       mort1:factor(mort_rate1fv):FEDFUNDS_change_biennial_clean) ~ 
+    (MPS_ORTH_sum_clean + 
+       mort1:MPS_ORTH_sum_clean +
+       factor(mort_rate1fv):MPS_ORTH_sum_clean +
+       mort1:factor(mort_rate1fv):MPS_ORTH_sum_clean),
+  data = d7tr_mortgage,
+  weights = ~weight,
+  cluster = ~pid
+)
+summary(model_pooled)
+
+
+
+model_simpler <- feols(
+  delta_cons ~ delta_income + educ + age_ref + r_house_value |
+    pid |
+    (FEDFUNDS_change_biennial_clean + mort1:FEDFUNDS_change_biennial_clean) ~ 
+    (MPS_ORTH_sum_clean + mort1:MPS_ORTH_sum_clean),
+  data = d7tr_mortgage,
+  weights = ~weight,
+  cluster = ~pid
+)
+summary(model_simpler)
+
+
+
+model_simpler <- feols(
+  delta_cons ~ delta_income + educ + age_ref + r_house_value |
+    pid |
+    (FEDFUNDS_change_biennial_clean + mort1:FEDFUNDS_change_biennial_clean) ~ 
+    (MPS_ORTH_sum_clean + mort1:MPS_ORTH_sum_clean),
+  data = d7tr_mortgage,
+  weights = ~weight,
+  cluster = ~pid
+)
+
+d7tr_mortgage$mort1_k <- d7tr_mortgage$mort1 / 1000
+d7tr$mort1_k <- d7tr$mort1 / 1000
+
+
+
+# First create the transformed variable if you haven’t already
+d7tr_mortgage$log_mort1 <- log(d7tr_mortgage$mort1 + 1)
+
+# Then run the IV model
+model_log_mort1 <- feols(
+  delta_tot_exp ~ delta_income + educ + age_ref + r_house_value |
+    pid |
+    (FEDFUNDS_change_biennial_clean + log_mort1:FEDFUNDS_change_biennial_clean) ~ 
+    (MPS_ORTH_sum_clean + log_mort1:MPS_ORTH_sum_clean),
+  data = d7tr_mortgage,
+  weights = ~weight,
+  cluster = ~pid
+)
+summary(model_log_mort1)
+library(data.table)
+d7tr_mortgage2<-copy(d7tr_mortgage)
+
+# terciles of mortgage balance
+d7tr_mortgage$mort_bin <- cut(
+  d7tr_mortgage$mort1,
+  breaks = quantile(d7tr_mortgage$mort1, probs = c(0, 1/3, 2/3, 1), na.rm = TRUE),
+  include.lowest = TRUE,
+  labels = c("low", "mid", "high")
+)
+
+# Turn into dummies for interaction
+d7tr_mortgage$mort_high <- as.numeric(d7tr_mortgage$mort_bin == "high")
+
+
+
+model_bins <- feols(
+  delta_durcons ~ delta_income + educ + age_ref + r_house_value |
+    pid |
+    (FEDFUNDS_change_biennial_clean + mort_mid:FEDFUNDS_change_biennial_clean) ~ 
+    (MPS_ORTH_sum_clean + mort_high:MPS_ORTH_sum_clean),
+  data = d7tr_mortgage,
+  weights = ~weight,
+  cluster = ~pid
+)
+summary(model_bins)
+
+
+# terciles of mortgage balance MORE 
+d7tr_mortgage$mort_bin <- cut(
+  d7tr_mortgage$mort1,
+  breaks = quantile(d7tr_mortgage$mort1, probs = c(0, 1/3, 2/3, 1), na.rm = TRUE),
+  include.lowest = TRUE,
+  labels = c("low", "mid", "high")
+)
+
+# Create dummies
+d7tr_mortgage$mort_low <- as.numeric(d7tr_mortgage$mort_bin == "low")
+d7tr_mortgage$mort_mid <- as.numeric(d7tr_mortgage$mort_bin == "mid")
+d7tr_mortgage$mort_high <- as.numeric(d7tr_mortgage$mort_bin == "high")
+
+model_bins_all <- feols(
+  delta_durcons ~ delta_income + educ + age_ref + r_house_value |
+    pid |
+    (
+      FEDFUNDS_change_biennial_clean
+      + mort_low:FEDFUNDS_change_biennial_clean
+      + mort_mid:FEDFUNDS_change_biennial_clean
+      + mort_high:FEDFUNDS_change_biennial_clean
+    ) ~ (
+      MPS_ORTH_sum_clean
+      + mort_low:MPS_ORTH_sum_clean
+      + mort_mid:MPS_ORTH_sum_clean
+      + mort_high:MPS_ORTH_sum_clean
+    ),
+  data = d7tr_mortgage,
+  weights = ~weight,
+  cluster = ~pid
+)
+ summary(model_bins_all)
+ 
+ 
+ library(modelsummary)
+ 
+ etable(model_bins_all, se = "cluster", cluster = "pid")
+
+ 
+ 
+ model_low <- feols(
+   delta_durcons ~ delta_income + educ + age_ref + r_house_value |
+     pid |
+     FEDFUNDS_change_biennial_clean ~ MPS_ORTH_sum_clean,
+   data = d7tr_mortgage[d7tr_mortgage$mort_bin == "low", ],
+   weights = ~weight,
+   cluster = ~pid
+ )
+ 
+summary(model_low) 
+
+model_mid <- feols(
+  delta_durcons ~ delta_income + educ + age_ref + r_house_value |
+    pid |
+    FEDFUNDS_change_biennial_clean ~ MPS_ORTH_sum_clean,
+  data = d7tr_mortgage[d7tr_mortgage$mort_bin == "mid", ],
+  weights = ~weight,
+  cluster = ~pid
+)
+summary(model_mid)
+
+model_high <- feols(
+  delta_durcons ~ delta_income + educ + age_ref + r_house_value |
+    pid |
+    FEDFUNDS_change_biennial_clean ~ MPS_ORTH_sum_clean,
+  data = d7tr_mortgage[d7tr_mortgage$mort_bin == "high", ],
+  weights = ~weight,
+  cluster = ~pid
+)
+
+summary(model_high)
+

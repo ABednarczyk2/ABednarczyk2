@@ -1,0 +1,277 @@
+library(dplyr)   # For data manipulation
+library(lubridate) # For handling dates (if needed)
+
+mps_yearly <- monetary_policy_surprises_data_2_ %>%
+  group_by(Year) %>%
+  summarise(MPS_ORTH = sum(MPS_ORTH, na.rm = TRUE)) %>%
+  rename(year = Year)  # To match with `d7`
+
+FEDFUNDS <- FEDFUNDS %>%
+  mutate(year = year(as.Date(observation_date))) %>%  # Extract year
+  arrange(year) %>%  # Sort by year
+  group_by(year) %>%
+  summarise(FEDFUNDS = mean(FEDFUNDS, na.rm = TRUE))  # Annual average rate
+
+# Compute 2-year changes (since your panel is biennial)
+FEDFUNDS_changes <- FEDFUNDS %>%
+  mutate(
+    fedfunds_change = FEDFUNDS - lag(FEDFUNDS, 2),  # Difference from 2 years ago
+    fedfunds_pct_change = (FEDFUNDS / lag(FEDFUNDS, 2) - 1) * 100  # % change (optional)
+  ) %>%
+  filter(year %in% seq(1999, 2021, by = 2))  # Keep only biennial years (1999, 2001, ...)
+
+
+
+final_data <- d7 %>%
+  left_join(mps_yearly, by = "year") %>%  # Add summed MPS shocks
+  left_join(FEDFUNDS_changes, by = "year")  # Add Fed Funds changes
+
+
+mps_yearly <- monetary_policy_surprises_data_2_ %>%
+  mutate(
+    year = Year,  # Ensure year column exists
+    shock_abs = abs(MPS_ORTH),  # Absolute magnitude for max calculation
+    is_large_positive = ifelse(MPS_ORTH >= 0.1, 1, 0),  # Count shocks ≥ +0.1
+    is_large_negative = ifelse(MPS_ORTH <= -0.1, 1, 0)   # Count shocks ≤ -0.1
+  ) %>%
+  group_by(year) %>%
+  summarise(
+    MPS_ORTH_sum = sum(MPS_ORTH, na.rm = TRUE),          # Sum of shocks (existing)
+    MPS_ORTH_max = MPS_ORTH[which.max(shock_abs)],        # Max magnitude (keep sign)
+    MPS_ORTH_sd = sd(MPS_ORTH, na.rm = TRUE),             # Standard deviation
+    MPS_ORTH_n_large_pos = sum(is_large_positive, na.rm = TRUE),  # Count ≥ +0.1
+    MPS_ORTH_n_large_neg = sum(is_large_negative, na.rm = TRUE)   # Count ≤ -0.1
+  ) %>%
+  filter(year %in% seq(1999, 2021, by = 2))  # Keep biennial years only
+
+final_data <- d7 %>%
+  left_join(mps_yearly, by = "year") %>%
+  left_join(FEDFUNDS_changes, by = "year")  # From previous Fed Funds changes
+
+colnames(final_data)
+
+
+
+library(fixest)
+
+iv_model <- feols(
+  int1prc ~ 1 | pid | fedfunds_change ~ MPS_ORTH_sum,
+  data = final_data,
+  weights = ~weight  # optional if you have survey weights
+)
+
+summary(iv_model)
+
+
+# 1. Create the 'definitely_refinanced' flag
+final_data <- final_data %>%
+  mutate(
+    definitely_refinanced = ifelse(
+      `refin1_y/n` == 2 & (mort1_year_obtained == year | mort1_year_obtained == year - 1),
+      1,
+      0
+    )
+  )
+
+# 2. Run regression for definitely refinanced
+iv_refin_def <- feols(
+  int1prc ~ 1 | pid | fedfunds_change ~ MPS_ORTH_sum,
+  data = final_data %>% filter(definitely_refinanced == 1),
+  weights = ~weight,
+  cluster = ~pid
+)
+
+# 3. Run regression for NOT refinanced (probably those who originally got the loan)
+iv_noref_def <- feols(
+  int1prc ~ 1 | pid | fedfunds_change ~ MPS_ORTH_sum,
+  data = final_data %>% filter(`refin1_y/n` == 1),
+  weights = ~weight,
+  cluster = ~pid
+)
+
+# 4. Check results
+summary(iv_refin_def)
+summary(iv_noref_def)
+
+
+
+
+
+# Scale int1prc to percent
+final_data <- final_data %>%
+  mutate(int1prc = int1prc / 100)
+
+# Create the 'definitely_refinanced' variable
+final_data <- final_data %>%
+  mutate(
+    definitely_refinanced = ifelse(
+      `refin1_y/n` == 2 & (mort1_year_obtained == year | mort1_year_obtained == year - 1),
+      1,
+      0
+    )
+  )
+
+# Regressions
+iv_refin_def <- feols(
+  int1prc ~ 1 | pid | fedfunds_change ~ MPS_ORTH_sum,
+  data = final_data %>% filter(definitely_refinanced == 1),
+  weights = ~weight,
+  cluster = ~pid
+)
+
+iv_noref_def <- feols(
+  int1prc ~ 1 | pid | fedfunds_change ~ MPS_ORTH_sum,
+  data = final_data %>% filter(definitely_refinanced == 0),
+  weights = ~weight,
+  cluster = ~pid
+)
+
+head(FEDFUNDS)
+head(monetary_policy_surprises_data_2_)
+
+bauer_annual <- monetary_policy_surprises_data_2_ %>%
+  group_by(Year) %>%
+  summarise(MPS_ORTH_sum = sum(MPS_ORTH, na.rm = TRUE)) %>%
+  rename(year = Year)
+
+
+library(dplyr)
+library(tidyr)
+
+# 1. Collapse MPS_ORTH to annual sums
+bauer_annual <- monetary_policy_surprises_data_2_ %>%
+  group_by(Year) %>%
+  summarise(MPS_ORTH_sum = sum(MPS_ORTH, na.rm = TRUE)) %>%
+  rename(year = Year)
+
+# 2. Create a complete sequence of years to avoid NAs later
+all_years <- tibble(year = 1998:2021)  # Change range if needed
+
+# 3. Left join to pad missing years with 0
+bauer_annual_full <- all_years %>%
+  left_join(bauer_annual, by = "year") %>%
+  mutate(MPS_ORTH_sum = replace_na(MPS_ORTH_sum, 0))
+
+# 4. Compute Fed Funds changes by year (if not already)
+fedfunds_annual <- FEDFUNDS %>%
+  arrange(year) %>%
+  mutate(fedfunds_change = FEDFUNDS - lag(FEDFUNDS)) %>%
+  filter(year >= 1998)  # keep consistent with MPS_ORTH range
+
+# 5. Merge both into a clean shocks dataset
+shocks_annual <- bauer_annual_full %>%
+  left_join(fedfunds_annual, by = "year") %>%
+  select(year, MPS_ORTH_sum, fedfunds_change)
+
+# Now shocks_annual is clean and ready to merge with final_data
+# You can merge by mort1_year_obtained like this:
+# final_data <- final_data %>% left_join(shocks_annual, by = c("mort1_year_obtained" = "year"))
+
+library(data.table)
+final_data2<-copy(final_data)
+final_data2 <- final_data2 %>%
+  left_join(shocks_annual, by = c("mort1_year_obtained" = "year"))
+
+
+colnames(final_data2)
+final_data2 <- final_data2 %>%
+  mutate(
+    fedfunds_change = fedfunds_change.y,
+    MPS_ORTH_sum = MPS_ORTH_sum.y
+  ) %>%
+  select(-fedfunds_change.x, -fedfunds_change.y, -MPS_ORTH_sum.y)
+
+
+library(dplyr)
+
+final_data2 <- final_data2 %>%
+  group_by(pid) %>%
+  arrange(year) %>%
+  mutate(
+    year_obtained_lag = lag(mort1_year_obtained),
+    mort_year_changed = mort1_year_obtained != year_obtained_lag,
+    refi_status = case_when(
+      refin1 == 1 & mort_year_changed ~ "definitely_refinanced",
+      refin1 == 0 & !mort_year_changed ~ "definitely_not_refinanced",
+      TRUE ~ "ambiguous"
+    )
+  ) %>%
+  ungroup()
+
+
+
+library(fixest)
+
+iv_refi <- feols(
+  int1prc ~ 1 | pid | fedfunds_change ~ MPS_ORTH_sum,
+  data = filter(final_data2, refi_status == "definitely_refinanced"),
+  weights = ~weight,
+  cluster = ~pid
+)
+
+iv_norefi <- feols(
+  int1prc ~ 1 | pid | fedfunds_change ~ MPS_ORTH_sum,
+  data = filter(final_data2, refi_status == "definitely_not_refinanced"),
+  weights = ~weight,
+  cluster = ~pid
+)
+
+iv_ambiguous <- feols(
+  int1prc ~ 1 | pid | fedfunds_change ~ MPS_ORTH_sum,
+  data = filter(final_data2, refi_status == "ambiguous"),
+  weights = ~weight,
+  cluster = ~pid
+)
+
+
+
+
+summary(iv_refi)
+summary(iv_norefi)
+summary(iv_ambiguous)
+
+
+
+
+
+iv_refin_final <- feols(
+  int1prc ~ 1 | pid | fedfunds_change ~ MPS_ORTH_sum,
+  data = final_data2 %>% filter(definitely_refinanced == 1),
+  weights = ~weight,
+  cluster = ~pid
+)
+
+
+iv_noref_final <- feols(
+  int1prc ~ 1 | pid | fedfunds_change ~ MPS_ORTH_sum,
+  data = final_data2 %>% filter(definitely_refinanced == 0),
+  weights = ~weight,
+  cluster = ~pid
+)
+
+summary(iv_refin_final)
+summary(iv_noref_final)
+
+
+
+library(dplyr)
+
+final_data <- final_data %>%
+  group_by(pid) %>%
+  arrange(year) %>%
+  mutate(
+    # Check how far off the mortgage year is from the survey year
+    mort_year_gap = abs(year - mort1_year_obtained),
+    
+    # If it's more than 1 year off, that's sus
+    mort_year_suspicious = mort_year_gap > 1,
+    
+    # Use that to define proper categories
+    refi_status = case_when(
+      refin1 == 1 & !mort_year_suspicious ~ "definitely_refinanced",
+      refin1 == 0 & mort1_year_obtained == lag(mort1_year_obtained) ~ "definitely_not_refinanced",
+      TRUE ~ "ambiguous"
+    )
+  ) %>%
+  ungroup()
+summary()

@@ -1,0 +1,141 @@
+⛰ iv_modeluh <- feols(
++  delta_durcons ~ r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ | 
++     pid | 
++     FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1 ~ 
++     MPS_ORTH_sum_clean + MPS_ORTH_sum_clean:r_mort1,
++   data = d7tr_mortgage,
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTE: 5,197 observations removed because of NA values (LHS: 4,606, RHS: 3,338, IV: 922/922).
+> summary(iv_modeluh)
+TSLS estimation - Dep. Var.: delta_durcons
+                  Endo.    : FEDFUNDS_change_biennial_clean, FEDFUNDS_change_biennial_clean:r_mort1
+                  Instr.   : MPS_ORTH_sum_clean, MPS_ORTH_sum_clean:r_mort1
+Second stage: Dep. Var.: delta_durcons
+Observations: 10,477
+Weights: weight
+Fixed-effects: pid: 3,075
+Standard-errors: Clustered (pid) 
+                                               Estimate  Std. Error  t value   Pr(>|t|)    
+fit_FEDFUNDS_change_biennial_clean         -7930.210869 1657.426777 -4.78465 1.7936e-06 ***
+fit_FEDFUNDS_change_biennial_clean:r_mort1    -0.033600    0.011106 -3.02541 2.5035e-03 ** 
+r_mort1                                       -0.095810    0.016395 -5.84377 5.6379e-09 ***
+r_fam_income_prevy                             0.048506    0.012857  3.77264 1.6457e-04 ***
+r_wlth_w_equity                                0.004016    0.001877  2.13982 3.2448e-02 *  
+educ                                       15086.705873 5708.200109  2.64299 8.2595e-03 ** 
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 147,959.5     Adj. R2: -1.47919
+                  Within R2: -1.09786
+F-test (1st stage), FEDFUNDS_change_biennial_clean        : stat = 138.2, p < 2.2e-16, on 2 and 10,470 DoF.
+F-test (1st stage), FEDFUNDS_change_biennial_clean:r_mort1: stat = 115.1, p < 2.2e-16, on 2 and 10,470 DoF.
+                                                Wu-Hausman: stat = 102.8, p < 2.2e-16, on 2 and 7,394 DoF.
+
+
+
+
+
+
+
+
+
+🌋 iv_modeluhh <- feols(
++   durable_expen_no_houscost ~ r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ | 
++     pid | 
++     FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1 ~ 
++     MPS_ORTH_sum_clean + MPS_ORTH_sum_clean:r_mort1,
++   data = d7tr_mortgage,
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTE: 3,517 observations removed because of NA values (LHS: 559, RHS: 3,338, IV: 922/922).
+> summary(iv_modeluhh)
+TSLS estimation - Dep. Var.: durable_expen_no_houscost
+                  Endo.    : FEDFUNDS_change_biennial_clean, FEDFUNDS_change_biennial_clean:r_mort1
+                  Instr.   : MPS_ORTH_sum_clean, MPS_ORTH_sum_clean:r_mort1
+Second stage: Dep. Var.: durable_expen_no_houscost
+Observations: 12,157
+Weights: weight
+Fixed-effects: pid: 3,503
+Standard-errors: Clustered (pid) 
+                                               Estimate  Std. Error  t value   Pr(>|t|)    
+fit_FEDFUNDS_change_biennial_clean         -5571.010403 1219.091551 -4.56980 5.0503e-06 ***
+fit_FEDFUNDS_change_biennial_clean:r_mort1    -0.027820    0.008541 -3.25720 1.1359e-03 ** 
+r_mort1                                       -0.041518    0.010803 -3.84311 1.2364e-04 ***
+r_fam_income_prevy                             0.042511    0.009768  4.35184 1.3885e-05 ***
+r_wlth_w_equity                               -0.002798    0.001273 -2.19766 2.8038e-02 *  
+educ                                        8916.614520 3704.413492  2.40702 1.6135e-02 *  
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 105,534.2     Adj. R2: -0.498319
+                  Within R2: -1.0118  
+F-test (1st stage), FEDFUNDS_change_biennial_clean        : stat = 142.0, p < 2.2e-16, on 2 and 12,150 DoF.
+F-test (1st stage), FEDFUNDS_change_biennial_clean:r_mort1: stat = 111.0, p < 2.2e-16, on 2 and 12,150 DoF.
+                                                Wu-Hausman: stat = 103.6, p < 2.2e-16, on 2 and 8,646 DoF.
+
+
+
+🚨 # First-stage regression for d7tr_mortgage data
+> first_stage_mortgage <- feols(
++   FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1 ~ 
++     MPS_ORTH_sum_clean + MPS_ORTH_sum_clean:r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ,
++   data = d7tr_mortgage,
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTE: 3,338 observations removed because of NA values (RHS: 3,338).
+Error in feols(FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1 ~  : 
+  dims [product 74016] do not match the length of object [75072]
+In addition: Warning messages:
+1: In FEDFUNDS_change_biennial_clean:r_mort1 :
+  numerical expression has 15674 elements: only the first used
+2: In FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1 :
+  longer object length is not a multiple of shorter object length
+3: In y - fitted.values :
+  longer object length is not a multiple of shorter object length
+4: In res$residuals * weights :
+  longer object length is not a multiple of shorter object length
+5: In (res$residuals * weights) * X_demean :
+  longer object length is not a multiple of shorter object length
+> summary(first_stage)
+Error: object 'first_stage' not found
+> # First-stage regression for d7tr data
+> first_stage <- feols(
++   FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1 ~ 
++     MPS_ORTH_sum_clean + MPS_ORTH_sum_clean:r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ,
++   data = d7tr,
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTES: 369 observation removed because of 0-weight.
+       20,473 observations removed because of NA values (RHS: 20,473).
+Warning message:
+In FEDFUNDS_change_biennial_clean:r_mort1 :
+  numerical expression has 45619 elements: only the first used
+> # View the results
+> summary(first_stage_mortgage)
+Error: object 'first_stage_mortgage' not found
+> summary(first_stage)
+OLS estimation
+Dep. Var.: FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1
+Observations: 25,146
+Weights: weight
+Standard-errors: Clustered (pid) 
+                                Estimate   Std. Error    t value   Pr(>|t|)    
+(Intercept)                -1.4247929561 0.0332621171 -42.835306  < 2.2e-16 ***
+MPS_ORTH_sum_clean          4.1124308204 0.1170981906  35.119508  < 2.2e-16 ***
+r_fam_income_prevy         -0.0000000591 0.0000001571  -0.375842 7.0705e-01    
+r_wlth_w_equity            -0.0000000849 0.0000000248  -3.425456 6.1798e-04 ***
+educ                        0.0607603905 0.0133948624   4.536097 5.8446e-06 ***
+MPS_ORTH_sum_clean:r_mort1 -0.0000054690 0.0000010130  -5.398669 6.9773e-08 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 10.1   Adj. R2: 0.029456
+> # Wald test for excluded instruments (MPS_ORTH_sum_clean + interaction)
+> wald_test <- wald(first_stage, c("MPS_ORTH_sum_clean", "MPS_ORTH_sum_clean:r_mort1"))
+Wald test, H0: joint nullity of MPS_ORTH_sum_clean and MPS_ORTH_sum_clean:r_mort1
+ stat = 975.6, p-value < 2.2e-16, on 2 and 25,140 DoF, VCOV: Clustered (pid).
+> f_stat <- wald_test$F
+> cat("First-stage F-statistic:", f_stat, "\n")
+First-stage F-statistic: 

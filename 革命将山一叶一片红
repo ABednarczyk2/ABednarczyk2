@@ -139,3 +139,146 @@ Wald test, H0: joint nullity of MPS_ORTH_sum_clean and MPS_ORTH_sum_clean:r_mort
 > f_stat <- wald_test$F
 > cat("First-stage F-statistic:", f_stat, "\n")
 First-stage F-statistic: 
+
+
+
+
+
+
+
+> summary(modelnoinstru)    # 2stage regression with no instrument WHAT ON EARTH DOES THIS SHOW ?????
+OLS estimation, Dep. Var.: durable_expen_no_houscost
+Observations: 12,157
+Weights: weight
+Fixed-effects: pid: 3,503
+Standard-errors: Clustered (pid) 
+                       Estimate  Std. Error  t value   Pr(>|t|)    
+r_mort1                0.023671    0.005798  4.08261 4.5528e-05 ***
+r_fam_income_prevy     0.023404    0.007795  3.00241 2.6974e-03 ** 
+r_wlth_w_equity       -0.004461    0.000978 -4.56207 5.2388e-06 ***
+educ               -5345.177361 2863.628221 -1.86658 6.2044e-02 .  
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 73,845.6     Adj. R2: 0.266558
+                 Within R2: 0.014978
+
+> modelnoinstru <- feols(                                                                  # IS THIS ON FEDFUNDS CHANGE 
++   durable_expen_no_houscost ~ r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ +
++     FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1 | 
++     pid,
++   data = d7tr_mortgage,
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTE: 3,517 observations removed because of NA values (LHS: 559, RHS: 3,338).
+> summary(modelnoinstru)
+OLS estimation, Dep. Var.: durable_expen_no_houscost
+Observations: 12,157
+Weights: weight
+Fixed-effects: pid: 3,503
+Standard-errors: Clustered (pid) 
+                                           Estimate  Std. Error   t value   Pr(>|t|)    
+r_mort1                                    0.012962    0.005628  2.303174 2.1327e-02 *  
+r_fam_income_prevy                         0.026729    0.007766  3.441527 5.8521e-04 ***
+r_wlth_w_equity                           -0.004158    0.000959 -4.333712 1.5074e-05 ***
+educ                                   -2777.267430 2907.634322 -0.955164 3.3956e-01    
+FEDFUNDS_change_biennial_clean         -1195.439405  159.888625 -7.476701 9.5785e-14 ***
+r_mort1:FEDFUNDS_change_biennial_clean    -0.003746    0.000937 -3.995698 6.5831e-05 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 71,992.1     Adj. R2: 0.302752
+                 Within R2: 0.063804
+
+
+
+# REGRESSION ON FEDFUNDS CHANGE 
+> modelwhat <- feols(
++   durable_expen_no_houscost ~ r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ + 
++     FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1 | 
++     pid,
++   data = d7tr_mortgage,
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTE: 3,517 observations removed because of NA values (LHS: 559, RHS: 3,338).
+> summary(modelwhat)
+OLS estimation, Dep. Var.: durable_expen_no_houscost
+Observations: 12,157
+Weights: weight
+Fixed-effects: pid: 3,503
+Standard-errors: Clustered (pid) 
+                                           Estimate  Std. Error   t value   Pr(>|t|)    
+r_mort1                                    0.012962    0.005628  2.303174 2.1327e-02 *  
+r_fam_income_prevy                         0.026729    0.007766  3.441527 5.8521e-04 ***
+r_wlth_w_equity                           -0.004158    0.000959 -4.333712 1.5074e-05 ***
+educ                                   -2777.267430 2907.634322 -0.955164 3.3956e-01    
+FEDFUNDS_change_biennial_clean         -1195.439405  159.888625 -7.476701 9.5785e-14 ***
+r_mort1:FEDFUNDS_change_biennial_clean    -0.003746    0.000937 -3.995698 6.5831e-05 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 71,992.1     Adj. R2: 0.302752
+                 Within R2: 0.063804
+> modelint1prc <- feols(
++   int1prc ~ r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ +
++     FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1 | 
++     pid,
++   data = d7tr_mortgage,
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTE: 3,851 observations removed because of NA values (LHS: 855, RHS: 3,338).
+> summary(modelint1prc)
+OLS estimation, Dep. Var.: int1prc
+Observations: 11,823
+Weights: weight
+Fixed-effects: pid: 3,421
+Standard-errors: Clustered (pid) 
+                                           Estimate   Std. Error    t value   Pr(>|t|)    
+r_mort1                                -0.000000340 0.0000004288  -0.791977 4.2843e-01    
+r_fam_income_prevy                     -0.000001658 0.0000004179  -3.967023 7.4268e-05 ***
+r_wlth_w_equity                        -0.000000497 0.0000000493 -10.084772  < 2.2e-16 ***
+educ                                   -0.571721709 0.1560339279  -3.664086 2.5199e-04 ***
+FEDFUNDS_change_biennial_clean         -0.109398922 0.0131743827  -8.303913  < 2.2e-16 ***
+r_mort1:FEDFUNDS_change_biennial_clean -0.000000196 0.0000000620  -3.160126 1.5908e-03 ** 
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 5.29676     Adj. R2: 0.510114
+                Within R2: 0.081447
+
+
+# INT1PRC CHNAGE 
+> #  lagged and differenced variables
+> d7tr_mortgage <- d7tr_mortgage %>%
++   group_by(pid) %>%
++   mutate(
++     int1prc_lag = lag(int1prc),
++     int1prc_diff = int1prc - lag(int1prc)  # first difference
++   ) %>%
++   ungroup()
+> # regression on the differenced dependent variable
+> model_diff <- feols(
++   int1prc_diff ~ r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ +
++     FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1 | 
++     pid,
++   data = d7tr_mortgage,
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTE: 5,578 observations removed because of NA values (LHS: 4,855, RHS: 3,338).
+> summary(model_diff)
+OLS estimation, Dep. Var.: int1prc_diff
+Observations: 10,096
+Weights: weight
+Fixed-effects: pid: 2,942
+Standard-errors: Clustered (pid) 
+                                            Estimate   Std. Error   t value   Pr(>|t|)    
+r_mort1                                -0.0000022694 0.0000004050 -5.603293 2.2977e-08 ***
+r_fam_income_prevy                      0.0000005884 0.0000004563  1.289533 1.9731e-01    
+r_wlth_w_equity                        -0.0000000596 0.0000000570 -1.045050 2.9609e-01    
+educ                                   -0.0624899186 0.1958854643 -0.319013 7.4974e-01    
+FEDFUNDS_change_biennial_clean          0.0480219160 0.0222627833  2.157049 3.1083e-02 *  
+r_mort1:FEDFUNDS_change_biennial_clean -0.0000000881 0.0000000986 -0.893581 3.7162e-01    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 7.28413     Adj. R2: -0.14488 
+                Within R2:  0.006898

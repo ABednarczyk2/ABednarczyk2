@@ -1,4 +1,4 @@
-⛰ iv_modeluh <- feols(
+⛰ iv_modeluh <- feols(                                                           #THIS IS LIKE IN THE LAST EMAIL SO DURABLES CONSUMPTION (CHANGE!!!)  AND CONTROL VARIABLES BUT WITH 
 +  delta_durcons ~ r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ | 
 +     pid | 
 +     FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1 ~ 
@@ -40,7 +40,7 @@ F-test (1st stage), FEDFUNDS_change_biennial_clean:r_mort1: stat = 115.1, p < 2.
 
 
 
-🌋 iv_modeluhh <- feols(
+🌋 iv_modeluhh <- feols(                                                                #BUT I WASNT SURE WHY CHNAGE IS IMPORTANT SO I DID THE REGULAR DURABLE CONS AS ABOVE 
 +   durable_expen_no_houscost ~ r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ | 
 +     pid | 
 +     FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1 ~ 
@@ -76,7 +76,7 @@ F-test (1st stage), FEDFUNDS_change_biennial_clean:r_mort1: stat = 111.0, p < 2.
 
 
 
-🚨 # First-stage regression for d7tr_mortgage data
+🚨 # First-stage regression for d7tr_mortgage data   #IM TRYING TO ESTABLISH IF MPS_ORT IS  ASTRONG INSTRUMENT OR WEAK
 > first_stage_mortgage <- feols(
 +   FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1 ~ 
 +     MPS_ORTH_sum_clean + MPS_ORTH_sum_clean:r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ,
@@ -143,10 +143,16 @@ First-stage F-statistic:
 
 
 
+######################################### OLS model with fixed effects (not an IV/2SLS model), shows the direct (potentially biased) relationship between mortgage rates (r_mort1) and durable expenditures, controlling for income, wealth, and education
 
-
-
-> summary(modelnoinstru)    # 2stage regression with no instrument WHAT ON EARTH DOES THIS SHOW ?????
+modelnoinstru <- feols(
+  durable_expen_no_houscost ~ r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ | 
+    pid,
+  data = d7tr_mortgage,
+  weights = ~weight,
+  cluster = ~pid
+)
+> summary(modelnoinstru)                                                                       
 OLS estimation, Dep. Var.: durable_expen_no_houscost
 Observations: 12,157
 Weights: weight
@@ -162,7 +168,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 RMSE: 73,845.6     Adj. R2: 0.266558
                  Within R2: 0.014978
 
-> modelnoinstru <- feols(                                                                  # IS THIS ON FEDFUNDS CHANGE 
+> modelnoinstru <- feols(                                                                  # IS THIS ON FEDFUNDS CHANGE . nO.
 +   durable_expen_no_houscost ~ r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ +
 +     FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1 | 
 +     pid,
@@ -190,8 +196,100 @@ RMSE: 71,992.1     Adj. R2: 0.302752
                  Within R2: 0.063804
 
 
+################################################## AND FOR CONTRAST RUN THIS STUFF WITH INSTRUMENT 
 
-# REGRESSION ON FEDFUNDS CHANGE 
+> iv_model <- feols(
++   durable_expen_no_houscost ~ r_fam_income_prevy + r_wlth_w_equity + educ |  # Controls
++     pid |  # Fixed effects
++     (FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1 ~ 
++        MPS_ORTH_sum_clean + MPS_ORTH_sum_clean:r_mort1),  # IV formula
++   data = d7tr_mortgage,
++   weights = ~weight,
++   cluster = ~pid
++ )
+Error in feols(durable_expen_no_houscost ~ r_fam_income_prevy + r_wlth_w_equity +  : 
+  Problem in the IV part. Evaluation of the right-hand-side raises an error: 
+  In x$terms %||% attr(x, "terms") %||% stop("no terms component nor attribute"): no terms component nor attribute
+> summary(iv_model)
+TSLS estimation - Dep. Var.: durable_expen_no_houscost
+                  Endo.    : FEDFUNDS_change_biennial_clean, FEDFUNDS_change_biennial_clean:r_mort1
+                  Instr.   : MPS_ORTH_sum_clean, MPS_ORTH_sum_clean:r_mort1
+Second stage: Dep. Var.: durable_expen_no_houscost
+Observations: 12,053
+Weights: weight
+Fixed-effects: pid: 3,482
+Standard-errors: Clustered (pid) 
+                                               Estimate  Std. Error    t value   Pr(>|t|)    
+fit_FEDFUNDS_change_biennial_clean         -5630.842068 1168.652130  -4.818236 1.5102e-06 ***
+fit_FEDFUNDS_change_biennial_clean:r_mort1    -0.026455    0.007822  -3.382003 7.2753e-04 ***
+r_mort1                                        0.004968    0.009560   0.519655 6.0334e-01    
+r_fam_income_prevy                             0.059418    0.009872   6.018759 1.9399e-09 ***
+r_wlth_w_equity                                0.002353    0.001411   1.668384 9.5329e-02 .  
+educ                                       11362.444275 3869.842338   2.936152 3.3449e-03 ** 
+r_house_value                                 -0.071438    0.007054 -10.127601  < 2.2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 101,959.1     Adj. R2: -0.407379
+                  Within R2: -0.887191
+F-test (1st stage), FEDFUNDS_change_biennial_clean        : stat = 144.7, p < 2.2e-16, on 2 and 12,045 DoF.
+F-test (1st stage), FEDFUNDS_change_biennial_clean:r_mort1: stat = 114.5, p < 2.2e-16, on 2 and 12,045 DoF.
+                                                Wu-Hausman: stat =  99.7, p < 2.2e-16, on 2 and 8,562 DoF
+
+#   KINDA LOOKS MORE NORMAL NO? :d COMPARED WITH NORMAL OLS 
+
+############################################################################3 ABSOLUTELY NOTHING IN THIS BARE BONES REGRESSION 
+
+
+> first_stage_simple <- lm(FEDFUNDS_change_biennial_clean ~ MPS_ORTH_sum_clean, 
++                          data = d7tr_mortgage, 
++                          weights = weight)
+> summary(first_stage_simple)
+
+Call:
+lm(formula = FEDFUNDS_change_biennial_clean ~ MPS_ORTH_sum_clean, 
+    data = d7tr_mortgage, weights = weight)
+
+Weighted Residuals:
+    Min      1Q  Median      3Q     Max 
+-54.051   0.350   1.822   6.488  22.934 
+
+Coefficients:
+                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)         -0.6655     0.0187  -35.59   <2e-16 ***
+MPS_ORTH_sum_clean   5.5731     0.1953   28.54   <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 10.25 on 15672 degrees of freedom
+Multiple R-squared:  0.04939,	Adjusted R-squared:  0.04933 
+F-statistic: 814.3 on 1 and 15672 DF,  p-value: < 2.2e-16
+
+> first_stage_simpler <- lm(FEDFUNDS_change_biennial_clean ~ MPS_ORTH_sum_clean, 
++                          data = d7tr, 
++                          weights = weight)
+> summary(first_stage_simpler)
+
+Call:
+lm(formula = FEDFUNDS_change_biennial_clean ~ MPS_ORTH_sum_clean, 
+    data = d7tr, weights = weight)
+
+Weighted Residuals:
+    Min      1Q  Median      3Q     Max 
+-53.934  -1.714   1.260   5.901  29.808 
+
+Coefficients:
+                    Estimate Std. Error t value Pr(>|t|)    
+(Intercept)        -0.471570   0.009078  -51.95   <2e-16 ***
+MPS_ORTH_sum_clean  2.623923   0.076412   34.34   <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 9.983 on 45248 degrees of freedom
+Multiple R-squared:  0.0254,	Adjusted R-squared:  0.02538 
+F-statistic:  1179 on 1 and 45248 DF,  p-value: < 2.2e-16
+
+
+# REGRESSION ON FEDFUNDS CHANGE                                                            THIS HAS NO MPS_ORT INSTRUMENT
 > modelwhat <- feols(
 +   durable_expen_no_houscost ~ r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ + 
 +     FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1 | 
@@ -218,6 +316,10 @@ r_mort1:FEDFUNDS_change_biennial_clean    -0.003746    0.000937 -3.995698 6.5831
 Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 RMSE: 71,992.1     Adj. R2: 0.302752
                  Within R2: 0.063804
+
+
+
+##############################################################################################   single-stage OLS model with fixed effects
 > modelint1prc <- feols(
 +   int1prc ~ r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ +
 +     FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1 | 
@@ -228,6 +330,7 @@ RMSE: 71,992.1     Adj. R2: 0.302752
 + )
 NOTE: 3,851 observations removed because of NA values (LHS: 855, RHS: 3,338).
 > summary(modelint1prc)
+
 OLS estimation, Dep. Var.: int1prc
 Observations: 11,823
 Weights: weight
@@ -236,7 +339,7 @@ Standard-errors: Clustered (pid)
                                            Estimate   Std. Error    t value   Pr(>|t|)    
 r_mort1                                -0.000000340 0.0000004288  -0.791977 4.2843e-01    
 r_fam_income_prevy                     -0.000001658 0.0000004179  -3.967023 7.4268e-05 ***
-r_wlth_w_equity                        -0.000000497 0.0000000493 -10.084772  < 2.2e-16 ***
+r_wlth_w_equity                        -0.000000497 0.0000000493 -10.084772  < 2.2e-16 *** #wealth effects on interest rates ???
 educ                                   -0.571721709 0.1560339279  -3.664086 2.5199e-04 ***
 FEDFUNDS_change_biennial_clean         -0.109398922 0.0131743827  -8.303913  < 2.2e-16 ***
 r_mort1:FEDFUNDS_change_biennial_clean -0.000000196 0.0000000620  -3.160126 1.5908e-03 ** 
@@ -244,6 +347,50 @@ r_mort1:FEDFUNDS_change_biennial_clean -0.000000196 0.0000000620  -3.160126 1.59
 Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 RMSE: 5.29676     Adj. R2: 0.510114
                 Within R2: 0.081447
+
+
+#####################################################3 #CAUSAL? 
+> iv_model_causal <- feols(
++   int1prc ~ r_fam_income_prevy + r_wlth_w_equity + educ |  # Controls and FE
++     pid |  # Fixed effects
++     FEDFUNDS_change_biennial_clean + I(FEDFUNDS_change_biennial_clean*r_mort1) ~  # Endogenous vars
++     MPS_ORTH_sum_clean + I(MPS_ORTH_sum_clean*r_mort1),  # Instruments
++   data = d7tr_mortgage,
++   weights = ~weight,
++   cluster = ~pid
++ )
+NOTE: 3,851 observations removed because of NA values (LHS: 855, RHS: 2,713, IV: 922/922).
+> summary(iv_model_causal)
+TSLS estimation - Dep. Var.: int1prc
+                  Endo.    : FEDFUNDS_change_biennial_clean, I(FEDFUNDS_change_biennial_clean * r_mort1)
+                  Instr.   : MPS_ORTH_sum_clean, I(MPS_ORTH_sum_clean * r_mort1)
+Second stage: Dep. Var.: int1prc
+Observations: 11,823
+Weights: weight
+Fixed-effects: pid: 3,421
+Standard-errors: Clustered (pid) 
+                                                    Estimate  Std. Error   t value   Pr(>|t|)    
+fit_FEDFUNDS_change_biennial_clean              -0.220861744 0.220906690 -0.999797 3.1748e-01    
+fit_I(FEDFUNDS_change_biennial_clean * r_mort1)  0.000005455 0.000001655  3.296423 9.8924e-04 ***
+r_fam_income_prevy                              -0.000003051 0.000000879 -3.469539 5.2779e-04 ***
+r_wlth_w_equity                                 -0.000000806 0.000000122 -6.624130 4.0415e-11 ***
+educ                                            -1.831933558 0.316593841 -5.786384 7.8394e-09 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 10.8     Adj. R2: -1.05022
+             Within R2: -2.84469
+F-test (1st stage), FEDFUNDS_change_biennial_clean             : stat = 127.2, p < 2.2e-16, on 2 and 11,817 DoF.
+F-test (1st stage), I(FEDFUNDS_change_biennial_clean * r_mort1): stat =  65.0, p < 2.2e-16, on 2 and 11,817 DoF.
+                                                     Wu-Hausman: stat = 139.9, p < 2.2e-16, on 2 and 8,395 DoF.
+
+
+#Fed Policy Effects Are Conditional on Mortgage Rates
+#interaction term suggests that monetary policy transmission weakens when mortgage rates are high - ?
+#rich and more educated households see lower int1prc - expected
+#no Standalone Effect of Fed Rates ( Conditional Effect Exists) :/    direct Fed rate effect is insignificant, but the interaction with mortgage rates is strong.
+
+#Fed policy works through mortgage markets rather than directly???? 
+#SUGGESTION MAYBE MAKE SOMETHING LIKE ...LEVERAGE BINS AND MORTGAGE BINS (I HAVE SAID MORTGAGE IS PARABOLIC I FEEL)
 
 
 # INT1PRC CHNAGE 
@@ -265,6 +412,9 @@ RMSE: 5.29676     Adj. R2: 0.510114
 +   cluster = ~pid
 + )
 NOTE: 5,578 observations removed because of NA values (LHS: 4,855, RHS: 3,338).
+
+
+
 > summary(model_diff)
 OLS estimation, Dep. Var.: int1prc_diff
 Observations: 10,096

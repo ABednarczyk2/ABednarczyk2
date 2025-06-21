@@ -1,4 +1,4 @@
-⛰ iv_modeluh <- feols(                                                           #THIS IS LIKE IN THE LAST EMAIL SO DURABLES CONSUMPTION (CHANGE!!!)  AND CONTROL VARIABLES BUT WITH 
+1) iv_modeluh <- feols(                                                           #THIS IS LIKE IN THE LAST EMAIL SO DURABLES CONSUMPTION (CHANGE!!!)  AND CONTROL VARIABLES (2SIV)
 +  delta_durcons ~ r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ | 
 +     pid | 
 +     FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1 ~ 
@@ -38,9 +38,7 @@ F-test (1st stage), FEDFUNDS_change_biennial_clean:r_mort1: stat = 115.1, p < 2.
 
 
 
-
-
-🌋 iv_modeluhh <- feols(                                                                #BUT I WASNT SURE WHY CHNAGE IS IMPORTANT SO I DID THE REGULAR DURABLE CONS AS ABOVE 
+2) iv_modeluhh <- feols(                                                                #BUT I WASNT SURE WHY CHNAGE IS IMPORTANT SO I DID THE IN THE LAST EMAIL SO DURABLES CONSUMPTION  AND CONTROL VARIABLES (2SIV))
 +   durable_expen_no_houscost ~ r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ | 
 +     pid | 
 +     FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1 ~ 
@@ -76,7 +74,7 @@ F-test (1st stage), FEDFUNDS_change_biennial_clean:r_mort1: stat = 111.0, p < 2.
 
 
 
-🚨 # First-stage regression for d7tr_mortgage data   #IM TRYING TO ESTABLISH IF MPS_ORT IS  ASTRONG INSTRUMENT OR WEAK
+🚨 # First-stage regression for d7tr_mortgage data                                                     #IM TRYING TO ESTABLISH IF MPS_ORT IS  A STRONG INSTRUMENT OR WEAK
 > first_stage_mortgage <- feols(
 +   FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1 ~ 
 +     MPS_ORTH_sum_clean + MPS_ORTH_sum_clean:r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ,
@@ -118,7 +116,7 @@ In FEDFUNDS_change_biennial_clean:r_mort1 :
 Error: object 'first_stage_mortgage' not found
 > summary(first_stage)
 OLS estimation
-Dep. Var.: FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1
+Dep. Var.: FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1                                        #REGULAR OLS WHERE Y IS FEDFUNDS_change_biennial_clean
 Observations: 25,146
 Weights: weight
 Standard-errors: Clustered (pid) 
@@ -153,7 +151,7 @@ modelnoinstru <- feols(
   cluster = ~pid
 )
 > summary(modelnoinstru)                                                                       
-OLS estimation, Dep. Var.: durable_expen_no_houscost
+OLS estimation, Dep. Var.: durable_expen_no_houscost                                  #OLS Y VARIABLE durable_expen_no_houscost NO FEDFUNDS 
 Observations: 12,157
 Weights: weight
 Fixed-effects: pid: 3,503
@@ -168,8 +166,8 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 RMSE: 73,845.6     Adj. R2: 0.266558
                  Within R2: 0.014978
 
-> modelnoinstru <- feols(                                                                  # IS THIS ON FEDFUNDS CHANGE . nO.
-+   durable_expen_no_houscost ~ r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ +
+> modelnoinstru <- feols(                                                                   #OLS Y VARIABLE durable_expen_no_houscost WITH FEDFUNDS
++   durable_expen_no_houscost ~ r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ +          
 +     FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1 | 
 +     pid,
 +   data = d7tr_mortgage,
@@ -289,7 +287,7 @@ Multiple R-squared:  0.0254,	Adjusted R-squared:  0.02538
 F-statistic:  1179 on 1 and 45248 DF,  p-value: < 2.2e-16
 
 
-# REGRESSION ON FEDFUNDS CHANGE                                                            THIS HAS NO MPS_ORT INSTRUMENT
+                                                            THIS HAS NO MPS_ORT INSTRUMENT
 > modelwhat <- feols(
 +   durable_expen_no_houscost ~ r_mort1 + r_fam_income_prevy + r_wlth_w_equity + educ + 
 +     FEDFUNDS_change_biennial_clean + FEDFUNDS_change_biennial_clean:r_mort1 | 

@@ -1,0 +1,36 @@
+1) create excel table from aggregated values of mps orth and fedfunds 
+APPENDIX
+
+   # 1 MPS by year (biennial format)
+   mps_biennial_sum <- monetary_policy_surprises_data %>%
+     group_by(Year) %>%
+     summarise(MPS_ORTH_sum_clean = sum(MPS_ORTH, na.rm = TRUE)) %>%
+     rename(year = Year)
+   
+   # 2  FedFunds by year (average)
+   fedfunds_annual_clean <- FEDFUNDS %>%
+     mutate(year = year(as.Date(observation_date))) %>%
+     group_by(year) %>%
+     summarise(FEDFUNDS_avg_clean = mean(FEDFUNDS, na.rm = TRUE)) %>%
+     arrange(year)
+   
+   # 3 biennial FedFunds changes (level and percent)
+   fedfunds_biennial_change <- fedfunds_annual_clean %>%
+     mutate(
+       FEDFUNDS_change_biennial_clean = FEDFUNDS_avg_clean - lag(FEDFUNDS_avg_clean, 2),
+       FEDFUNDS_pct_change_biennial_clean = (FEDFUNDS_avg_clean / lag(FEDFUNDS_avg_clean, 2) - 1) * 100 # didint really use this garbage but i was trying to recreate the skibidi process i used before to the t not to f up 
+     ) %>%
+     filter(year %in% seq(1999, 2021, by = 2))
+   
+   # 4 FedFunds with MPS data merge
+   iv_dataset_clean <- fedfunds_biennial_change %>%
+     left_join(mps_biennial_sum, by = "year")
+   
+   # main panel merge
+   d7tr <- d7tr %>%
+     left_join(iv_dataset_clean, by = "year") %>%
+     filter(year %in% 1999:2021)  # Keep valid biennial years
+
+this way its making sure then run the regression on that somehow 
+
+2) 

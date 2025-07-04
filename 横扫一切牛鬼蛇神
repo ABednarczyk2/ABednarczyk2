@@ -31,8 +31,168 @@ APPENDIX
      left_join(iv_dataset_clean, by = "year") %>%
      filter(year %in% 1999:2021)  # Keep valid biennial years
 
-this way its making sure then run the regression on that somehow 
+RESULTS 
 
-also without aggregation at all
 
-2) 
+> model <- lm(FEDFUNDS_avg_clean ~ MPS_ORTH_sum_clean,
++             data = merged_data)
+> summary(model)
+
+Call:
+lm(formula = FEDFUNDS_avg_clean ~ MPS_ORTH_sum_clean, data = merged_data)
+
+Residuals:
+   Min     1Q Median     3Q    Max 
+-3.132 -2.783 -0.461  2.045  6.028 
+
+Coefficients:
+                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)          3.0856     0.4446   6.940 5.32e-08 ***
+MPS_ORTH_sum_clean  -1.2159     2.9052  -0.419    0.678    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 2.668 on 34 degrees of freedom
+Multiple R-squared:  0.005126,	Adjusted R-squared:  -0.02414 
+F-statistic: 0.1752 on 1 and 34 DF,  p-value: 0.6782
+
+> merged_data$MPS_lagged <- lag(merged_data$MPS_ORTH_sum_clean, 1)  # 1-year lag
+> lm(FEDFUNDS_avg_clean ~ MPS_lagged, data = merged_data) %>% summary()
+
+Call:
+lm(formula = FEDFUNDS_avg_clean ~ MPS_lagged, data = merged_data)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-2.9917 -2.6369 -0.8045  2.1143  5.6206 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept)    2.966      0.437   6.787  9.7e-08 ***
+MPS_lagged     1.643      2.873   0.572    0.571    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 2.584 on 33 degrees of freedom
+  (1 observation deleted due to missingness)
+Multiple R-squared:  0.00981,	Adjusted R-squared:  -0.0202 
+F-statistic: 0.3269 on 1 and 33 DF,  p-value: 0.5713
+
+> # Create lagged shocks
+> merged_data$MPS_lagged <- lag(merged_data$MPS_ORTH_sum_clean, 1)
+> # Run regression
+> lagged_model <- lm(FEDFUNDS_avg_clean ~ MPS_lagged, data = merged_data)
+> summary(lagged_model)
+
+Call:
+lm(formula = FEDFUNDS_avg_clean ~ MPS_lagged, data = merged_data)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-2.9917 -2.6369 -0.8045  2.1143  5.6206 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept)    2.966      0.437   6.787  9.7e-08 ***
+MPS_lagged     1.643      2.873   0.572    0.571    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 2.584 on 33 degrees of freedom
+  (1 observation deleted due to missingness)
+Multiple R-squared:  0.00981,	Adjusted R-squared:  -0.0202 
+F-statistic: 0.3269 on 1 and 33 DF,  p-value: 0.5713
+
+
+
+
+> merged_data$MPS_sq <- merged_data$MPS_lagged^2
+> lm(FEDFUNDS_avg_clean ~ MPS_lagged + MPS_sq, data = merged_data) %>% summary()
+
+Call:
+lm(formula = FEDFUNDS_avg_clean ~ MPS_lagged + MPS_sq, data = merged_data)
+
+Residuals:
+   Min     1Q Median     3Q    Max 
+-2.914 -2.400 -1.111  2.417  5.607 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept)   2.6308     0.4802   5.479 4.93e-06 ***
+MPS_lagged    2.8941     2.9293   0.988    0.331    
+MPS_sq       14.7727     9.5758   1.543    0.133    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 2.532 on 32 degrees of freedom
+  (1 observation deleted due to missingness)
+Multiple R-squared:  0.07836,	Adjusted R-squared:  0.02075 
+F-statistic:  1.36 on 2 and 32 DF,  p-value: 0.271
+
+> # squared term ANYTHING 
+> merged_data$MPS_sq <- merged_data$MPS_lagged^2
+> nonlinear_model <- lm(FEDFUNDS_avg_clean ~ MPS_lagged + MPS_sq, data = merged_data)
+> summary(nonlinear_model)
+
+Call:
+lm(formula = FEDFUNDS_avg_clean ~ MPS_lagged + MPS_sq, data = merged_data)
+
+Residuals:
+   Min     1Q Median     3Q    Max 
+-2.914 -2.400 -1.111  2.417  5.607 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept)   2.6308     0.4802   5.479 4.93e-06 ***
+MPS_lagged    2.8941     2.9293   0.988    0.331    
+MPS_sq       14.7727     9.5758   1.543    0.133    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 2.532 on 32 degrees of freedom
+  (1 observation deleted due to missingness)
+Multiple R-squared:  0.07836,	Adjusted R-squared:  0.02075 
+F-statistic:  1.36 on 2 and 32 DF,  p-value: 0.271
+
+2) MONTHLY 
+
+Call:
+lm(formula = FEDFUNDS ~ MPS_ORTH, data = merged_data)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-1.7377 -1.6553 -0.7397  0.8647  4.7523 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept)   1.7877     0.1186  15.074   <2e-16 ***
+MPS_ORTH     -0.3452     2.4330  -0.142    0.887    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 1.97 on 274 degrees of freedom
+Multiple R-squared:  7.345e-05,	Adjusted R-squared:  -0.003576 
+F-statistic: 0.02013 on 1 and 274 DF,  p-value: 0.8873
+
+
+Call:
+lm(formula = FEDFUNDS ~ MPS_ORTH_lag1, data = merged_data, na.action = na.omit) # MAYBE LAGS ANYTHING :/
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-1.7375 -1.6391 -0.7453  0.7781  4.7668 
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)    
+(Intercept)     1.7769     0.1186  14.986   <2e-16 ***
+MPS_ORTH_lag1   0.1081     2.4314   0.044    0.965    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 1.966 on 273 degrees of freedom
+  (1 observation deleted due to missingness)
+Multiple R-squared:  7.243e-06,	Adjusted R-squared:  -0.003656 
+F-statistic: 0.001977 on 1 and 273 DF,  p-value: 0.9646
+
+
+

@@ -1,0 +1,85 @@
+> View(FEDFUNDS)
+> colnames(FEDFUNDS)
+[1] "observation_date" "FEDFUNDS"         "date"             "year_month"       "merge_key"       
+> colnames(monetary_policy_surprises_data)          
+ [1] "Year"      "Month"     "MPS"       "MPS_ORTH"  "NFP_SURP"  "NFP_12M"   "SP500_3M"  "SLOPE_3M"  "BCOM_3M"   "TR_SKEW"   "date"     
+[12] "merge_key"
+> View(FEDFUNDS)
+> library(lubridate)
+> # Clean Fed Funds data (monthly average)
+> fedfunds_monthly <- FEDFUNDS %>%
++   mutate(year = year(observation_date),
++          month = month(observation_date)) %>%
++   group_by(year, month) %>%
++   summarize(FEDFUNDS_avg = mean(FEDFUNDS, na.rm = TRUE))
+`summarise()` has grouped output by 'year'. You can override using the `.groups` argument.
+> # Clean shocks data (already monthly)
+> mps_monthly <- monetary_policy_surprises_data %>%
++   mutate(date = as.Date(paste(Year, Month, "01", sep = "-")))
+> 
+> biennial_effects <- mps_monthly %>%
++   mutate(biennial = ifelse(year(date) %% 2 == 0, year(date), year(date) - 1)) %>%
++   group_by(biennial) %>%
++   summarize(
++     # Shock magnitude measures
++     MPS_ORTH_sum = sum(MPS_ORTH, na.rm = TRUE),
++     MPS_ORTH_mean = mean(MPS_ORTH, na.rm = TRUE),
++     
++     # Shock timing measures
++     shock_months = n_distinct(month[abs(MPS_ORTH) > sd(MPS_ORTH)]),
++     last_6m_impact = sum(MPS_ORTH * (month >= 7))  # Weight H2 more
++   ) %>%
++   left_join(
++     fedfunds_monthly %>%
++       mutate(biennial = ifelse(year %% 2 == 0, year, year - 1)) %>%
++       group_by(biennial) %>%
++       summarize(FEDFUNDS_change = last(FEDFUNDS_avg) - first(FEDFUNDS_avg)),
++     by = "biennial"
++   )
+Error in `summarize()`:
+ℹ In argument: `shock_months = n_distinct(month[abs(MPS_ORTH) > sd(MPS_ORTH)])`.
+ℹ In group 1: `biennial = 1988`.
+Caused by error in `month[abs(MPS_ORTH) > sd(MPS_ORTH)]`:
+! object of type 'closure' is not subsettable
+Run `rlang::last_trace()` to see where the error occurred.
+> biennial_effects <- mps_monthly %>%
++   mutate(biennial = ifelse(year(date) %% 2 == 0, year(date), year(date) - 1)) %>%
++   group_by(biennial) %>%
++   summarize(
++     # Shock magnitude measures
++     MPS_ORTH_sum = sum(MPS_ORTH, na.rm = TRUE),
++     MPS_ORTH_mean = mean(MPS_ORTH, na.rm = TRUE),
++     
++     # Shock timing measures (FIXED)
++     shock_months = n_distinct(Month[abs(MPS_ORTH) > sd(MPS_ORTH)]), # Use "Month" column
++     last_6m_impact = sum(MPS_ORTH * (Month >= 7))  # Weight H2 more
++   ) %>%
++   left_join(
++     fedfunds_monthly %>%
++       mutate(biennial = ifelse(year %% 2 == 0, year, year - 1)) %>%
++       group_by(biennial) %>%
++       summarize(FEDFUNDS_change = last(FEDFUNDS_avg) - first(FEDFUNDS_avg)),
++     by = "biennial"
++   )
+> first_stage <- lm(FEDFUNDS_change ~ MPS_ORTH_sum + shock_months,
++                   data = biennial_effects)
+> summary(first_stage)  # Check F-stat > 10
+
+Call:
+lm(formula = FEDFUNDS_change ~ MPS_ORTH_sum + shock_months, data = biennial_effects)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-4.6095 -0.9631 -0.2838  1.1220  3.5464 
+
+Coefficients:
+             Estimate Std. Error t value Pr(>|t|)  
+(Intercept)   0.41714    1.87386   0.223   0.8268  
+MPS_ORTH_sum  5.62446    2.51268   2.238   0.0408 *
+shock_months -0.09661    0.36519  -0.265   0.7950  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 2.125 on 15 degrees of freedom
+Multiple R-squared:  0.2772,	Adjusted R-squared:  0.1808 
+F-statistic: 2.876 on 2 and 15 DF,  p-value: 0.08766

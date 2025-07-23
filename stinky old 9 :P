@@ -83,3 +83,25 @@ Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’
 Residual standard error: 2.125 on 15 degrees of freedom
 Multiple R-squared:  0.2772,	Adjusted R-squared:  0.1808 
 F-statistic: 2.876 on 2 and 15 DF,  p-value: 0.08766
+
+
+
+
+Call:
+lm(formula = FEDFUNDS_change ~ MPS_ORTH_sum + shock_months, data = biennial_effects)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-4.6095 -0.9631 -0.2838  1.1220  3.5464 
+
+Coefficients:
+             Estimate Std. Error t value Pr(>|t|)  
+(Intercept)   0.41714    1.87386   0.223   0.8268  
+MPS_ORTH_sum  5.62446    2.51268   2.238   0.0408 *
+shock_months -0.09661    0.36519  -0.265   0.7950  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 2.125 on 15 degrees of freedom
+Multiple R-squared:  0.2772,	Adjusted R-squared:  0.1808 
+F-statistic: 2.876 on 2 and 15 DF,  p-value: 0.08766
